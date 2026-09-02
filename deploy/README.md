@@ -1,13 +1,13 @@
 # Stackot 배포 가이드 (MVP)
 
+봇 자격(앱·권한·초대) 준비는 [bot-setup.md](bot-setup.md)를 먼저 끝낸다. 이 문서는
+Gateway·Receiver·GitHub webhook 연결을 다룬다.
+
 ## 0. 사전 준비
 
 - 서버: Linux/macOS, Docker 설치 (sandbox backend), Node 22+
 - OpenClaw Gateway 설치: `npm install -g openclaw@latest --allow-scripts=openclaw`
-- Discord 앱 생성 (Developer Portal):
-  - Bot 페이지: username `스태콧`, **Message Content Intent** + **Server Members Intent** 활성화, 토큰 복사
-  - OAuth2 URL: scopes `bot` + `applications.commands`; 권한에 **Send Messages in Threads** 포함
-  - 서버에 초대, Developer Mode로 Server/User/Channel ID 확보
+- Discord 앱: [bot-setup.md](bot-setup.md) 완료 — 토큰, 권한, 초대, ID 확보까지
 
 ## 1. Discord 서버 구성
 
