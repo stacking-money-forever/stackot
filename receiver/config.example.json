@@ -1,0 +1,25 @@
+{
+  "host": "127.0.0.1",
+  "port": 9377,
+  "githubWebhookSecret": "<WEBHOOK_SECRET — GitHub webhook과 동일>",
+  "openclawHooksUrl": "http://127.0.0.1:18789/hooks",
+  "openclawHookToken": "<.env의 STACKOT_HOOK_TOKEN과 동일>",
+  "githubToken": "<.env의 STACKOT_GITHUB_TOKEN과 동일>",
+  "repos": {
+    "stacking-money-forever/bungae-frontend": {
+      "issuesForumChannelId": "<이 저장소용 #issues 포럼 채널 ID>",
+      "prsForumChannelId": "<이 저장소용 #pull-requests 포럼 채널 ID>"
+    },
+    "gajaedev/jagalchi-server-node": {
+      "issuesForumChannelId": "<jagalchi용 #issues 포럼 채널 ID>",
+      "prsForumChannelId": "<jagalchi용 #pull-requests 포럼 채널 ID>"
+    },
+    "justn-hyeok/meter": {
+      "issuesForumChannelId": "<meter용 #issues 포럼 채널 ID>",
+      "prsForumChannelId": "<meter용 #pull-requests 포럼 채널 ID>"
+    }
+  },
+  "ciAlertsChannelId": "<공용 #ci-alerts 채널 ID>",
+  "adminChannelId": "<공용 #stackot-admin 채널 ID>",
+  "agentId": "stackot"
+}

@@ -11,16 +11,23 @@ Gateway·Receiver·GitHub webhook 연결을 다룬다.
 
 ## 1. Discord 서버 구성
 
-`GitHub` 카테고리 아래 생성:
+**프로젝트(저장소)별로 포럼 채널 쌍을 만든다.** 카테고리는 프로젝트당 하나:
 
-| 채널 | 타입 | 태그 |
-|---|---|---|
-| `#issues` | 포럼 | bug, feature, question, triage, in-progress, blocked, resolved, wont-fix |
-| `#pull-requests` | 포럼 | draft, review, changes-requested, ci-failed, approved, merged, closed |
-| `#ci-alerts` | 텍스트 | — |
-| `#stackot-admin` | 텍스트 | — |
+```txt
+GitHub 카테고리 (프로젝트마다 반복 — 이름은 프로젝트명 추천)
+├─ #issues            포럼 — 그 프로젝트 Issue 스레드
+├─ #pull-requests     포럼 — 그 프로젝트 PR 스레드
+└─ (공용, 하나만)
+   #ci-alerts         텍스트 — 모든 프로젝트 CI 실패
+   #stackot-admin     텍스트 — 관리 알림
+```
 
-채널 ID 4개를 기록한다.
+포럼 채널 태그:
+
+- `#issues`: bug, feature, question, triage, in-progress, blocked, resolved, wont-fix
+- `#pull-requests`: draft, review, changes-requested, ci-failed, approved, merged, closed
+
+기록할 것: 프로젝트별 포럼 채널 ID 2개씩 + 공용 채널 ID 2개.
 
 ## 2. Gateway 설정
 
@@ -44,8 +51,9 @@ Gateway·Receiver·GitHub webhook 연결을 다룬다.
 
 ## 3. Receiver 설정
 
-1. `receiver/config.json` 생성 (아래 예). `githubWebhookSecret`은 GitHub webhook
-   설정 시 지정한 secret과 동일해야 한다:
+1. `receiver/config.json` 생성 — `receiver/config.example.json`을 복사하고 채운다.
+   저장소마다 `repos` 항목 하나씩 (키는 `owner/name` 정확히), 포럼 채널 ID는
+   **저장소별로 따로** 만든 포럼 채널의 ID다:
    ```json
    {
      "host": "127.0.0.1",
@@ -54,27 +62,34 @@ Gateway·Receiver·GitHub webhook 연결을 다룬다.
      "openclawHooksUrl": "http://127.0.0.1:18789/hooks",
      "openclawHookToken": "<LONG_RANDOM_HOOK_TOKEN — gateway와 동일>",
      "githubToken": "<repo:read 최소권한 PAT>",
-     "allowedThreadIds": [],
-     "issuesForumChannelId": "<ISSUES_FORUM_CHANNEL_ID>",
-     "prsForumChannelId": "<PRS_FORUM_CHANNEL_ID>",
+     "repos": {
+       "owner/repo-a": { "issuesForumChannelId": "<...>", "prsForumChannelId": "<...>" },
+       "owner/repo-b": { "issuesForumChannelId": "<...>", "prsForumChannelId": "<...>" }
+     },
      "ciAlertsChannelId": "<CI_ALERTS_CHANNEL_ID>",
      "adminChannelId": "<ADMIN_CHANNEL_ID>",
      "agentId": "stackot"
    }
    ```
+   등록 안 된 저장소의 webhook 이벤트는 #stackot-admin으로만 알림이 가고
+   스레드는 만들어지지 않는다.
 2. 실행: `cd receiver && bun run src/server.ts` (systemd 등으로 상주 권장).
 3. 리버스 프록시: `https://<host>/stackot/webhook` → `127.0.0.1:9377/webhook`.
    Gateway는 절대 공개하지 않는다 (loopback 고정).
 
 ## 4. GitHub Webhook 설정
 
-저장소 Settings → Webhooks → Add webhook:
+**webhook은 스태콧에 붙일 저장소마다 각각** 설정한다 (저장소 Settings → Webhooks →
+Add webhook). Secret은 전부 같은 값으로:
 
 - Payload URL: `https://<host>/stackot/webhook`
 - Content type: `application/json`
 - Secret: `<WEBHOOK_SECRET>` (receiver config와 동일)
 - Events: Issues, Issue comments, Pull requests, Pull request reviews,
   Pull request review comments, Check runs, Check suites
+
+webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼야
+스레드가 생성된다.
 
 ## 5. 동작 검증 (P0 체크리스트 대응)
 

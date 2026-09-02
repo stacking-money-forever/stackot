@@ -22,10 +22,17 @@ const cfg: ReceiverConfig = await loadConfig();
 const dedupe = new Dedupe(new URL("../var/dedupe.sqlite", import.meta.url).pathname);
 
 async function resolveTarget(ev: NormalizedEvent): Promise<NormalizedEvent> {
-  // New items: create a forum thread in the right parent channel.
+  const repoCfg = cfg.repos[ev.repo];
+  if (!repoCfg) {
+    // Unlisted repo: webhook pointed here but no routing configured. Admin notice.
+    console.warn(`repo not configured: ${ev.repo}`);
+    return { ...ev, target: cfg.adminChannelId };
+  }
+
+  // New items: create a forum thread in that repo's parent channel.
   if (ev.targetKind === "channel") {
-    if (ev.item.startsWith("issue")) return { ...ev, createThread: { forumChannelId: cfg.issuesForumChannelId, title: titleFrom(ev) } };
-    if (ev.item.startsWith("PR")) return { ...ev, createThread: { forumChannelId: cfg.prsForumChannelId, title: titleFrom(ev) } };
+    if (ev.item.startsWith("issue")) return { ...ev, createThread: { forumChannelId: repoCfg.issuesForumChannelId, title: titleFrom(ev) } };
+    if (ev.item.startsWith("PR")) return { ...ev, createThread: { forumChannelId: repoCfg.prsForumChannelId, title: titleFrom(ev) } };
     if (ev.item.startsWith("CI")) return { ...ev, target: cfg.ciAlertsChannelId };
     return ev;
   }
@@ -36,7 +43,7 @@ async function resolveTarget(ev: NormalizedEvent): Promise<NormalizedEvent> {
   try {
     const item = await fetchItem(cfg, ev.repo, kind, number);
     const threadId = findThreadId(item);
-    if (threadId && cfg.allowedThreadIds.includes(threadId)) return { ...ev, target: threadId };
+    if (threadId) return { ...ev, target: threadId };
   } catch (err) {
     console.warn(`mapping lookup failed for ${ev.repo} ${ev.item}:`, err);
   }
