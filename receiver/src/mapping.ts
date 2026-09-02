@@ -1,0 +1,49 @@
+/**
+ * Thread mapping — spec.md §3 title convention.
+ *
+ * Forward direction is implicit: forum thread title is "[owner/repo#123] …".
+ * Reverse lookup resolves repo+number → thread ID by scanning the GitHub item
+ * body and comments for a Discord thread URL the bot recorded earlier.
+ */
+import type { ReceiverConfig } from "./config.ts";
+
+const THREAD_URL_RE = /https:\/\/discord\.com\/channels\/\d+\/(\d+)/;
+
+export function threadTitle(repo: string, number: number, title: string): string {
+  const t = `[${repo}#${number}] ${title}`.slice(0, 100);
+  return t;
+}
+
+export type GitHubItem = {
+  body: string | null;
+  comments: { body: string }[];
+};
+
+/** Extract the thread ID recorded in the item body or its comments, if any. */
+export function findThreadId(item: GitHubItem): string | null {
+  const texts = [item.body ?? "", ...item.comments.map((c) => c.body)];
+  for (const text of texts) {
+    const m = THREAD_URL_RE.exec(text);
+    if (m?.[1]) return m[1];
+  }
+  return null;
+}
+
+/** Fetch an issue/PR with its comments, for reverse-link resolution. */
+export async function fetchItem(cfg: ReceiverConfig, repo: string, kind: "issues" | "pulls", number: number): Promise<GitHubItem> {
+  const base = `https://api.github.com/repos/${repo}`;
+  const headers = {
+    Authorization: `Bearer ${cfg.githubToken}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+  const [itemRes, commentsRes] = await Promise.all([
+    fetch(`${base}/${kind}/${number}`, { headers }),
+    fetch(`${base}/${kind}/${number}/comments?per_page=20`, { headers }),
+  ]);
+  if (!itemRes.ok) throw new Error(`github api ${itemRes.status} for ${repo} ${kind} #${number}`);
+  const item = (await itemRes.json()) as { body?: string | null };
+  const comments = commentsRes.ok ? ((await commentsRes.json()) as { body: string }[]) : [];
+  return { body: item.body ?? null, comments };
+}
+

@@ -1,0 +1,5 @@
+node_modules/
+receiver/var/
+receiver/config.json
+*.sqlite
+*.sqlite-*

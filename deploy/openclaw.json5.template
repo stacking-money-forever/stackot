@@ -1,0 +1,78 @@
+// Stackot openclaw.json template — copy to ~/.openclaw/openclaw.json and fill
+// the placeholders. Verify with `openclaw config validate` before restart.
+{
+  // ── Stackot agent ──────────────────────────────────────────────
+  agents: {
+    entries: {
+      stackot: {
+        default: true,
+        workspace: "~/.openclaw/workspace-stackot",
+        // The stackot skill lives in the workspace skills dir:
+        //   ~/.openclaw/workspace-stackot/skills/stackot/SKILL.md
+      },
+    },
+    defaults: {
+      sandbox: {
+        // Non-main sessions (channel-derived) run docker-isolated,
+        // network none by default.
+        mode: "non-main",
+        backend: "docker",
+        scope: "session",
+        workspaceAccess: "rw",
+      },
+    },
+  },
+
+  // ── Discord channel ────────────────────────────────────────────
+  channels: {
+    discord: {
+      enabled: true,
+      token: { source: "env", provider: "default", id: "DISCORD_BOT_TOKEN" },
+      dmPolicy: "allowlist",
+      allowFrom: ["<OWNER_DISCORD_USER_ID>"],
+      groupPolicy: "allowlist",
+      guilds: {
+        "<GUILD_ID>": {
+          requireMention: true,
+          users: ["<OWNER_DISCORD_USER_ID>"],
+          channels: {
+            "<ISSUES_FORUM_CHANNEL_ID>": { enabled: true },
+            "<PRS_FORUM_CHANNEL_ID>": { enabled: true },
+            "<CI_ALERTS_CHANNEL_ID>": { enabled: true },
+            "<ADMIN_CHANNEL_ID>": { enabled: true },
+          },
+        },
+      },
+      // Approval buttons must survive long review waits.
+      agentComponents: {
+        ttlMs: 86400000, // 24h (documented cap)
+      },
+    },
+  },
+
+  // ── Gateway HTTP hooks (receiver → gateway) ────────────────────
+  hooks: {
+    enabled: true,
+    token: "<LONG_RANDOM_HOOK_TOKEN>",
+    path: "/hooks",
+    allowedAgentIds: ["stackot"],
+    allowRequestSessionKey: false,
+  },
+
+  // ── ACP workers ────────────────────────────────────────────────
+  plugins: {
+    entries: {
+      acpx: {
+        enabled: true,
+      },
+    },
+  },
+  acp: {
+    // Restrict which external harnesses the skill can spawn.
+    allowedAgents: ["codex"],
+  },
+
+  // ── Sub-agent / worker defaults ────────────────────────────────
+  // Worker runs are bounded; timeout is enforced per spawn.
+  // runTimeoutSeconds is passed per-call by the skill (3600).
+}

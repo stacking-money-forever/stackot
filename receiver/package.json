@@ -1,0 +1,10 @@
+{
+  "name": "@stackot/receiver",
+  "module": "src/server.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "^1.4.0",
+    "typescript": "^7.0.2"
+  }
+}
