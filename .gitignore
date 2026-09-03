@@ -4,5 +4,6 @@ receiver/config.json
 receiver/bun.lock
 receiver/node_modules/
 .env
+.env.save
 *.sqlite
 *.sqlite-*
