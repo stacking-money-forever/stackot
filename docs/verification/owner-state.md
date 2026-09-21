@@ -40,6 +40,22 @@ Two candidate rows were opened by this wave's findings. The first is now **done*
 
 Then the remaining P1 local rows from `docs/atomic-completion.md`: S39 (redaction), S41 (health split), S42 (telemetry), S43 (metrics), S46 (backup), plus B01–B03. S37 is effectively satisfied by the committed scripts. S38's CI evidence exists for the current SHA but should be re-stated when S21-era routing lands in a release candidate.
 
+## Observability and recovery bundle (S39, S41, S42, S43, S46) — closed
+
+- S39 (`ea9087d`): configured secrets are masked in logs **and** in stored `last_error`; the leak was real (stderr showed `path: "…/<token>/repos/…"`).
+- S41 (`991518d`): liveness / readiness / status split — a dead Gateway keeps intake accepting and shows up as `degraded` on `/status`, never as a readiness failure.
+- S42 (`5fbb946`, ACCEPT after one narrowed retry): structured `delivery.*` and `routing.fallback` JSON lines correlated by delivery id; the retry backoff schedule moved to a single owner (`outbox.ts` `retryDelayMs`) with a drift assertion tying telemetry to the persisted `next_attempt_at`.
+- S43 (`92d3716`): `Outbox.stats()` plus a periodic `queue.metrics` line and queue numbers on `/status`.
+- S46 (`8b793b9`): consistent standalone snapshots via `VACUUM INTO`, with a CLI; the probe showed a naive file copy of the WAL-mode outbox yields a database that will not open.
+
+Baseline at close-out: `4b56bf9`, `bun test` 271 pass / 939 assertions across 26 files, `bun run typecheck` clean, `bun run build` emits `dist/server.js`, CI green on the pushed SHA.
+
+Still open from the findings of this wave: **outbox-failure recovery or readiness failure** (S09B) — after an induced outbox I/O failure the receiver keeps answering `/healthz` 200 and `/readyz` ready while new deliveries get 503, because `ready()` is a plain `SELECT 1`. The bundle did not fix it; `/status` now at least carries queue numbers but nothing detects an unwritable outbox.
+
+## Remaining local rows
+
+S38's CI evidence exists for the current SHA; the P1 rows still untouched are B01 (per-repo permission separation), B02 (per-repo concurrency cap), B03 (GitHub 429 Retry-After), B04 (alerting), B05 (status command), and the C-series. The deployment rows S44–S48 depend on a host and on the backup artifact just built.
+
 ## Blocked, with evidence
 
 - M2–M4 (S23–S52) need the real runtime: `which openclaw acpx` finds neither binary, no process listens on 9377 or 18789, and no Discord app, GitHub webhook or host/DNS authority exists in this session. Caddy is installed but nothing else.
