@@ -138,4 +138,20 @@ Envelope (owner decision): the row's own scope is `mapping.ts` + `mapping.test.t
 
 Required behaviour for the worker: the general-discussion comments are read from the issues comments surface for pull requests as well as issues, while the item body still comes from the surface that carries it. The owner will reject a candidate that "fixes" this by fetching both comment surfaces and merging them without a stated reason, or that weakens the existing `findThreadId` semantics.
 
-Status: contract written; not yet launched.
+Status: launched 2026-09-21 from baseline `00f5fb2`. Task checkout `/Users/justn/dev/.worktrees/stackot-s17-20260921` on the pre-existing empty row branch `codex/stackot-s17-20260921`, fast-forwarded from `1259895` to the baseline before launch. `herdr worktree create --label stackot-s17 --no-focus` provisioned workspace `w5Q` with root pane `w5Q:p1` rooted at the checkout (same documented placement deviation as S12/S13). Foreground argv verified from the process table: `devin --model swe-2 --permission-mode dangerous --prompt-file …/s17-launch.txt` (pid 80512), pane footer `SWE-2 High`, exactly one worker. `herdr agent start` again timed out waiting for startup while the real process ran; no relaunch, no model change (fourth occurrence: S01, S12, S13, S17).
+
+### S17 decision — ACCEPT, no retry needed
+
+Candidate: `receiver/src/mapping.ts` modified, `receiver/test/mapping.test.ts` new; nothing else changed, HEAD unchanged at `00f5fb2` — the worker did not commit. The delta is seven lines of behaviour: `const commentsKind = kind === "pulls" ? "issues" : kind;` feeds the comments request while the item body still comes from `${kind}/${number}`, plus an optional `opts: { apiBase?: string } = {}` seam defaulting to `https://api.github.com`. No `server.ts` change was needed, as the contract predicted.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/mapping.test.ts` 4 pass / 14 assertions, `bun test` 111 pass / 234 assertions across 14 files (S13 left it at 107).
+
+Oracle discrimination check (owner, disposable copy outside the candidate): reverting only `commentsKind` to the previous `${kind}` makes 2 of the 4 mapping tests fail — the URL-contract test and the PR discussion-comment resolution test — so the new oracle genuinely detects the defect it was written for rather than passing vacuously.
+
+Test quality: a local `Bun.serve` stub records every request, so the test asserts observed paths (PR comments from `/issues/{n}/comments` with `per_page=20`, never `/pulls/{n}/comments`), the resolved thread id, the issue-path regression, and the bearer header on each request. No global `fetch` patching and no live network.
+
+Owner integration: both files copied verbatim into the completion checkout and verified byte-identical by md5 (two MATCH). Completion-side oracles: typecheck clean, 111 pass / 234 assertions, `bun run build` emits `dist/server.js` (18.95 KB).
+
+Residual risk accepted with the row: this lookup is verified at contract level (evidence class S) only. `server.ts` calls `fetchItem` without an `apiBase`, so the running receiver always talks to the live GitHub API, which means an end-to-end proof of reverse-link routing needs real GitHub credentials — the same boundary as S49. A candidate follow-up row (not part of S17) is to let the receiver take an API base from configuration so a disposable integration environment can point it at a stub; that would also make the mapping path testable at the process level.
+
+Worker lifecycle: the S17 worker settled `idle` after writing its receipt; workspace `w5Q` (label `stackot-s17`) was closed after integration and the task worktree is retained.
