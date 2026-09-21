@@ -58,6 +58,35 @@ describe("normalize", () => {
   });
 });
 
+describe("routing classification (S16)", () => {
+  const issuePayload = { issue: { number: 42, title: "t", html_url: "u", state: "open" } };
+  const prPayload = { pull_request: { number: 7, title: "t", html_url: "u", state: "open" } };
+
+  test.each([
+    ["opened", "channel"],
+    ["edited", "thread"],
+    ["closed", "thread"],
+    ["reopened", "thread"],
+  ] as const)("issues.%s → targetKind %s", (action, kind) => {
+    const ev = normalize("issues", repo, action, issuePayload);
+    expect(ev).not.toBeNull();
+    expect(ev!.targetKind).toBe(kind);
+    expect(ev!.createThread).toBeUndefined();
+  });
+
+  test.each([
+    ["opened", "channel"],
+    ["edited", "thread"],
+    ["synchronize", "thread"],
+    ["closed", "thread"],
+  ] as const)("pull_request.%s → targetKind %s", (action, kind) => {
+    const ev = normalize("pull_request", repo, action, prPayload);
+    expect(ev).not.toBeNull();
+    expect(ev!.targetKind).toBe(kind);
+    expect(ev!.createThread).toBeUndefined();
+  });
+});
+
 describe("mapping", () => {
   test("threadTitle clamps to 100 chars", () => {
     const long = "제".repeat(120);

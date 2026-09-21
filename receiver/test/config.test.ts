@@ -72,4 +72,164 @@ describe("loadConfig", () => {
     const path = await writeConfig(rest);
     await expect(loadConfigWith(path)).rejects.toThrow("agentId");
   });
+
+  const invalidSecrets: Record<string, unknown> = {
+    missing: undefined,
+    null: null,
+    "empty string": "",
+    "whitespace-only string": " \t\n ",
+    number: 12345,
+    boolean: true,
+    object: { nested: true },
+  };
+  for (const [label, secret] of Object.entries(invalidSecrets)) {
+    test(`rejects githubWebhookSecret: ${label}`, async () => {
+      const path = await writeConfig({ ...base, githubWebhookSecret: secret });
+      await expect(loadConfigWith(path)).rejects.toThrow("githubWebhookSecret");
+    });
+  }
+
+  test("preserves githubWebhookSecret bytes verbatim", async () => {
+    const path = await writeConfig({ ...base, githubWebhookSecret: "  padded-secret\t" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.githubWebhookSecret).toBe("  padded-secret\t");
+  });
+
+  test("rejects githubWebhookSecret that is an angle-bracket placeholder after trim", async () => {
+    for (const secret of ["<WEBHOOK_SECRET>", "  <anything>\t"]) {
+      const path = await writeConfig({ ...base, githubWebhookSecret: secret });
+      await expect(loadConfigWith(path)).rejects.toThrow("githubWebhookSecret");
+    }
+  });
+
+  test("accepts githubWebhookSecret containing angle brackets as ordinary text", async () => {
+    const path = await writeConfig({ ...base, githubWebhookSecret: "real-secret<with>brackets" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.githubWebhookSecret).toBe("real-secret<with>brackets");
+  });
+
+  test("rejects placeholder openclawHookToken", async () => {
+    const path = await writeConfig({ ...base, openclawHookToken: "  <HOOK_TOKEN>  " });
+    await expect(loadConfigWith(path)).rejects.toThrow("openclawHookToken");
+  });
+
+  test("accepts openclawHookToken containing angle brackets", async () => {
+    const path = await writeConfig({ ...base, openclawHookToken: "real<tok>en" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.openclawHookToken).toBe("real<tok>en");
+
+    const wrapped = await writeConfig({ ...base, openclawHookToken: "<a><b>" });
+    const cfg2 = await loadConfigWith(wrapped);
+    expect(cfg2.openclawHookToken).toBe("<a><b>");
+  });
+
+  test("rejects githubToken that is a single placeholder", async () => {
+    const path = await writeConfig({ ...base, githubToken: "  <your-token-here>  " });
+    await expect(loadConfigWith(path)).rejects.toThrow("githubToken");
+  });
+
+  test("accepts githubToken containing brackets as non-placeholder", async () => {
+    const path = await writeConfig({ ...base, githubToken: "ghp_abc<def>" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.githubToken).toBe("ghp_abc<def>");
+  });
+
+  test("accepts githubToken '<a><b>' as non-placeholder", async () => {
+    const path = await writeConfig({ ...base, githubToken: "<a><b>" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.githubToken).toBe("<a><b>");
+  });
+
+  test("rejects ciAlertsChannelId <...> placeholder", async () => {
+    const path = await writeConfig({ ...base, ciAlertsChannelId: "  <ci-alerts>  " });
+    await expect(loadConfigWith(path)).rejects.toThrow("ciAlertsChannelId");
+  });
+
+  test("accepts ciAlertsChannelId containing brackets as non-placeholder", async () => {
+    const path = await writeConfig({ ...base, ciAlertsChannelId: "123<456>" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.ciAlertsChannelId).toBe("123<456>");
+
+    const wrapped = await writeConfig({ ...base, ciAlertsChannelId: "<a><b>" });
+    const cfg2 = await loadConfigWith(wrapped);
+    expect(cfg2.ciAlertsChannelId).toBe("<a><b>");
+  });
+
+  test("rejects adminChannelId placeholder", async () => {
+    for (const adminChannelId of ["<admin-channel-id>", "  <123>  "]) {
+      const path = await writeConfig({ ...base, adminChannelId });
+      await expect(loadConfigWith(path)).rejects.toThrow("adminChannelId");
+    }
+  });
+
+  test("accepts adminChannelId with brackets that is not a single placeholder", async () => {
+    const path = await writeConfig({ ...base, adminChannelId: "<a><b>" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.adminChannelId).toBe("<a><b>");
+  });
+
+  test("preserves boundary ports 1 and 65535", async () => {
+    for (const port of [1, 65535]) {
+      const path = await writeConfig({ ...base, port });
+      const cfg = await loadConfigWith(path);
+      expect(cfg.port).toBe(port);
+    }
+  });
+
+  const invalidPorts: Record<string, unknown> = {
+    zero: 0,
+    negative: -1,
+    "above max": 65536,
+    fractional: 9377.5,
+    string: "9377",
+    boolean: true,
+    null: null,
+    object: { port: 9377 },
+    array: [9377],
+  };
+  for (const [label, port] of Object.entries(invalidPorts)) {
+    test(`rejects port: ${label}`, async () => {
+      const path = await writeConfig({ ...base, port });
+      await expect(loadConfigWith(path)).rejects.toThrow("port");
+    });
+  }
+
+  const invalidHooksUrls: Record<string, unknown> = {
+    missing: undefined,
+    null: null,
+    "empty string": "",
+    "whitespace-only string": " \t\n ",
+    "leading space": " http://127.0.0.1:18789/hooks",
+    "trailing tab": "http://127.0.0.1:18789/hooks\t",
+    "relative path": "/hooks",
+    "no scheme": "example.com/hooks",
+    "bare host:port": "127.0.0.1:18789/hooks",
+    "scheme-like non-http": "localhost:18789/hooks",
+    malformed: "http://",
+    "ftp protocol": "ftp://127.0.0.1:18789/hooks",
+    "file protocol": "file:///etc/passwd",
+    number: 12345,
+    boolean: true,
+    object: { url: "http://127.0.0.1:18789/hooks" },
+    array: ["http://127.0.0.1:18789/hooks"],
+  };
+  for (const [label, url] of Object.entries(invalidHooksUrls)) {
+    test(`rejects openclawHooksUrl: ${label}`, async () => {
+      const path = await writeConfig({ ...base, openclawHooksUrl: url });
+      await expect(loadConfigWith(path)).rejects.toThrow("openclawHooksUrl");
+    });
+  }
+
+  test("preserves valid http loopback and https hooks URLs byte-for-byte", async () => {
+    const urls = [
+      "http://127.0.0.1:18789/hooks",
+      "http://localhost:18789/hooks?x=1#frag",
+      "https://gw.internal.example.com:8443/hooks/path?q=a%20b",
+    ];
+    for (const url of urls) {
+      const path = await writeConfig({ ...base, openclawHooksUrl: url });
+      const cfg = await loadConfigWith(path);
+      expect(cfg.openclawHooksUrl).toBe(url);
+    }
+  });
 });

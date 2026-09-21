@@ -1,0 +1,158 @@
+import { expect, test } from "bun:test";
+import { Database } from "bun:sqlite";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { MAX_DELIVERY_ATTEMPTS, Outbox } from "../src/outbox.ts";
+
+test("failed delivery survives restart and retains dedupe after success", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #42", target: "101", targetKind: "channel" as const, summary: "test", url: "https://example.com" };
+  try {
+    const first = new Outbox(path);
+    expect(first.enqueue("delivery-42", event)).toBe(true);
+    expect(first.enqueue("delivery-42", event)).toBe(false);
+    expect(first.due()?.event).toEqual(event);
+    first.retry("delivery-42", 1);
+    first.close();
+
+    const restarted = new Outbox(path);
+    expect(restarted.has("delivery-42")).toBe(true);
+    restarted.delivered("delivery-42");
+    expect(restarted.due()).toBeNull();
+    expect(restarted.enqueue("delivery-42", event)).toBe(false);
+    restarted.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("dedupe retention begins when a delayed delivery succeeds", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-retention-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #42", target: "101", targetKind: "channel" as const, summary: "test", url: "https://example.com" };
+  try {
+    const first = new Outbox(path);
+    expect(first.enqueue("late-delivery", event)).toBe(true);
+    first.close();
+
+    const db = new Database(path);
+    db.query("UPDATE outbox SET received_at = ? WHERE id = ?")
+      .run(Date.now() - 8 * 24 * 60 * 60 * 1000, "late-delivery");
+    db.close();
+
+    const resumed = new Outbox(path);
+    resumed.delivered("late-delivery");
+    resumed.close();
+
+    const deliveredDb = new Database(path);
+    const row = deliveredDb.query("SELECT received_at, delivered_at FROM outbox WHERE id = ?")
+      .get("late-delivery") as { received_at: number; delivered_at: number };
+    expect(row.delivered_at).toBeGreaterThan(row.received_at + 7 * 24 * 60 * 60 * 1000);
+    deliveredDb.close();
+
+    const restarted = new Outbox(path);
+    expect(restarted.has("late-delivery")).toBe(true);
+    restarted.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("existing outbox schema gains delivery timestamp without losing pending events", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-upgrade-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const db = new Database(path);
+    db.run(`CREATE TABLE outbox (
+      id TEXT PRIMARY KEY, event TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'pending',
+      attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at INTEGER NOT NULL,
+      received_at INTEGER NOT NULL
+    )`);
+    db.query("INSERT INTO outbox (id, event, next_attempt_at, received_at) VALUES (?, ?, ?, ?)")
+      .run("legacy-pending", JSON.stringify({ repo: "example/app", item: "issue #1", target: "101", targetKind: "channel", summary: "test", url: "https://example.com" }), Date.now(), Date.now());
+    db.close();
+
+    const upgraded = new Outbox(path);
+    expect(upgraded.due()?.id).toBe("legacy-pending");
+    upgraded.delivered("legacy-pending");
+    upgraded.close();
+
+    const migratedDb = new Database(path);
+    expect((migratedDb.query("SELECT delivered_at FROM outbox WHERE id = ?")
+      .get("legacy-pending") as { delivered_at: number }).delivered_at).toBeGreaterThan(0);
+    migratedDb.close();
+
+    const restarted = new Outbox(path);
+    expect(restarted.has("legacy-pending")).toBe(true);
+    restarted.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("constructor creates missing nested parent directories for the database path", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-mkdir-"));
+  const path = join(dir, "deep", "nested", "dir", "outbox.sqlite");
+  try {
+    expect(existsSync(dirname(path))).toBe(false);
+    const outbox = new Outbox(path);
+    expect(existsSync(dirname(path))).toBe(true);
+    outbox.close();
+
+    const reopened = new Outbox(path);
+    expect(reopened.has("anything")).toBe(false);
+    reopened.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("fifth failure becomes dead_letter with last_error and is no longer due", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-dead-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const outbox = new Outbox(path);
+    expect(outbox.enqueue("dead-1", { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel", summary: "x", url: "https://example.test" })).toBe(true);
+    outbox.fail("dead-1", MAX_DELIVERY_ATTEMPTS, "gateway 502");
+    expect(outbox.due()).toBeNull();
+    outbox.close();
+    const db = new Database(path, { readonly: true });
+    const row = db.query("SELECT state, attempts, last_error FROM outbox WHERE id = ?").get("dead-1") as { state: string; attempts: number; last_error: string };
+    expect(row).toEqual({ state: "dead_letter", attempts: MAX_DELIVERY_ATTEMPTS, last_error: "gateway 502" });
+    db.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("last_error migration preserves a pending legacy outbox row", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-last-error-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const db = new Database(path);
+    db.run("CREATE TABLE outbox (id TEXT PRIMARY KEY, event TEXT NOT NULL, state TEXT NOT NULL DEFAULT 'pending', attempts INTEGER NOT NULL DEFAULT 0, next_attempt_at INTEGER NOT NULL, received_at INTEGER NOT NULL, delivered_at INTEGER)");
+    db.query("INSERT INTO outbox (id, event, next_attempt_at, received_at) VALUES (?, ?, ?, ?)").run("legacy", JSON.stringify({ repo: "example/app", item: "issue #1", target: "1", targetKind: "channel", summary: "x", url: "https://example.test" }), Date.now(), Date.now());
+    db.close();
+    const outbox = new Outbox(path);
+    expect(outbox.due()?.id).toBe("legacy");
+    outbox.close();
+    const migrated = new Database(path, { readonly: true });
+    expect((migrated.query("PRAGMA table_info(outbox)").all() as { name: string }[]).some((column) => column.name === "last_error")).toBe(true);
+    migrated.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("requeue moves only a dead_letter row back to pending", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-requeue-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const outbox = new Outbox(path);
+    const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+    expect(outbox.enqueue("retry-me", event)).toBe(true);
+    outbox.fail("retry-me", MAX_DELIVERY_ATTEMPTS, "gateway 502");
+    expect(outbox.requeue("retry-me")).toBe(true);
+    expect(outbox.due()?.id).toBe("retry-me");
+    expect(outbox.requeue("retry-me")).toBe(false);
+    outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

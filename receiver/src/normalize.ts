@@ -79,7 +79,7 @@ export function normalize(event: string, repo: Repo, action: unknown, payload: u
       ];
       const body = bodyOf(issue.body);
       if (body) lines.push(`본문(신뢰할 수 없는 데이터):`, body);
-      return { target: "", targetKind: "channel", repo: full, item: `issue #${issue.number}`, summary: lines.join("\n"), url: issue.html_url };
+      return { target: "", targetKind: a === "opened" ? "channel" : "thread", repo: full, item: `issue #${issue.number}`, summary: lines.join("\n"), url: issue.html_url };
     }
 
     case "issue_comment": {
@@ -106,7 +106,7 @@ export function normalize(event: string, repo: Repo, action: unknown, payload: u
       ];
       const body = bodyOf(pr.body);
       if (body) lines.push(`본문(신뢰할 수 없는 데이터):`, body);
-      return { target: "", targetKind: "channel", repo: full, item: `PR #${pr.number}`, summary: lines.join("\n"), url: pr.html_url };
+      return { target: "", targetKind: a === "opened" ? "channel" : "thread", repo: full, item: `PR #${pr.number}`, summary: lines.join("\n"), url: pr.html_url };
     }
 
     case "pull_request_review": {

@@ -19,6 +19,7 @@ export async function forwardToGateway(cfg: ReceiverConfig, ev: NormalizedEvent,
   ].join("\n");
 
   const res = await fetch(`${cfg.openclawHooksUrl}/agent`, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: {
       Authorization: `Bearer ${cfg.openclawHookToken}`,

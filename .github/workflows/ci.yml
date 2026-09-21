@@ -1,0 +1,19 @@
+name: receiver-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  receiver:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: receiver
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run build

@@ -51,6 +51,39 @@ export async function loadConfig(): Promise<ReceiverConfig> {
   for (const key of required) {
     if (!cfg[key]) throw new Error(`config missing: ${key}`);
   }
+  if (typeof cfg.githubWebhookSecret !== "string" || cfg.githubWebhookSecret.trim() === "") {
+    throw new Error("config missing: githubWebhookSecret (non-empty string required)");
+  }
+  if (/^<[^<>]*>$/.test(cfg.githubWebhookSecret.trim())) {
+    throw new Error("config invalid: githubWebhookSecret is an angle-bracket placeholder; set a real secret");
+  }
+  if (/^<[^<>]*>$/.test(cfg.openclawHookToken.trim())) {
+    throw new Error("config openclawHookToken is an unfilled placeholder like <HOOK_TOKEN> — set the real hooks.token value");
+  }
+  if (/^<[^<>]*>$/.test(cfg.githubToken.trim())) {
+    throw new Error("config githubToken is still a <...> placeholder");
+  }
+  if (/^<[^<>]*>$/.test(cfg.ciAlertsChannelId.trim())) {
+    throw new Error("config ciAlertsChannelId must be a real channel ID, not a <...> placeholder");
+  }
+  if (typeof cfg.adminChannelId === "string" && /^<[^<>]*>$/.test(cfg.adminChannelId.trim())) {
+    throw new Error("config adminChannelId must be a real channel ID, not a <...> placeholder");
+  }
+  if (typeof cfg.openclawHooksUrl !== "string" || cfg.openclawHooksUrl.trim() === "") {
+    throw new Error("config openclawHooksUrl must be a non-blank absolute http(s) URL");
+  }
+  if (cfg.openclawHooksUrl !== cfg.openclawHooksUrl.trim()) {
+    throw new Error("config openclawHooksUrl must not have leading or trailing whitespace");
+  }
+  let hooksProtocol: string;
+  try {
+    hooksProtocol = new URL(cfg.openclawHooksUrl).protocol;
+  } catch {
+    throw new Error(`config openclawHooksUrl must be an absolute http(s) URL, got: ${JSON.stringify(cfg.openclawHooksUrl)}`);
+  }
+  if (hooksProtocol !== "http:" && hooksProtocol !== "https:") {
+    throw new Error(`config openclawHooksUrl protocol must be http: or https:, got: ${hooksProtocol}`);
+  }
   if (!cfg.repos || typeof cfg.repos !== "object" || Object.keys(cfg.repos).length === 0) {
     throw new Error("config missing: repos (at least one owner/name entry)");
   }
@@ -63,6 +96,10 @@ export async function loadConfig(): Promise<ReceiverConfig> {
     }
   }
   cfg.host ??= "127.0.0.1";
-  cfg.port ??= 9377;
+  if (cfg.port === undefined) {
+    cfg.port = 9377;
+  } else if (!Number.isInteger(cfg.port) || cfg.port < 1 || cfg.port > 65535) {
+    throw new Error(`config port must be an integer in range 1-65535, got: ${JSON.stringify(cfg.port)}`);
+  }
   return cfg;
 }

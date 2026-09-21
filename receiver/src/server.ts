@@ -13,13 +13,19 @@
  *   5. Forward to Gateway /hooks/agent
  */
 import { loadConfig, type ReceiverConfig } from "./config.ts";
-import { verifySignature, Dedupe } from "./verify.ts";
+import { verifySignature } from "./verify.ts";
+import { PayloadTooLargeError, readBodyWithinLimit, requireDeliveryId } from "./ingress.ts";
+import { Outbox } from "./outbox.ts";
+import { DeliveryDrainer } from "./delivery.ts";
 import { normalize, type NormalizedEvent } from "./normalize.ts";
 import { findThreadId, fetchItem } from "./mapping.ts";
 import { forwardToGateway } from "./gateway.ts";
 
 const cfg: ReceiverConfig = await loadConfig();
-const dedupe = new Dedupe(new URL("../var/dedupe.sqlite", import.meta.url).pathname);
+const outbox = new Outbox(process.env.STACKOT_OUTBOX_PATH ?? new URL("../var/outbox.sqlite", import.meta.url).pathname);
+const drainer = new DeliveryDrainer(outbox, async (job) => forwardToGateway(cfg, job.event, job.id));
+const retryTimer = setInterval(() => { void drainer.drain(); }, 1000);
+void drainer.drain();
 
 async function resolveTarget(ev: NormalizedEvent): Promise<NormalizedEvent> {
   const repoCfg = cfg.repos[ev.repo];
@@ -59,8 +65,6 @@ function titleFrom(ev: NormalizedEvent): string {
   return `[${ev.repo}#${number}] ${subject}`.slice(0, 100);
 }
 
-let processing = 0;
-
 Bun.serve({
   hostname: cfg.host,
   port: cfg.port,
@@ -71,21 +75,37 @@ Bun.serve({
       return new Response("ok");
     }
 
+    if (req.method === "GET" && url.pathname === "/readyz") {
+      try {
+        outbox.ready();
+        return new Response("ready");
+      } catch {
+        return new Response("outbox unavailable", { status: 503 });
+      }
+    }
+
     if (req.method !== "POST" || url.pathname !== "/webhook") {
       return new Response("not found", { status: 404 });
     }
 
-    const raw = new Uint8Array(await req.arrayBuffer());
+    let raw: Uint8Array;
+    try {
+      raw = await readBodyWithinLimit(req.body, 1_048_576);
+    } catch (error) {
+      if (error instanceof PayloadTooLargeError) return new Response("payload too large", { status: 413 });
+      throw error;
+    }
     const sig = req.headers.get("X-Hub-Signature-256");
     if (!verifySignature(cfg.githubWebhookSecret, raw, sig)) {
       return new Response("invalid signature", { status: 401 });
     }
 
-    const deliveryId = req.headers.get("X-GitHub-Delivery") ?? "";
-    if (!dedupe.first(deliveryId)) {
-      return new Response("duplicate", { status: 200 });
+    let deliveryId: string;
+    try {
+      deliveryId = requireDeliveryId(req.headers);
+    } catch {
+      return new Response("missing delivery id", { status: 400 });
     }
-
     const event = req.headers.get("X-GitHub-Event") ?? "";
     let payload: unknown;
     try {
@@ -93,22 +113,21 @@ Bun.serve({
     } catch {
       return new Response("bad json", { status: 400 });
     }
-    const repo = (payload as { repository?: { full_name?: string } }).repository;
-    if (!repo?.full_name) return new Response("no repo", { status: 200 });
+    const repo = (payload as { repository?: { full_name?: unknown } }).repository;
+    if (!repo || typeof repo.full_name !== "string" || repo.full_name.trim() === "") {
+      return new Response("invalid repository", { status: 400 });
+    }
+
+    if (outbox.has(deliveryId)) {
+      return new Response("duplicate", { status: 200 });
+    }
 
     const ev = normalize(event, { full_name: repo.full_name }, (payload as { action?: unknown }).action, payload);
     if (!ev) return new Response("ignored", { status: 200 });
 
     const routed = await resolveTarget(ev);
-    processing++;
-    // Fire-and-forget: GitHub gets 200 now; admission is async by design.
-    forwardToGateway(cfg, routed, deliveryId)
-      .then((r) => {
-        if (!r.ok) console.error(`gateway forward failed (${r.status}):`, r.body);
-        else console.log(`forwarded ${routed.repo} ${routed.item} → ${routed.target || routed.createThread?.forumChannelId}`);
-      })
-      .catch((err) => console.error("gateway forward error:", err))
-      .finally(() => processing--);
+    if (!outbox.enqueue(deliveryId, routed)) return new Response("duplicate", { status: 200 });
+    void drainer.drain();
 
     return new Response("accepted", { status: 200 });
   },
@@ -117,10 +136,12 @@ Bun.serve({
 console.log(`stackot receiver listening on ${cfg.host}:${cfg.port}`);
 
 process.on("SIGTERM", () => {
-  dedupe.close();
+  clearInterval(retryTimer);
+  outbox.close();
   process.exit(0);
 });
 process.on("SIGINT", () => {
-  dedupe.close();
+  clearInterval(retryTimer);
+  outbox.close();
   process.exit(0);
 });
