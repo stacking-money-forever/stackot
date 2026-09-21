@@ -526,3 +526,13 @@ Residual risks accepted with the row:
 - The ACK no longer implies the destination was resolved; it implies the event is durably stored. That is the intended contract change and it is what S21b's completion condition asked for.
 
 Worker lifecycle: the S21b worker settled with its receipt written; workspace `w61` (label `stackot-s21b`) was closed after integration and the task worktree is retained.
+
+## S39 launch contract — redact secrets from logs and stored errors
+
+Baseline: `9fa80cf` (S21b integrated). Task checkout `/Users/justn/dev/.worktrees/stackot-s39-20260921`, branch `codex/stackot-s39-20260921`, created with `herdr worktree create --label stackot-s39 --no-focus --trust-repository`; workspace and pane IDs are read back from the create result.
+
+Owner-observed defect: nothing redacts secrets today. A hook token embedded in `openclawHooksUrl` (a shape operators do use) ends up inside the connection-failure message, and that message is both stored as the row's `last_error` and printed to stderr — so a configured secret can persist in the operator-visible database and logs.
+
+Owner envelope: `redact.ts` + `redact.test.ts` as the row nominates, plus `server.ts` wiring and a new `server.redact.integration.test.ts`. The wiring is what makes the row load-bearing in two places at once: the forward callback redacts the error message **before rethrowing**, so the drainer stores a clean `last_error` without `delivery.ts` being touched, and the server's own error logs redact before printing. The integration test induces the leak with an unreachable gateway and a token-in-URL config, then asserts the secret is absent from both the child's stderr and the stored `last_error`.
+
+Status: contract written; launch follows.

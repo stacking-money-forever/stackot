@@ -1,0 +1,55 @@
+S39 — 로그·저장 메시지 secret 마스킹 (owner launch contract, wave 03)
+
+Task: ONE changeset. 설정 secret이 로그나 outbox의 `last_error`에 원문으로 남지 않게 한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (오너가 소스로 확인한 사실)
+- 현재 로그/저장 경로에 redaction이 없다. 예를 들어 `openclawHooksUrl`에 hook token이 쿼리로 들어간 형태(운영자가 흔히 쓰는 형태)로 설정하면, gateway 연결 실패 오류 메시지에 URL이 그대로 담긴다. 그 메시지는 (a) drainer가 `last_error`로 DB에 저장하고 (b) `console.error`로 stderr에 남긴다.
+- 즉 secret 원문이 운영자 화면과 DB에 남을 수 있다.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/redact.ts (신규)
+- receiver/test/redact.test.ts (신규)
+- receiver/src/server.ts (로그/전달 오류 마스킹 배선)
+- receiver/test/server.redact.integration.test.ts (신규)
+
+금지: delivery.ts, outbox.ts, router.ts, mapping.ts, normalize.ts, config.ts, gateway.ts, ingress.ts, replay.ts, package.json, 기존 테스트 파일 수정.
+
+## 요구 동작
+1. `redact.ts`에 순수 함수를 만든다. 예: `export function redact(text: string, secrets: readonly string[]): string`.
+   - 각 secret의 모든 출현을 고정 토큰(예: `[redacted]`)으로 치환한다.
+   - 빈 문자열/공백만 secret은 무시한다(빈 문자열 치환으로 텍스트가 망가지는 것 방지).
+   - secret 목록이 비어 있으면 입력을 그대로 반환한다.
+   - 긴 secret을 먼저 처리해 부분 겹침에서도 원문이 남지 않게 한다.
+2. `export function redactSecrets(cfg: ReceiverConfig): string[]` 같은 헬퍼로 마스킹 대상 secret 목록을 설정에서 뽑는다(githubWebhookSecret, openclawHookToken, githubToken 포함. 필요하면 더 추가).
+3. `server.ts` 배선 — 최소 두 곳:
+   - **전달 오류**: drainer에 넘기는 forward 콜백에서 forward 실패 시 오류 메시지를 redaction한 뒤 다시 던진다. 그래야 outbox의 `last_error`에 원문이 남지 않는다. (delivery.ts는 수정하지 않는다 — drainer가 저장하는 건 던져진 메시지이므로 콜백에서 정제하면 된다.)
+   - **로그**: 서버가 남기는 오류 로그(예: enqueue 실패, drain 실패, outbox 확인 실패)는 redaction을 거쳐 출력한다.
+4. 응답 본문은 지금처럼 내부 정보를 노출하지 않는다(S09B 계약 유지).
+5. 정상 경로 회귀 금지: 200 accepted/duplicate, 503 outbox unavailable, 라우팅 동작, 그리고 S09A/S09B/S21b 계약이 그대로다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/redact.test.ts test/server.redact.integration.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구
+### receiver/test/redact.test.ts (단위)
+- 단일 secret 1회/여러 회 출현 치환, 여러 secret 혼합, 겹치는 secret에서 긴 것 우선, 빈/공백 secret 무시, 빈 목록이면 원문 유지, secret이 없으면 원문 유지, 멀티라인 텍스트.
+- `redactSecrets(cfg)`가 세 secret을 모두 포함한다.
+### receiver/test/server.redact.integration.test.ts (프로세스)
+- 설정의 `openclawHooksUrl`에 hook token을 쿼리로 넣고(`http://127.0.0.1:1/hooks?token=<openclawHookToken>`), gateway를 도달 불가로 둔 뒤 webhook을 POST한다.
+- 서버 자식 프로세스의 **stderr를 수집**해, secret 원문이 로그에 없고 `[redacted]`가 나타나는지 단언한다.
+- 같은 secret이 그 delivery의 outbox `last_error`에 남지 않았는지 단언한다(원문 미포함).
+- 추가로: GitHub 토큰을 `githubToken`에 넣고 매핑 조회 실패를 유발했을 때도 그 토큰이 stderr에 남지 않는지 확인한다(가능한 방법으로; 불가하면 receipt에 왜 불가한지 기록).
+- 로컬 프로세스만 사용하고 실제 네트워크를 쓰지 않는다.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s39-receipt.md`: 변경 파일, 핵심 diff 요약, 마스킹 배선 위치, 실행한 명령과 결과, 남은 리스크(예: 로그 상관관계에서 어떤 값이 여전히 남는지).
+3. Todo는 최대 2개, 보고 300줄 이내.
