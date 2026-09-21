@@ -265,3 +265,27 @@ Owner envelope decision: the destination decision currently lives inline in `ser
 Routing table the owner specified, in priority order: unconfigured repo → admin; CI with a resolvable linked PR thread → that thread plus `noticeChannelId = ciAlertsChannelId`; CI otherwise → `ciAlertsChannelId`; opened issue/PR → `createThread` in that repo's forum with the existing title rule; follow-up resolved → that thread; follow-up unresolved or a throwing lookup → admin. The router decides only — no thread creation, no GitHub writes, no outbox or dedupe work.
 
 Status: contract written; launch follows.
+
+### S21 decision — ACCEPT, no retry needed
+
+Candidate: new `receiver/src/router.ts`, extended `receiver/test/routing.test.ts`, plus `server.ts`, `gateway.ts` and the `noticeChannelId` field in `normalize.ts`. Nothing outside the envelope changed and HEAD stayed at `d41a46b` — the worker did not commit. The worker ran the permitted cached `bun install`.
+
+Owner verified by reading every file and re-running every oracle. `router.ts` exposes `route(ev, deps)` with `resolveThreadId` injected, so it never touches the network; `titleFrom` moved there from `server.ts`. The table matches the owner's specification exactly, with one improvement the owner did not ask for but accepts: the follow-up branch guards the parsed number with `Number.isInteger(number) && number > 0`, which closes the old `NaN`-into-URL path. The CI branch keys off `item.startsWith("CI ")`, catches a throwing lookup and falls through to `#ci-alerts`. `server.ts` keeps only wiring: a `resolveThreadId` closure built from `fetchItem` + trust-aware `findThreadId`, then the decision applied to the event before enqueue. `gateway.ts` adds one `CI 알림 채널: <id>` line when the event carries a notice channel.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/routing.test.ts` 23 pass / 54 assertions, `bun test` **175 pass / 350 assertions** across 15 files (S20 left it at 162).
+
+Oracle discrimination check (owner, disposable copy outside the candidate): disabling the CI branch in `router.ts` fails 4 of the 23 routing assertions, so the table is detecting the rule rather than restating it.
+
+Owner runtime proof (throwaway script, real receiver process, stub gateway, no GitHub dependency): POST of an `issues opened` webhook → `200 accepted` and the persisted row carries `target: ""`, `targetKind: "channel"`, `createThread: { forumChannelId: "101", title: "[owner/repo#42] 로그인 오류" }`, with the gateway receiving `새 포럼 스레드 필요: 채널 101, 제목 "[owner/repo#42] 로그인 오류"`. POST of a `check_run` failure with no linked PR → `200 accepted`, row `target: "103"` (ci-alerts), no notice channel, gateway receiving `대상 스레드: 103`. So the routing decision survives into the outbox and into the forwarded message.
+
+Owner-applied delta (recorded, not part of the worker candidate): the pipeline comment at the top of `server.ts` still claimed "CI failure → #ci-alerts"; the owner corrected it to name the linked PR thread and the notice channel, then re-ran typecheck and the full suite in the completion checkout (175 pass / 350 assertions, build 22.93 KB).
+
+Residual risks accepted with the row: the PR-thread happy path (a CI failure whose linked PR thread actually resolves) can only be exercised against the live GitHub API, so it is proven at router level with an injected resolver and remains a contract-level claim; `noticeChannelId` is currently consumed only as one message line, so the agent still has to act on it; and the `unrouted` row (a channel-kind event that is neither an opened issue/PR nor CI) passes the event's own target through unchanged.
+
+### Owner-observed finding from S21 — resolution precedes persistence, with no lookup timeout (new candidate row)
+
+Reading the accepted wiring exposed a real M1-relevant gap that is **not** fixed here and is not part of S20–S22: `server.ts` awaits `route(...)` — and therefore the GitHub reverse-link lookup — **before** `outbox.enqueue`, and `mapping.ts`'s `fetchItem` sets no request timeout (unlike `gateway.ts`, which aborts at 10 s). A slow or hung GitHub API therefore delays both the webhook ACK and the persistence of the event. GitHub marks the delivery failed on its own timeout and redelivers, and the delivery-id dedupe covers that, so no event is silently lost, but the ACK durability that M1 claims is coupled to a third-party API.
+
+Proposed candidate row (owner, TODO in this ledger): persist the normalized event first and resolve the destination inside the drainer, add a bounded lookup timeout, and prove it with a hanging-GitHub probe plus a redelivery test. Do not fold this into S22, which is a documentation-truth row.
+
+Worker lifecycle: the S21 worker settled `idle` at its prompt with its report delivered; workspace `w5W` (label `stackot-s21`) was closed after integration and the task worktree is retained.
