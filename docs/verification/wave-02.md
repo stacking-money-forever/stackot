@@ -682,3 +682,19 @@ Owner integration: five files copied verbatim and md5-verified (five MATCH). Com
 Residual risks: readiness now performs a write probe, so a contended database can make `/readyz` slow up to `busy_timeout` — that is deliberately concentrated on the readiness endpoint and is the cost of the endpoint telling the truth; recovery is attempted at most once per interval, so a persistently broken database answers 503 until an operator or supervisor acts, which is the intended signal rather than a silent loop; the suite's runtime grew to ~50 s locally because the induction holds the write lock while the receiver waits out its timeout; and `Outbox.health()` reports the last write outcome, so a process that has never written reports healthy on the strength of construction alone.
 
 Worker lifecycle: the S09Bb worker settled with its receipt written; workspace `w5S` (label `stackot-s09bb`) was closed after integration and the task worktree is retained.
+
+### B01 decision — ACCEPT, no retry needed
+
+Baseline: `38b5d29`. Candidate: new `repo-policy.ts`, `repo-policy.test.ts` and `server.repo-policy.integration.test.ts`, plus `config.ts` (optional per-repo `githubToken` with validation), `mapping.ts` (a `token` override), `redact.ts` (repo tokens added to the secret list) and `server.ts` wiring; nothing outside the envelope, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `authorizeRepo` denies an unconfigured repo without minting a grant, prefers a repo's own token and marks the shared fallback as `tokenSource: "shared"`, and carries that repo's forum channel IDs so they cannot be mixed. `assertGrantForRepo` refuses a grant spent on another repo, making a cross-repo path fail closed rather than silently borrowing authority. `resolveThreadId` authorizes before any network access, asserts the grant, and passes the token as an explicit override, so an unconfigured repo produces no GitHub call at all.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, the three focused files 142 pass / 205 assertions, the new integration file 5 pass / 46 assertions, full suite **298 pass / 1057 assertions** across 28 files.
+
+Oracle discrimination check (owner, disposable copy with the pre-B01 `server.ts`): every observed request carries `Bearer shared-token` where the new tests demand `Bearer repo-a-token` / `Bearer repo-b-token`, and the cross-repo assertion fails too. That is literally the recorded failure trigger — one credential serving every repo.
+
+Owner integration: eight files copied verbatim and md5-verified (eight MATCH). Completion-side oracles: typecheck clean, 298 pass / 1057 assertions, `bun run build` emits `dist/server.js` (34.38 KB). CI runs on the push.
+
+Residual risks: a repo without its own token still uses the shared credential, which is now *visible* via `tokenSource` but not enforced — the operator decides per repo; nothing yet surfaces `tokenSource: "shared"` in telemetry or `/status`, so that belongs to a follow-up if the posture matters operationally; and the repo token is a PAT whose GitHub-side scope the receiver cannot verify, so least-privilege remains an operator responsibility.
+
+Worker lifecycle: the B01 worker settled with its receipt written; workspace `w5T` (label `stackot-b01`) was closed after integration and the task worktree is retained.
