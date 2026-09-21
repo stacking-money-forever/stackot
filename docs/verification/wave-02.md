@@ -644,3 +644,13 @@ Owner integration: both files copied verbatim and md5-verified (two MATCH). Comp
 Residual risks: `VACUUM INTO` rewrites the database, so its cost scales with size — fine for an outbox, and it takes a read transaction on the source, which does not block the receiver's writes; the destination must be on a filesystem with room for a full copy; the operation is not scheduled anywhere yet, so the backup cadence and retention policy belong to the deployment rows (S44/S47/S48); and because the destination is refused when it exists, a runbook must rotate names rather than reuse a path.
 
 Worker lifecycle: the S46 worker settled with its receipt written; workspace `w66` (label `stackot-s46`) was closed after integration and the task worktree is retained.
+
+## S09Bb launch contract — outbox failure recovery and honest readiness (wave 04)
+
+Baseline: `92d2693`. Task checkout `/Users/justn/dev/.worktrees/stackot-s09bb-20260921`, branch `codex/stackot-s09bb-20260921`, created with `herdr worktree create --label stackot-s09bb --no-focus --trust-repository`.
+
+This is the top open defect recorded from S09B, and the user asked for it to be closed locally now: after an outbox I/O failure the receiver answers 503 to every new delivery while `/healthz` stays 200 and `/readyz` stays `ready`, because `ready()` is a plain `SELECT 1` that never tests write capability. Nothing tells a supervisor to restart and nothing attempts to heal.
+
+Owner envelope: `outbox.ts` (health tracking, a write-capability `ready()`, an idempotent `recover()` that reopens and re-probes, no schema or signature change), `health.ts` (surface the outbox state in `/status`), `server.ts` (readiness must answer 503 while unhealthy and attempt recovery, liveness stays 200), plus the row's own test file strengthened. The integration assertion that carries this row is `/readyz` returning **503** during the induced failure where it previously returned 200, followed by recovery to 200 and a fresh accepted delivery once the cause is removed — using S09B's portable lock-holder induction.
+
+Status: contract written; launch follows.

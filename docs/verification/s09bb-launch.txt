@@ -1,0 +1,64 @@
+S09Bb — outbox 실패 복구와 readiness 정직성 (owner launch contract, wave 04)
+
+Task: ONE changeset. outbox 쓰기 실패 후 (a) readiness가 더 이상 정상이라고 말하지 않고, (b) 스스로 복구를 시도한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (오너가 실측으로 확인한 사실)
+- S09B 테스트로 outbox 쓰기가 실패하면 webhook은 503을 반환한다. 그런데 그 뒤에도 `/healthz`는 200이고 `/readyz`는 `ready`를 반환한다. 이유: `Outbox.ready()`가 단순 `SELECT 1`이라 "쓸 수 있는가"를 전혀 확인하지 않는다.
+- 즉 운영자는 정상이라고 보고받지만 새 전달은 전부 503으로 거부된다. 감독자가 재시작할 근거도, 스스로 회복할 경로도 없다.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/outbox.ts
+- receiver/src/health.ts
+- receiver/src/server.ts
+- receiver/test/outbox.test.ts (복구/상태 테스트 추가; 기존 테스트 약화 금지)
+- receiver/test/server.outbox.failure.integration.test.ts (기존 테스트 강화 + readiness/recovery 단언 추가)
+
+금지: delivery.ts, router.ts, mapping.ts, normalize.ts, config.ts, gateway.ts, ingress.ts, redact.ts, telemetry.ts, metrics.ts, replay.ts, backup.ts, package.json.
+
+## 요구 동작
+1. `Outbox`가 자신의 쓰기 가능 상태를 추적한다:
+   - `health(): { ok: boolean; lastError: string | null }` — 쓰기 시도가 실패하면 `ok=false` + 메시지 기록, 쓰기(또는 복구)가 성공하면 `ok=true`로 돌아온다.
+   - 스키마·컬럼·PRAGMA·기존 메서드 시그니처/동작은 바꾸지 않는다(추가만).
+2. `ready()`는 **쓰기 가능성**을 반영한다:
+   - 상태가 unhealthy면 false(또는 throw) → `/readyz` 503.
+   - healthy면 실제로 쓸 수 있는지 가벼운 write probe로 확인한다(예: `BEGIN IMMEDIATE` 후 `ROLLBACK`, 또는 heartbeat 행 insert+delete). probe 실패는 false.
+   - probe는 상시 잠금 경합과 오탐을 만들지 않아야 한다(짧게, 그리고 실패 시 상태를 unhealthy로 내린다).
+3. `recover()`:
+   - 연결을 닫고 다시 연 뒤 write probe로 검증한다. 성공하면 healthy로 복귀하고 true, 실패하면 false.
+   - 예외를 던지지 않는다(호출자가 /readyz 핸들러다). 실패 사유는 `health().lastError`로 남긴다.
+   - 반복 호출이 안전해야 한다(idempotent).
+4. `server.ts`:
+   - `/readyz`가 unhealthy일 때 503을 반환한다(문구는 짧게). healthy이면 기존처럼 200 `ready`.
+   - unhealthy를 감지하면 `recover()`를 시도하는 경로를 둔다(예: readiness 처리 안에서, 또는 주기 타이머). 무한 루프·과도한 재시도 금지.
+   - `/healthz`는 지금처럼 200(생존 신호)을 유지한다.
+   - `/status`가 outbox 상태(ok/lastError, secret 마스킹 적용)를 담는다.
+   - 기존 계약 회귀 금지: S09A(ACK 이전 커밋), S09B(실패 시 5xx·내부정보 비노출), S21b(먼저 저장 후 라우팅), S39(마스킹), S41(health/readiness/status 분리), S42/S43 계약.
+5. secret은 어디에도 원문으로 남지 않는다(S39의 redaction 사용).
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/outbox.test.ts test/server.outbox.failure.integration.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구
+### receiver/test/outbox.test.ts (추가)
+- 쓰기 실패를 유도(디렉터리를 읽기 전용으로 만드는 방식 등 결정적 방법)했을 때 `health().ok`가 false가 되고 lastError가 채워지며 `ready()`가 false가 된다.
+- 실패 원인을 제거하면 `recover()`가 true를 반환하고 `ready()`가 다시 true가 된다(복구 경로).
+- `recover()`를 두 번 호출해도 안전하다.
+- 기존 outbox 테스트(재시작 보존, TTL, 마이그레이션, drainer 연동, requeue, busy_timeout 경합, 백오프)는 그대로 통과한다.
+### receiver/test/server.outbox.failure.integration.test.ts (강화)
+- 기존 실패 유도(락 홀더)에서: webhook 5xx, `/readyz`가 **503**(이전에는 200이었다 — 이 단언이 이 행의 핵심이다), `/healthz`는 200, `/status`의 outbox 상태가 unhealthy.
+- 락을 풀고 복구가 일어나면: `/readyz`가 다시 200 `ready`, 새 delivery id가 200 accepted로 커밋된다.
+- 실패했던 delivery id는 여전히 흔적을 남기지 않는다(기존 단언 유지).
+- 로컬 프로세스만 사용하고 실제 네트워크를 쓰지 않는다.
+
+## 금지
+- 위 범위 밖 파일 수정, 스키마/컬럼 변경, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s09bb-receipt.md`: 변경 파일, 핵심 diff 요약, 복구 절차와 트리거, 실행한 명령과 결과, 남은 리스크(예: 복구가 실패할 때의 동작, probe 비용).
+3. Todo는 최대 2개, 보고 300줄 이내.
