@@ -4,6 +4,7 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { MAX_DELIVERY_ATTEMPTS, Outbox } from "../src/outbox.ts";
+import { DeliveryDrainer } from "../src/delivery.ts";
 
 test("failed delivery survives restart and retains dedupe after success", () => {
   const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-"));
@@ -139,6 +140,47 @@ test("last_error migration preserves a pending legacy outbox row", () => {
     const migrated = new Database(path, { readonly: true });
     expect((migrated.query("PRAGMA table_info(outbox)").all() as { name: string }[]).some((column) => column.name === "last_error")).toBe(true);
     migrated.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("drainer dead-letters a permanently failing job and due() stays empty", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-drain-dead-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const outbox = new Outbox(path);
+    expect(outbox.enqueue("flakey", { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel", summary: "x", url: "https://example.test" })).toBe(true);
+    const drainer = new DeliveryDrainer(outbox, async () => ({ ok: false, status: 502 }));
+    const db = new Database(path);
+    for (let i = 0; i < MAX_DELIVERY_ATTEMPTS; i++) {
+      await drainer.drain();
+      db.query("UPDATE outbox SET next_attempt_at = 0 WHERE id = ?").run("flakey");
+    }
+    const row = db.query("SELECT state, attempts, last_error FROM outbox WHERE id = ?").get("flakey") as { state: string; attempts: number; last_error: string | null };
+    expect(row.state).toBe("dead_letter");
+    expect(row.attempts).toBe(MAX_DELIVERY_ATTEMPTS);
+    expect(row.last_error).toBeTruthy();
+    db.close();
+    expect(outbox.due()).toBeNull();
+    outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("below-limit fail keeps the row pending, backs off, and returns to due()", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-fail-retry-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const outbox = new Outbox(path);
+    const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+    expect(outbox.enqueue("flap-1", event)).toBe(true);
+    outbox.fail("flap-1", 1, "boom");
+    const db = new Database(path);
+    const row = db.query("SELECT state, attempts FROM outbox WHERE id = ?").get("flap-1") as { state: string; attempts: number };
+    expect(row).toEqual({ state: "pending", attempts: 1 });
+    expect(outbox.due()).toBeNull();
+    db.query("UPDATE outbox SET next_attempt_at = 0 WHERE id = ?").run("flap-1");
+    expect(outbox.due()?.id).toBe("flap-1");
+    db.close();
+    outbox.close();
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
 
