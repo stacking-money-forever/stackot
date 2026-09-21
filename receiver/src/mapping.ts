@@ -54,6 +54,9 @@ export function findThreadId(item: GitHubItem, trust: BacklinkTrust): string | n
 /** Hard cap on comment pages fetched per item, so a long thread URL search stays bounded. */
 export const MAX_COMMENT_PAGES = 10;
 
+/** Bound on a whole item lookup — the drain path must never wait on GitHub forever. */
+export const GITHUB_TIMEOUT_MS = 10_000;
+
 /** Pull the `rel="next"` URL out of a GitHub `Link` header, if present. */
 function nextPageUrl(link: string | null): string | null {
   if (!link) return null;
@@ -77,18 +80,19 @@ export async function fetchItem(
   repo: string,
   kind: "issues" | "pulls",
   number: number,
-  opts: { apiBase?: string; maxCommentPages?: number } = {},
+  opts: { apiBase?: string; maxCommentPages?: number; timeoutMs?: number } = {},
 ): Promise<GitHubItem> {
   const base = `${opts.apiBase ?? "https://api.github.com"}/repos/${repo}`;
   const commentsKind = kind === "pulls" ? "issues" : kind;
+  const signal = AbortSignal.timeout(opts.timeoutMs ?? GITHUB_TIMEOUT_MS);
   const headers = {
     Authorization: `Bearer ${cfg.githubToken}`,
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
   };
   const [itemRes, commentsRes] = await Promise.all([
-    fetch(`${base}/${kind}/${number}`, { headers }),
-    fetch(`${base}/${commentsKind}/${number}/comments?per_page=20`, { headers }),
+    fetch(`${base}/${kind}/${number}`, { headers, signal }),
+    fetch(`${base}/${commentsKind}/${number}/comments?per_page=20`, { headers, signal }),
   ]);
   if (!itemRes.ok) throw new Error(`github api ${itemRes.status} for ${repo} ${kind} #${number}`);
   type ApiUser = { login?: string | null } | null;
@@ -106,7 +110,7 @@ export async function fetchItem(
   const maxPages = opts.maxCommentPages ?? MAX_COMMENT_PAGES;
   let next = commentsRes.ok ? nextPageUrl(commentsRes.headers.get("link")) : null;
   for (let pages = 1; next && pages < maxPages && !findThreadId(result, cfg); pages++) {
-    const pageRes = await fetch(next, { headers });
+    const pageRes = await fetch(next, { headers, signal });
     if (!pageRes.ok) break;
     result.comments.push(...((await pageRes.json()) as ApiComment[]).map(toComment));
     next = nextPageUrl(pageRes.headers.get("link"));
