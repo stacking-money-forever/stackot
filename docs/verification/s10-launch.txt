@@ -1,0 +1,43 @@
+S10 — Gateway 요청 시간 제한 오라클 (owner launch contract, wave 02)
+
+Task: ONE changeset. hanging Gateway에 대한 요청이 정해진 시간에 실패로 끝나도록 보장하고, 그 사실을 테스트로 고정한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/gateway.ts
+- receiver/test/gateway.test.ts
+
+금지: server.ts, delivery.ts, outbox.ts, mapping.ts, router.ts, normalize.ts, config.ts, ingress.ts, package.json.
+
+## 현재 상태 (오너가 소스로 확인함)
+- `forwardToGateway`는 `signal: AbortSignal.timeout(10_000)`으로 요청을 제한한다(동작은 구현되어 있다).
+- 그런데 이 10초가 하드코딩이라 테스트에서 실제로 검증할 수 없다. `gateway.test.ts`에는 메시지 프레이밍/헤더 테스트만 있고 hanging 게이트웨이 케이스가 없다. 결과적으로 "무기한 pending fetch"가 회귀해도 잡히지 않는다(원장 S10은 그래서 명명 오라클이 비어 있다).
+
+## 요구 동작
+1. 타임아웃 값을 주입 가능하게 만든다(예: 네 번째 인자 `opts: { timeoutMs?: number } = {}`). 기본값은 export 상수로 노출한다(예: `export const GATEWAY_TIMEOUT_MS = 10_000`). 하드코딩된 10_000이 소스에 남아 있으면 안 된다.
+2. 타임아웃으로 중단된 요청은 호출자에게 **거부(reject)**로 전달되어야 하며, Drainer가 이를 실패로 처리해 재시도 예약으로 이어져야 한다(기존 delivery 동작 유지). 오류는 타임아웃임을 식별할 수 있어야 한다(예: AbortError 또는 메시지에 timeout/abort 포함).
+3. 기존 동작 회귀 금지: 정상 200 응답이면 `{ ok: true, status, body }`를 반환하고, 비-2xx면 `{ ok: false, ... }`를 반환한다. 메시지 프레이밍과 헤더(Authorization Bearer, Idempotency-Key `stackot-<deliveryId>`, Content-Type)는 그대로다.
+4. `server.ts`는 수정하지 않는다(기본값 사용). 시그니처 확장은 기존 호출부와 호환되어야 한다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/gateway.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/gateway.test.ts 확장)
+- hanging 게이트웨이: 응답하지 않는 로컬 스텁(예: promise를 영원히 대기)에 대해 `timeoutMs: 50`으로 호출하면, 호출이 **정해진 시간 안에** 거부되고 경과 시간이 2초 미만임을 단언한다(실제 대기는 50ms 수준이라 스위트가 느려지지 않아야 한다).
+- 거부된 오류가 타임아웃임을 식별할 수 있어야 한다(인스턴스 또는 메시지로 단언).
+- 정상 경로 회귀: 즉시 200을 주는 스텁이면 `ok: true`와 status/body가 그대로다(기존 테스트 유지).
+- 비-2xx 회귀: 502를 주는 스텁이면 `ok: false`이며 throw하지 않는다.
+- 기본값 사용 경로: `timeoutMs`를 생략해도 빠른 스텁에 대해서는 정상 동작한다.
+- 서버/스텁은 로컬 Bun.serve만 사용하고 실제 네트워크를 쓰지 않는다. 전역 fetch monkey-patching 금지.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s10-receipt.md`: 변경 파일, 핵심 diff 요약, 타임아웃 주입 방식, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개, 보고 300줄 이내.

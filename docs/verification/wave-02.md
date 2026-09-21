@@ -340,7 +340,19 @@ Defect the owner confirmed by reading the source: `Outbox` sets only `journal_mo
 
 Owner envelope: declare both policies in code — a finite exported `busy_timeout` constant and an explicit `synchronous` level with the reason for that choice — without changing the schema or the public API. The oracle is a concurrent duplicate insert (two connections racing the same delivery id must yield exactly one row and exactly one `true`), a lock-contention case where a short write transaction on one connection does not make the other fail, and a durability case where a pending row survives close and reopen. Schema changes and column additions are forbidden.
 
-Status: contract written; launch follows S03C4.
+Status: launched 2026-09-21 from baseline `ee19025`. `herdr worktree create --label stackot-s15 --no-focus` provisioned workspace `w5Y` with root pane `w5Y:p1` at the checkout. Foreground argv verified from the process table: `devin --model swe-2 --permission-mode dangerous --prompt-file …/s15-launch.txt` (pid 88003), pane footer `SWE-2 High`, exactly one worker, no fallback model; the S03C4 workspace was closed first.
+
+## S10 launch contract — gateway request timeout oracle
+
+Baseline will be the S15 integration commit; the task checkout is created after that row is accepted.
+
+Row: `gateway.ts` + `gateway.test.ts`, completion condition "정해진 시간에 실패 반환", failure trigger "무기한 pending fetch".
+
+Defect the owner confirmed by reading the source: the 10 s limit exists (`signal: AbortSignal.timeout(10_000)`) but is hardcoded, so no test can exercise it and `gateway.test.ts` only covers framing and headers. S10 was recorded as ACCEPT-WITH-GAP for exactly that reason.
+
+Owner envelope: the timeout becomes injectable through an options argument with the default exported as a constant, the abort must surface as a rejection the drainer treats as a failure (so a hanging gateway schedules a retry rather than hanging forever), and `server.ts` stays untouched so production keeps the default. The hanging case must be tested against a local stub that never responds using a small injected timeout, keeping the suite fast, and the existing framing/header/bearer assertions must survive unchanged.
+
+Status: contract written; launch follows S15.
 
 ### S09A decision — oracle gap closed (owner-authored test)
 
