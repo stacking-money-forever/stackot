@@ -118,7 +118,7 @@ The previous owner wave integrated this block without leaving a decision record,
 | S12 | row satisfied literally, system property not met | The outbox side and its tests already exist (`outbox.fail` writes `dead_letter` + `last_error`; `test/outbox.test.ts` covers the fifth-failure case, the `last_error` migration and `requeue`). Because nothing calls `fail`, the row's completion condition ("한도 후 재시도 멈춤") is still false end to end. This is exactly what the wave-02 S12 launch now closes. |
 | S14 | ACCEPT | `test/server.restart.integration.test.ts`: first delivery 502 → row stays `pending` with attempts 1 → process restart → re-delivery succeeds and the row becomes `delivered`, with the gateway receiving the same `stackot-<deliveryId>` idempotency key twice. |
 
-Consequence for milestone M1: S03C4, S04D, S15, S17–S22 remain, and S07/S03C4 have no surviving candidate, so those rows must run as fresh tasks. S09A and S10 need their named oracles before M1 can be called closed.
+Consequence for milestone M1: S03C4, S04D, S15, S20–S22 remain, and S07/S03C4 have no surviving candidate, so those rows must run as fresh tasks. S09A and S10 need their named oracles before M1 can be called closed. S17–S19 are accepted (see their decision sections below).
 
 ## S13 boundary — owner decision closed: CLI-only recovery
 
@@ -199,3 +199,29 @@ Owner envelope decision, wider than the row's nominal scope and justified the sa
 Two required keys are the owner's design choice over making them optional: `discordGuildId` and `githubBacklinkLogin`. The receiver has never been deployed, so fail-fast on a missing key costs nothing today, and an optional key that silently degrades to "no backlink is trusted" would push every follow-up event to the admin channel without any startup signal. Both keys are validated like the existing ones (non-blank, no `<...>` placeholder, shape-checked) and `config.example.json` is updated. The real values are boundary-E user assets and are not part of this row.
 
 Status: launched 2026-09-21 from baseline `bd00c9e`. `herdr worktree create --label stackot-s19 --no-focus` provisioned workspace `w5T` with root pane `w5T:p1` at the checkout. Foreground argv verified from the process table: `devin --model swe-2 --permission-mode dangerous --prompt-file …/s19-launch.txt` (pid 60724), pane footer `SWE-2 High`, exactly one worker, no fallback model. `herdr agent start` again timed out waiting for startup while the real process ran; no relaunch (sixth occurrence). The S18 workspace was closed before this launch, so the one-worker policy holds.
+
+### S19 decision — ACCEPT after one narrowed retry
+
+First candidate: functionally complete and in scope (12 files: `config.ts`, `config.example.json`, `mapping.ts`, `server.ts`, five integration fixtures, `config.test.ts`, `mapping.test.ts`), owner oracles green, and the trust cases matched the contract. Owner nevertheless rejected one shape: `findThreadId(item, trust?)` made trust optional and kept a `THREAD_URL_RE` unauthenticated fallback for older call sites, so the insecure behaviour remained the function's default. One narrowed retry was issued to make trust required, delete the fallback path and its pattern, and let `normalize.test.ts` (owner-added to the envelope for that single test) pass trust while preserving its body-before-comments intent.
+
+Corrected candidate — ACCEPT. Owner verified by reading the delta and re-running every oracle:
+
+- `mapping.ts`: `findThreadId(item: GitHubItem, trust: BacklinkTrust)` requires trust; `THREAD_URL_RE` is deleted and no code path reaches an unauthenticated scan. The guild segment must match `trust.discordGuildId` exactly (the pattern is built from the configured value), and `isRecorder` compares `user.login` with `githubBacklinkLogin` case-insensitively. Text order is unchanged (body first, then comments), so the earliest *trusted* link wins.
+- `mapping.ts` `fetchItem`: `GitHubItem` now carries `author` for the body and for each comment, mapped from GitHub's `user.login` (absent → `null`), including every paginated page; the pagination loop's early-stop check is trust-aware.
+- `config.ts`: `discordGuildId` must be a non-blank, non-placeholder `^\d+$` string; `githubBacklinkLogin` must be a non-blank, non-placeholder GitHub login (`[A-Za-z0-9][A-Za-z0-9_-]{0,38}` with optional `[bot]` suffix). Both are required keys. `config.example.json` documents them and the five integration fixtures carry synthetic values.
+- `server.ts`: the only change is `findThreadId(item, cfg)`.
+- Tests: recorder-authored comment and body links resolve; foreign-guild links, non-recorder authors, recorder-authored links in another guild, and unknown authors are all rejected; a forged link before a valid one is skipped in favour of the valid one; the recorder login matches case-insensitively; and the S17/S18 path, pagination, early-stop and cap assertions still pass unchanged. `config.test.ts` adds rejection cases for both new keys.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/mapping.test.ts test/config.test.ts test/normalize.test.ts` 113 pass / 174 assertions, `bun test` **151 pass / 290 assertions** across 14 files (S18 left it at 115).
+
+Oracle discrimination check (owner, disposable copy outside the candidate): running the new `mapping.test.ts` against the S18 `mapping.ts` fails 10 of 19 assertions — the pre-S19 code accepts the forged links these tests exist to reject.
+
+Owner runtime check of the new config guard (throwaway configs, real `bun src/server.ts`): a config without `discordGuildId` exits 1 with `config missing: discordGuildId (non-empty numeric string required)`, and a `<GUILD_ID>` placeholder exits 1 with `config invalid: discordGuildId is an angle-bracket placeholder; set the real guild ID`. So the guard fails fast at startup rather than degrading silently.
+
+Owner integration: all 12 files copied verbatim and md5-verified (12 MATCH). Completion-side oracles: typecheck clean, 151 pass / 290 assertions, `bun run build` emits `dist/server.js` (21.26 KB).
+
+Residual risks carried with the row: the real `discordGuildId` and `githubBacklinkLogin` values are boundary-E user assets and are still unset anywhere; an issue or PR whose author and comment authors are all unknown resolves to no thread (correct, but it means routing depends on the API returning `user.login`); a thread URL recorded by a *different* repository's bot account would be rejected, so a second recorder account would need its own row; and the mapping path stays contract-level evidence (S) because `server.ts` still calls the live GitHub API.
+
+Worker lifecycle: the S19 worker settled `done` after the retry; workspace `w5T` (label `stackot-s19`) was closed after integration and the task worktree is retained. D3 (S17–S19) is therefore complete at contract level; the live end-to-end claim still depends on the blocked runtime rows.
+
+One process note for future owners: the first S19 turn spent a long time exploring without editing, and the steering message submitted while it was working sat queued in the Devin TUI (Herdr reported the pane `idle` while a message waited for Enter). `herdr agent send-keys <pane> enter` delivered it and the worker resumed. Treat a Herdr `idle` on a worker pane as "awaiting input" until the pane text is checked.

@@ -24,8 +24,9 @@ User-mandated execution form: one interactive Devin worker per row with the exac
 - S13 manual replay (`47df399`): `receiver/src/replay.ts` plus CLI. Owner runtime proof: a dead-lettered row recovered by the CLI became `pending` with attempts preserved and was then delivered by the running drainer with a stable idempotency key. Owner decision: redelivery of a dead-letter id stays `200 duplicate`; the CLI is the recovery path (closed, see wave-02).
 - S17 reverse-link comments surface (`49e1d94`): PR discussion comments are read from the issues surface. Two of the new mapping tests fail against the previous code.
 - S18 comment pagination (`f1be5f5`): follows `Link rel="next"`, stops early on a hit, bounded by `MAX_COMMENT_PAGES` (10). Two of the new mapping tests fail against the previous code.
+- S19 backlink trust (`bfefe5a`, ACCEPT after one narrowed retry): `findThreadId` requires trust inputs, only a link whose guild equals `discordGuildId` and whose text was written by `githubBacklinkLogin` counts, the unauthenticated fallback is deleted, and the two keys are required config that fails startup when missing or placeholder. Ten of the new mapping assertions fail against the previous implementation; the config guard was also checked against the real server process.
 - Retro record for the unrecorded wave (S05A–S14) with per-row ACCEPT / ACCEPT-WITH-GAP / NOT DONE in wave-02. S09A and S10 carry ACCEPT-WITH-GAP because their named oracles are absent.
-- Test baseline after S18: `bun test` 115 pass / 247 assertions across 14 files, `bun run typecheck` clean, `bun run build` emits `dist/server.js`.
+- Test baseline after S19: `bun test` 151 pass / 290 assertions across 14 files, `bun run typecheck` clean, `bun run build` emits `dist/server.js`.
 
 ## Next queue after S19
 
