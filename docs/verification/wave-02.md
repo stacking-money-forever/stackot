@@ -666,3 +666,19 @@ The user asked for these to be closed locally while the runtime-dependent rows s
 **B02 — per-repo delivery concurrency.** Owner-observed: `DeliveryDrainer.drain()` awaits one forward at a time, so a slow Gateway for one repo holds every other repo's deliveries behind it, and there is no per-repo cap because there is no concurrency. Envelope: new `scheduler.ts` (pure `selectRunnable` with global and per-repo caps and least-in-flight-first fairness), an additive `Outbox.dueBatch(limit)`, and `delivery.ts` gaining bounded concurrent draining with an in-flight id set so a row cannot be dispatched twice. The decisive oracle holds repo A's forward open while repo B's deliveries complete, and records per-repo concurrent forwards to prove the cap was never exceeded and that no id was forwarded twice.
 
 Status: contracts written; S09Bb is in flight, then B01, B03, B02.
+
+### S09Bb decision — ACCEPT, no retry needed
+
+Baseline: `bb06ac0`. Candidate: `outbox.ts`, `health.ts`, `server.ts` plus the row's own test file and `outbox.test.ts`; nothing outside the envelope, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. Every mutation now goes through one `write()` wrapper that records success or a masked failure message, so the health flag cannot drift from the last write outcome; `probe()` uses `BEGIN IMMEDIATE` + `ROLLBACK` as the cheapest proof that the write lock is acquirable; `ready()` returns false while the last write failed and re-probes otherwise; `recover()` closes, reopens and re-probes without throwing, so a request handler can call it. `/readyz` answers 503 while unwritable and attempts a bounded self-repair (at most once per interval) before re-probing inside the same request; `/healthz` uses tracked state so liveness never takes the write lock; `/status` carries the outbox health. The owner specifically checked the probe-cost reasoning: readiness is the only endpoint taking the write lock, which is why `/healthz` and `/status` were moved onto the tracked flag.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, focused 16 pass / 95 assertions, full suite **273 pass / 970 assertions** across 26 files (49 s — the induction plus recovery probes add real waiting, see below).
+
+Oracle discrimination check (owner, disposable copy with the pre-S09Bb `server.ts`): during the induced failure `/readyz` answers **200 "ready"** where the new assertion demands 503 — the defect reproduced exactly as recorded, and the test fails only because the fix exists.
+
+Owner integration: five files copied verbatim and md5-verified (five MATCH). Completion-side oracles: typecheck clean, 273 pass / 970 assertions, `bun run build` emits `dist/server.js` (32.95 KB). CI runs on the push.
+
+Residual risks: readiness now performs a write probe, so a contended database can make `/readyz` slow up to `busy_timeout` — that is deliberately concentrated on the readiness endpoint and is the cost of the endpoint telling the truth; recovery is attempted at most once per interval, so a persistently broken database answers 503 until an operator or supervisor acts, which is the intended signal rather than a silent loop; the suite's runtime grew to ~50 s locally because the induction holds the write lock while the receiver waits out its timeout; and `Outbox.health()` reports the last write outcome, so a process that has never written reports healthy on the strength of construction alone.
+
+Worker lifecycle: the S09Bb worker settled with its receipt written; workspace `w5S` (label `stackot-s09bb`) was closed after integration and the task worktree is retained.
