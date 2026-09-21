@@ -48,7 +48,7 @@ async function resolveTarget(ev: NormalizedEvent): Promise<NormalizedEvent> {
   const kind = ev.item.startsWith("issue") ? "issues" : "pulls";
   try {
     const item = await fetchItem(cfg, ev.repo, kind, number);
-    const threadId = findThreadId(item);
+    const threadId = findThreadId(item, cfg);
     if (threadId) return { ...ev, target: threadId };
   } catch (err) {
     console.warn(`mapping lookup failed for ${ev.repo} ${ev.item}:`, err);

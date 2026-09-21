@@ -96,10 +96,17 @@ describe("mapping", () => {
   });
 
   test("findThreadId reads body first, then comments", () => {
-    const inBody = findThreadId({ body: "작업실: https://discord.com/channels/111/222", comments: [] });
+    const trust = { discordGuildId: "111", githubBacklinkLogin: "GitHubBot" };
+    const inBody = findThreadId(
+      { body: "작업실: https://discord.com/channels/111/222", author: "GitHubBot", comments: [] },
+      trust,
+    );
     expect(inBody).toBe("222");
-    const inComment = findThreadId({ body: null, comments: [{ body: "https://discord.com/channels/111/333" }] });
+    const inComment = findThreadId(
+      { body: null, comments: [{ body: "https://discord.com/channels/111/333", author: "GitHubBot" }] },
+      trust,
+    );
     expect(inComment).toBe("333");
-    expect(findThreadId({ body: null, comments: [] })).toBeNull();
+    expect(findThreadId({ body: null, comments: [] }, trust)).toBeNull();
   });
 });
