@@ -72,7 +72,30 @@ Scope: `receiver/src/replay.ts` + `receiver/test/replay.test.ts` (new), plus at 
 
 Predecessor evidence reused: the owner reproduction against a real receiver process showing the redelivery gap (`200 "duplicate"`, row unchanged) is recorded in the S12 boundary section above.
 
-Status: launched; acceptance pending.
+## S13 decision — ACCEPT, no retry needed
+
+Worker candidate: `receiver/src/replay.ts` (new) and `receiver/test/replay.test.ts` (new); `receiver/package.json` deliberately unchanged because `bun src/replay.ts <id>` runs the file directly. `git status` in the task checkout showed only those two new files; HEAD unchanged at `eb0dba7` — the worker did not commit. The worker ran one `bun install` inside the checkout (no `node_modules` existed) and reported that it resolved from the Bun cache at the same versions the wave-02 record pins.
+
+Owner verified by reading both files and re-running every oracle:
+
+- `replayDelivery(outbox, id)` composes only existing primitives: `outbox.has(id)` distinguishes a missing id, then `outbox.requeue(id)` performs the transition, so `outbox.ts` and the schema are untouched. Results are `resumed` / `not_found` / `not_dead_letter`.
+- The CLI runs under `import.meta.main`, reads `STACKOT_OUTBOX_PATH` with the same default as `server.ts`, prints one operator-readable line, and sets exit code 0 on resume, 1 when the id is not a replay target, 2 on usage error.
+- Tests assert observable behaviour, not implementation shape: resume of one exact id with `attempts` preserved and `next_attempt_at <= now`; a second replay returns `not_dead_letter` and leaves the row byte-identical (`SELECT *` comparison); another dead-letter row and a delivered row stay untouched; and a real child process runs the CLI to check exit codes, stdout, and resulting DB state for the resume, repeat, missing-id and delivered-id cases.
+- Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/replay.test.ts` 4 pass / 22 assertions, `bun test` 107 pass / 220 assertions across 13 files (S12 left it at 103).
+
+Owner integration: both files copied verbatim into the completion checkout and verified byte-identical by md5 (two MATCH). Completion-side oracles: `bun run typecheck` clean, `bun test` 107 pass / 220 assertions, `bun run build` emits `dist/server.js`.
+
+Owner runtime proof (throwaway script, real receiver process, gateway stubbed to fail with 502 until flipped): POST /webhook → `200 accepted`; the server drain drove the row to `dead_letter` (`attempts = 5`, `last_error = "gateway rejected delivery (status 502)"`); then `bun src/replay.ts s13-runtime-proof` exited `0` with stdout `replayed s13-runtime-proof: dead_letter -> pending`, leaving the row `pending` with `attempts = 5` preserved and `last_error` cleared; with the gateway healthy again the running drainer delivered it, ending at `state = delivered` with the gateway receiving the same `stackot-s13-runtime-proof` idempotency key on every attempt. So the manual recovery path leads all the way to delivery in the live process, not only in unit tests.
+
+Residual risks accepted with the row (from the worker receipt, all re-checked by the owner as accurate):
+
+- `has` followed by `requeue` is not atomic; the only deletion path in the outbox is the delivered-row TTL sweep, and dead-letter rows are never deleted, so the window is not reachable in practice.
+- Exit code 2 for a usage error is beyond the contract but keeps it distinguishable from "not a replay target".
+- `requeue` clears `last_error` (pre-existing behaviour), so an operator must read the row before replaying if the cause matters.
+- The CLI creates the outbox file when `STACKOT_OUTBOX_PATH` points somewhere empty, so a mistyped path yields a new empty outbox and `not_found` instead of an error.
+- A GitHub redelivery of a dead-lettered ID is still `200 duplicate`; the replay CLI is the documented operator recovery path. Changing `server.ts` dedupe remains an open owner decision, not part of this row.
+
+Worker lifecycle: the S13 worker settled `idle` with its receipt written; its workspace `w5P` (label `stackot-s13`) was closed after integration, and the task worktree `/Users/justn/dev/.worktrees/stackot-s13-20260921` is retained.
 
 ## Retro acceptance record for the unrecorded wave (S05A–S14)
 
@@ -95,4 +118,4 @@ The previous owner wave integrated this block without leaving a decision record,
 | S12 | row satisfied literally, system property not met | The outbox side and its tests already exist (`outbox.fail` writes `dead_letter` + `last_error`; `test/outbox.test.ts` covers the fifth-failure case, the `last_error` migration and `requeue`). Because nothing calls `fail`, the row's completion condition ("한도 후 재시도 멈춤") is still false end to end. This is exactly what the wave-02 S12 launch now closes. |
 | S14 | ACCEPT | `test/server.restart.integration.test.ts`: first delivery 502 → row stays `pending` with attempts 1 → process restart → re-delivery succeeds and the row becomes `delivered`, with the gateway receiving the same `stackot-<deliveryId>` idempotency key twice. |
 
-Consequence for milestone M1: S03C4, S04D, S13, S17–S22 remain, and S07/S03C4 have no surviving candidate, so those rows must run as fresh tasks. S09A and S10 need their named oracles before M1 can be called closed.
+Consequence for milestone M1: S03C4, S04D, S15, S17–S22 remain, and S07/S03C4 have no surviving candidate, so those rows must run as fresh tasks. S09A and S10 need their named oracles before M1 can be called closed.
