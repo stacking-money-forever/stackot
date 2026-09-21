@@ -1,0 +1,53 @@
+S09B — outbox 쓰기 실패 시 5xx (owner launch contract, wave 02)
+
+Task: ONE changeset. outbox 커밋이 실패하면 webhook은 ACK하지 않고 명시적 5xx를 반환하며, 프로세스는 살아 있어야 한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/server.ts
+- receiver/test/server.outbox.failure.integration.test.ts (신규)
+
+금지: outbox.ts, delivery.ts, router.ts, mapping.ts, normalize.ts, config.ts, ingress.ts, package.json, 기존 테스트 파일.
+
+## 현재 상태 (오너가 소스로 확인함)
+- webhook 경로는 `outbox.enqueue(...)`를 try/catch 없이 호출한다. enqueue가 throw하면 예외가 `fetch` 밖으로 나가 Bun 기본 오류 응답(500 + 내부 오류 노출)이 나간다.
+- 원장 S09A는 "커밋 뒤에만 ACK"를 요구하고, S09B는 그 실패 쪽을 요구한다: **쓰기 실패 시 5xx, ACK 없음**. 아직 테스트도, 명시적 처리도 없다.
+
+## 요구 동작
+1. `enqueue` 실패를 명시적으로 처리한다: 2xx를 절대 반환하지 않고, 5xx를 반환한다(503 권장, 본문은 짧은 문구). 예외가 그대로 밖으로 나가 내부 스택이 노출되지 않게 한다.
+2. 실패 시 서버 로그에 원인을 남기되 secret/token/요청 본문 원문은 남기지 않는다.
+3. 프로세스는 죽지 않는다. 실패 직후에도 `/healthz`가 응답해야 한다.
+4. 정상 경로 회귀 금지: 성공 시 200 `accepted`, 중복 ID 200 `duplicate`, 그리고 S09A가 요구하는 "응답 시점에 행이 이미 커밋"이 그대로 유지된다.
+5. `outbox.ts`의 공개 API와 동작(due/delivered/retry/fail/requeue/has/ready/busy_timeout/synchronous)은 절대 바꾸지 않는다.
+
+## 실패 재현 방법 (오너가 실제로 검증한 방법 — 그대로 사용)
+파일 chmod만으로는 실패하지 않는다(이미 열린 fd는 계속 쓰기 가능). 다음 조합이 요청 시점 쓰기 실패를 결정적으로 만든다:
+1. 서버를 정상 기동하고 webhook을 1회 성공시켜 WAL을 활성화한다.
+2. outbox의 `-wal`과 `-shm` 파일을 삭제한다.
+3. outbox 디렉터리를 `chmod 0555`, DB 파일을 `chmod 0444`로 만든다.
+4. 같은 경로로 새 delivery ID의 webhook을 보내면 SQLite 쓰기가 실패한다(오너 probe: `SQLiteError: disk I/O error`).
+정리 시 권한을 되돌려야 한다(`chmod 0755`/`0644`).
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/server.outbox.failure.integration.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/server.outbox.failure.integration.test.ts 신규)
+- 정상 1건: webhook 1회 → 200 accepted, 그리고 응답 시점에 outbox 행이 존재(S09A 성질 회귀).
+- 실패 1건: 위 재현 절차 후 새 delivery ID로 webhook → 응답 status가 **5xx**이고 2xx가 아니며, 본문이 성공 문구가 아니다.
+- 실패한 delivery ID로 outbox에 행이 생기지 않았음을 단언한다(쓰기 실패 후 부분 상태 금지).
+- 실패 후 `/healthz`가 200을 반환한다(프로세스 생존).
+- 진행 중 실패했던 delivery ID를 다시 보내도 2xx ACK가 되지 않는다(재현 상태가 유지되는 동안).
+- 권한 복구 후 새 delivery ID로 webhook을 보냈을 때의 결과(200 회복 여부)를 receipt에 사실대로 기록한다 — 회복되지 않으면 그것을 finding으로 보고하고 단언을 약화하거나 삭제하지 말 것.
+- 로컬 프로세스만 사용하고 실제 네트워크를 쓰지 않는다.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s09b-receipt.md`: 변경 파일, 핵심 diff 요약, 실패 재현 절차와 관측 결과, 권한 복구 후 동작, 남은 리스크.
+3. Todo는 최대 2개, 보고 300줄 이내.

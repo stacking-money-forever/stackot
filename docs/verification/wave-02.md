@@ -393,3 +393,13 @@ Owner integration: both files copied verbatim and md5-verified (two MATCH). Comp
 Residual risks: the contention test depends on real process timing, so a machine that cannot spawn a child process within the handshake window would fail loudly rather than silently pass; `synchronous = FULL` costs an fsync per commit, which is the deliberate price of the ACK-durability claim and would be the first thing to revisit if ingress throughput ever matters; and the busy timeout only helps when the *other* writer is a cooperating process — an external tool holding the lock longer than five seconds still produces SQLITE_BUSY, which is a deliberate bound.
 
 Worker lifecycle: the worker's candidate was already complete — both source and test files written, receipt on disk — and the owner had finished verifying and integrating it when workspace `w5Y` (label `stackot-s15`) was closed. The worker's final summary turn was still composing text at that moment, so that turn was cut short on purpose after integration; nothing needed from it remained. The task worktree is retained.
+
+## S09B launch contract — outbox write failure must not ACK
+
+Owner-observed while closing M1: S09B is the last unimplemented row in the M1 range. `server.ts` calls `outbox.enqueue` without a try/catch, so a failing commit lets the exception escape and Bun answers with its default error response; the row requires an explicit 5xx, no ACK, and a surviving process.
+
+Owner-verified reproduction (probed directly before writing this contract): chmod alone does **not** produce a failure, because an already-open file descriptor keeps write access; deleting the outbox `-wal` and `-shm` files and then making the directory `0555` and the database file `0444` does — the next write throws `SQLiteError: disk I/O error`. That recipe is written into the launch prompt so the worker does not have to rediscover it.
+
+Owner envelope: `server.ts` plus a new `test/server.outbox.failure.integration.test.ts`. The failure path must return 5xx (503 preferred) with a short body and must not leak internals or secrets, the process must still answer `/healthz`, a failed delivery id must leave no partial row, and the healthy path (200 accepted with the row committed, 200 duplicate) must stay intact. `outbox.ts` is out of scope. Whether the connection recovers once permissions return must be reported as a fact rather than assumed.
+
+Status: contract written; launch follows the S10 integration commit.
