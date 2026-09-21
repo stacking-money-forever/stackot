@@ -1,0 +1,46 @@
+S03C4 — repo 포럼 채널 ID placeholder 거부 (owner launch contract, wave 02)
+
+Task: ONE changeset. 설정의 `repos[*].issuesForumChannelId` / `prsForumChannelId`에 남은 `<...>` placeholder를 시작 시 거부한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/config.ts
+- receiver/test/config.test.ts
+- receiver/config.example.json (placeholder 표기가 실제로 거부된다는 사실이 드러나도록 주석/값 정리만)
+
+금지: server.ts, mapping.ts, router.ts, normalize.ts, outbox.ts, delivery.ts, replay.ts, ingress.ts, package.json, 테스트 픽스처(server.*.integration.test.ts).
+
+## 현재 결함 (오너가 소스로 확인함)
+- `loadConfig`는 `openclawHookToken`/`githubToken`/`ciAlertsChannelId`/`adminChannelId`/`discordGuildId`/`githubBacklinkLogin`의 `<...>` placeholder를 거부한다.
+- 그러나 `repos` 항목 검증은 `if (!rc.issuesForumChannelId || !rc.prsForumChannelId)`뿐이다. 그래서 `"<ISSUES_FORUM_CHANNEL_ID>"` 같은 placeholder가 그대로 통과해, 봇이 존재하지 않는 채널 ID로 스레드 생성을 시도하게 된다.
+
+## 요구 동작
+1. 각 repo의 `issuesForumChannelId`와 `prsForumChannelId`는 **문자열**이어야 하고, trim 결과가 비어 있지 않아야 하며, **전체가 단일 angle-bracket placeholder**(`/^<[^<>]*>$/`)이면 시작 실패한다. 기존 S03C1~C4 계열과 같은 whole-token 규칙을 쓴다.
+2. `<a><b>`처럼 angle bracket을 포함하되 단일 placeholder가 아닌 값은 유효한 채널 ID로 취급한다(기존 규칙과 일관).
+3. 숫자·boolean·null·객체 등 문자열이 아닌 값은 거부한다.
+4. 오류 메시지는 어느 repo의 어느 키가 문제인지 알 수 있어야 한다(예: `config repos["owner/repo"].issuesForumChannelId ...`).
+5. 그 외 config 검증(기존 키들, port, openclawHooksUrl, repos 키 형식, repos 비어 있음)은 절대 변경하지 않는다.
+6. `receiver/config.example.json`은 placeholder가 실제로 거부된다는 점이 드러나게 정리한다(예시 값은 유지 가능, 주석은 JSON이므로 불가 — 파일이 JSON이면 구조를 깨지 말 것). JSON에 주석을 넣을 수 없다면 이 항목은 건드리지 말고 receipt에 그 사실을 적는다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/config.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/config.test.ts 확장)
+- 거부: issues 포럼 채널이 `<ISSUES_FORUM>`, prs 포럼 채널이 `<PRS_FORUM>`, 둘 다 placeholder인 경우 각각 시작 실패.
+- 거부: 빈 문자열, 공백만, 숫자, null, boolean, 객체, 배열.
+- 허용: 실제처럼 보이는 채널 ID 문자열(`"1234567890"`), 그리고 `<a><b>` 같은 비단일 placeholder.
+- 회귀: 기존 repo 검증 테스트(누락, malformed key, repos 비어 있음)는 그대로 통과한다.
+- 어느 repo의 어느 키인지 메시지로 구분 가능함을 최소 1건 단언한다.
+- S19에서 추가된 `discordGuildId`/`githubBacklinkLogin` 검증 테스트는 그대로 통과해야 한다.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `cd receiver && bun install --frozen-lockfile` 1회 허용(락은 커밋되어 있다).
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s03c4-receipt.md`: 변경 파일, 핵심 diff 요약, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개, 보고 300줄 이내.

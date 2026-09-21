@@ -305,3 +305,39 @@ Owner oracle (throwaway script, run against this checkout, then deleted):
 Files changed: `docs/spec.md`, `deploy/README.md`. No source or test change, so no code oracle was re-run beyond this comparison; the suite was unaffected and CI ran on the push.
 
 Residual risks: the note about unsubscribed events states current behaviour only, so whichever row implements `check_suite`/`push`/`release` must update both documents in the same change; and the guide's CI checklist step ("CI 실패 → #ci-alerts 알림 + PR 스레드 답글") is now backed by S21's routing plus the `CI 알림 채널` message line, but the actual Discord posting still depends on the agent and the blocked runtime rows.
+
+### S04D decision — ACCEPT (owner-authored), M1 tooling truth
+
+Baseline: `b5be3d0`. Owner-authored reasoning, same as S22: the change is mechanical tooling plus a lock regeneration, and the oracle is an external clean-copy check the owner must run anyway.
+
+Diagnosis (owner, disposable copy): the tracked root `bun.lock` declares a `stackot-impl` workspace whose `package.json` no longer exists at the repository root and is referenced by nothing, while `receiver/bun.lock` was gitignored and therefore never committed. Installing inside `receiver/` creates its own lock and leaves the root lock byte-identical, so there is no hidden root traversal — the real defect is that CI's `bun install --frozen-lockfile` ran with `working-directory: receiver`, found no lockfile, and re-resolved the tree on every run.
+
+Change: the ignore rule for `receiver/bun.lock` is dropped, the receiver lock is generated and committed beside `receiver/package.json`, and the orphaned root lock is removed so exactly one lockfile governs the receiver.
+
+Oracle (clean copy of the commit, `git archive` + tar): `bun install --frozen-lockfile` twice in `receiver/` produced the identical lock hash `d225c2accecb474fd668874690a5d42d` and the second run reported "no changes"; `bun run typecheck`, `bun test` (175 pass / 350 assertions) and `bun run build` all passed from that pinned install; no root lock exists in the copy. CI on `0374d34` then ran the same frozen install with the committed lock and passed.
+
+Residual risks: the lock pins the receiver's devDependencies only (`@types/bun`, `typescript`), so a future runtime dependency must be added to `receiver/package.json` and re-locked deliberately; and dropping the root lock means any future root-level tooling needs its own `package.json` and lock rather than reusing the removed one.
+
+## S03C4 launch contract — reject placeholder repo forum channel IDs
+
+Baseline: `0374d34`. Task checkout `/Users/justn/dev/.worktrees/stackot-s03c4-20260921`, branch `codex/stackot-s03c4-20260921`, created with `herdr worktree create --label stackot-s03c4 --no-focus --trust-repository`; workspace and pane IDs are read back from the create result.
+
+Row: `config.ts` + `config.test.ts`, completion condition "<...> forum ID는 시작 실패", failure trigger "유효 ID 회귀".
+
+Defect the owner confirmed by reading the source: repo entries are only checked for truthiness, so `"<ISSUES_FORUM_CHANNEL_ID>"` starts the receiver and the bot then tries to create threads in a channel that cannot exist. Every other configured secret or channel ID already rejects whole-token `<...>` placeholders.
+
+Owner envelope: only the two repo forum channel IDs are added to that existing rule; they must be strings, non-blank after trim, and not a single whole-token placeholder, while values that merely contain angle brackets (`<a><b>`) stay valid for consistency with S03C1–C4. Non-string types are rejected. The error must name the repo and the key. Nothing else in `loadConfig` changes, and `config.example.json` is only touched if a JSON comment-free edit is possible.
+
+Status: contract written; launch follows.
+
+## S15 launch contract — SQLite busy and durability policy
+
+Baseline will be the S03C4 integration commit; the task checkout is created after that row is accepted, so the two rows never share a worktree.
+
+Row: `outbox.ts` + `outbox.test.ts`, completion condition "동시 ID 하나만 저장", failure trigger "두 side-effect job 생성".
+
+Defect the owner confirmed by reading the source: `Outbox` sets only `journal_mode = WAL`; with no `busy_timeout`, a concurrent writer can surface `SQLITE_BUSY` into the webhook path and produce a 5xx, which is exactly the window in which a second client could introduce another delivery attempt.
+
+Owner envelope: declare both policies in code — a finite exported `busy_timeout` constant and an explicit `synchronous` level with the reason for that choice — without changing the schema or the public API. The oracle is a concurrent duplicate insert (two connections racing the same delivery id must yield exactly one row and exactly one `true`), a lock-contention case where a short write transaction on one connection does not make the other fail, and a durability case where a pending row survives close and reopen. Schema changes and column additions are forbidden.
+
+Status: contract written; launch follows S03C4.
