@@ -698,3 +698,19 @@ Owner integration: eight files copied verbatim and md5-verified (eight MATCH). C
 Residual risks: a repo without its own token still uses the shared credential, which is now *visible* via `tokenSource` but not enforced — the operator decides per repo; nothing yet surfaces `tokenSource: "shared"` in telemetry or `/status`, so that belongs to a follow-up if the posture matters operationally; and the repo token is a PAT whose GitHub-side scope the receiver cannot verify, so least-privilege remains an operator responsibility.
 
 Worker lifecycle: the B01 worker settled with its receipt written; workspace `w5T` (label `stackot-b01`) was closed after integration and the task worktree is retained.
+
+### B03 decision — ACCEPT, no retry needed
+
+Baseline: `43cc112`. Candidate: new `github-client.ts` and `github-client.test.ts`, plus `mapping.ts` routing every request through it and the rate-limit assertions added to `mapping.test.ts`; nothing outside the envelope, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `retryAfterMs` accepts delta-seconds and HTTP-date (clamped at zero for a past date) and falls back to one second when the header is absent or unparseable; `githubFetch` retries only rate-limited responses (429, or 403 with `x-ratelimit-remaining: 0`), sequentially, exactly once per response, with each wait capped at a minute and the retry budget bounded, then hands back the last response unchanged so the caller decides. It cancels the dropped response body before waiting, which releases the connection rather than leaking it across the delay. `fetchItem` sends the item, the first comments page and every paginated page through it, with the options injectable so tests observe the instructed delays without a real clock.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, the two focused files 39 pass / 98 assertions, full suite **316 pass / 1109 assertions** across 29 files — with a 50 s runtime dominated by the S09Bb lock-induction tests, not by this row.
+
+Oracle discrimination check (owner, disposable copy with the pre-B03 `mapping.ts`): the new rate-limit tests fail — the backlink resolves to `null` because a 429 collapsed the lookup into a failure instead of being waited out. That is the recorded failure trigger in one line.
+
+Owner integration: four files copied verbatim and md5-verified (four MATCH). Completion-side oracles: typecheck clean, 316 pass / 1109 assertions, `bun run build` emits `dist/server.js` (35.74 KB). CI runs on the push.
+
+Residual risks: the retry budget and the one-minute cap mean a rate limit lasting longer than that still fails the lookup and routes that event to the admin channel — deliberate, since a receiver cannot outwait a long limit and the delivery itself is unaffected; `Retry-After` is trusted as the authority, so a server advertising an enormous value is bounded by the cap rather than obeyed literally; and the retries consume the same AbortSignal deadline as the original request, so a very long instructed wait can still be cut short by the timeout — the interaction is bounded but worth revisiting if rate-limit windows and timeouts ever conflict in production.
+
+Worker lifecycle: the B03 worker settled with its receipt written; workspace `w5V` (label `stackot-b03`) was closed after integration and the task worktree is retained.
