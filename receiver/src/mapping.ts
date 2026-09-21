@@ -29,6 +29,19 @@ export function findThreadId(item: GitHubItem): string | null {
   return null;
 }
 
+/** Hard cap on comment pages fetched per item, so a long thread URL search stays bounded. */
+export const MAX_COMMENT_PAGES = 10;
+
+/** Pull the `rel="next"` URL out of a GitHub `Link` header, if present. */
+function nextPageUrl(link: string | null): string | null {
+  if (!link) return null;
+  for (const entry of link.split(",")) {
+    const m = /^\s*<([^>]+)>\s*;\s*rel="next"\s*$/.exec(entry);
+    if (m?.[1]) return m[1];
+  }
+  return null;
+}
+
 /**
  * Fetch an issue/PR with its comments, for reverse-link resolution.
  *
@@ -42,7 +55,7 @@ export async function fetchItem(
   repo: string,
   kind: "issues" | "pulls",
   number: number,
-  opts: { apiBase?: string } = {},
+  opts: { apiBase?: string; maxCommentPages?: number } = {},
 ): Promise<GitHubItem> {
   const base = `${opts.apiBase ?? "https://api.github.com"}/repos/${repo}`;
   const commentsKind = kind === "pulls" ? "issues" : kind;
@@ -57,7 +70,21 @@ export async function fetchItem(
   ]);
   if (!itemRes.ok) throw new Error(`github api ${itemRes.status} for ${repo} ${kind} #${number}`);
   const item = (await itemRes.json()) as { body?: string | null };
-  const comments = commentsRes.ok ? ((await commentsRes.json()) as { body: string }[]) : [];
-  return { body: item.body ?? null, comments };
+  const result: GitHubItem = {
+    body: item.body ?? null,
+    comments: commentsRes.ok ? ((await commentsRes.json()) as { body: string }[]) : [],
+  };
+
+  // Follow the server-provided rel="next" chain until the thread URL appears or
+  // the page cap is hit — never guess a page parameter.
+  const maxPages = opts.maxCommentPages ?? MAX_COMMENT_PAGES;
+  let next = commentsRes.ok ? nextPageUrl(commentsRes.headers.get("link")) : null;
+  for (let pages = 1; next && pages < maxPages && !findThreadId(result); pages++) {
+    const pageRes = await fetch(next, { headers });
+    if (!pageRes.ok) break;
+    result.comments.push(...((await pageRes.json()) as { body: string }[]));
+    next = nextPageUrl(pageRes.headers.get("link"));
+  }
+  return result;
 }
 
