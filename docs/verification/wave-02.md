@@ -429,3 +429,44 @@ Baseline: `067e7ce`. S11 was recorded as ACCEPT-WITH-GAP because the drain path 
 Discrimination check (owner, disposable copy): changing the exponent cap from 6 to 4 in `outbox.ts` fails the new test, so it pins the schedule rather than restating it. Full suite after the addition: 208 pass / 435 assertions, typecheck clean.
 
 S11 is therefore ACCEPT rather than ACCEPT-WITH-GAP.
+
+### S09B decision — ACCEPT, no retry needed
+
+Baseline: `b5be3d0`..`067e7ce` lineage; task checkout `/Users/justn/dev/.worktrees/stackot-s09b-20260921` (workspace `w50`). Candidate: `receiver/src/server.ts` (+21/-7) and new `receiver/test/server.outbox.failure.integration.test.ts`, nothing else, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `outbox.has` and `outbox.enqueue` are each wrapped: a failure logs the delivery id and the reason server-side and answers `503 outbox unavailable` with no internals; the drain calls gained a rejection handler so a failing drain cannot become an unhandled rejection; the healthy path is untouched (`200 accepted` with the row committed before the ACK, `200 duplicate` for a repeat id).
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/server.outbox.failure.integration.test.ts` 2 pass / 18 assertions, full suite 209 pass / 429 assertions.
+
+Oracle discrimination check (owner, disposable copy outside the candidate) — this one is unusually informative: restoring the previous handler makes the test fail on its `expect(body).not.toContain("SQLiteError")` assertion, because Bun answered with its development error page containing the exception name, the receiver's absolute working directory and stack frames. So the explicit catch is load-bearing for two properties at once: a clean 5xx and no server-internal leakage to the caller. The pre-fix run failed in `has()` rather than `enqueue`, which also confirms the dedupe read needs the same protection the worker gave it.
+
+Test quality: the failure is induced with the owner-verified recipe (the test even checkpoints the WAL first, with a comment explaining that deleting it before a checkpoint would drop committed rows and make the no-partial-row assertion meaningless); it then asserts a 5xx that is not 2xx, a body that is neither `accepted` nor `duplicate` nor an error page, `/healthz` still answering, no false ACK when the failed id is resent while the outbox is broken, no partial row, and it restores permissions in a `finally`.
+
+Owner integration: both files copied verbatim and md5-verified (two MATCH). Completion-side oracles: typecheck clean, **210 pass / 453 assertions** across 17 files, `bun run build` emits `dist/server.js` (24.0 KB).
+
+### Owner-observed finding from S09B — an outbox I/O failure is not recovered and not reflected in readiness
+
+The worker's recovery probe is recorded rather than hidden, and the owner reproduced its meaning: after the induced write failure and after permissions are restored, the running receiver answers `503 outbox unavailable` for new deliveries (`post-restore webhook result: 503 outbox unavailable` in the receipt). The process is alive and `/healthz` still returns 200. `/readyz` calls `outbox.ready()`, which is a plain `SELECT 1` and can also keep succeeding on the broken connection.
+
+Consequence: a transient outbox I/O error (filesystem hiccup, disk full, external checkpoint that removes the WAL) can leave a running receiver permanently unable to persist deliveries while both health endpoints keep reporting healthy, and GitHub's redeliveries are answered 5xx and retried. Nothing in M1 claims otherwise, but this is a real operational hole.
+
+Proposed candidate row (owner, TODO): after an outbox failure the receiver must either reopen the database and resume, or fail readiness so a supervisor restarts it — with a test that induces the failure, restores permissions and asserts one of those two outcomes rather than a silent 503 loop. Keep it out of M1's scope statement.
+
+## M1 close-out — reliable ingress (S01–S22)
+
+Every row in the M1 range now has an owner decision, and each gap that M1 depended on has been closed or explicitly recorded:
+
+- S01, S02, S03A, S03B, S03C1–C3 were accepted in wave-01 by the previous owner; their worktrees are gone but the accepted deltas are in this checkout and were re-verified in the retro table above.
+- S03C4 was re-run as a fresh task (`0f53822`, ACCEPT) because its old branch held no work.
+- S04A–C accepted; S04D fixed the lockfile layout (`0374d34`, ACCEPT).
+- S05A, S05B, S06, S08A, S08B, S14 accepted in the retro table.
+- S07's wave-01 REJECT is superseded: the repository-shape gate and its child-process test exist and pass, and the rejected candidate is unrecoverable.
+- S09A's named oracle was written and now passes (`5484670`), S09B was implemented and tested (`ca6a9b0`).
+- S10's missing oracle was closed with an injectable timeout plus a hanging-gateway test (`4ba3da9`), S11's backoff schedule was pinned (`5b47809`).
+- S12 (`57be0b6`) and S13 (`47df399`) were implemented and proven against a real process; S15 declared the concurrency and durability policy (`7ee1c78`); S16 accepted; S17 (`49e1d94`), S18 (`f1be5f5`) and S19 (`bfefe5a`) hardened the reverse-link path; S20 (`74ebffc`), S21 (`b7254f8`) and S22 (`b5be3d0`) finished routing and documentation truth.
+
+Evidence class for all of M1: local and synthetic process-level only. There is still **no** runtime, deployed or human-verified evidence — no live GitHub delivery, no OpenClaw Gateway, no Discord delivery, no deployed SHA, no restore or rollback drill. M1's claim is limited to "reliable ingress at the code and synthetic-process level".
+
+Baseline at close-out: `ca6a9b0`, `bun test` 210 pass / 453 assertions across 17 files, `bun run typecheck` clean, `bun run build` emits 24.0 KB, CI green on every push.
+
+Two candidate rows were opened from this wave and are **not** part of M1: persist-then-resolve so the ACK no longer waits on the GitHub lookup (from S21), and outbox-failure recovery or readiness failure (from S09B).
