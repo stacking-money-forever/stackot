@@ -29,9 +29,23 @@ export function findThreadId(item: GitHubItem): string | null {
   return null;
 }
 
-/** Fetch an issue/PR with its comments, for reverse-link resolution. */
-export async function fetchItem(cfg: ReceiverConfig, repo: string, kind: "issues" | "pulls", number: number): Promise<GitHubItem> {
-  const base = `https://api.github.com/repos/${repo}`;
+/**
+ * Fetch an issue/PR with its comments, for reverse-link resolution.
+ *
+ * GitHub serves a PR's general discussion comments on the issues surface
+ * (`/issues/{n}/comments`); `/pulls/{n}/comments` is the inline review-comment
+ * surface, where the bot never records thread URLs. The item body itself comes
+ * from the surface that actually provides it (`/pulls/{n}` for PRs).
+ */
+export async function fetchItem(
+  cfg: ReceiverConfig,
+  repo: string,
+  kind: "issues" | "pulls",
+  number: number,
+  opts: { apiBase?: string } = {},
+): Promise<GitHubItem> {
+  const base = `${opts.apiBase ?? "https://api.github.com"}/repos/${repo}`;
+  const commentsKind = kind === "pulls" ? "issues" : kind;
   const headers = {
     Authorization: `Bearer ${cfg.githubToken}`,
     Accept: "application/vnd.github+json",
@@ -39,7 +53,7 @@ export async function fetchItem(cfg: ReceiverConfig, repo: string, kind: "issues
   };
   const [itemRes, commentsRes] = await Promise.all([
     fetch(`${base}/${kind}/${number}`, { headers }),
-    fetch(`${base}/${kind}/${number}/comments?per_page=20`, { headers }),
+    fetch(`${base}/${commentsKind}/${number}/comments?per_page=20`, { headers }),
   ]);
   if (!itemRes.ok) throw new Error(`github api ${itemRes.status} for ${repo} ${kind} #${number}`);
   const item = (await itemRes.json()) as { body?: string | null };
