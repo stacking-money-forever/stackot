@@ -36,7 +36,10 @@ export function redact(text: string, secrets: readonly string[]): string {
  * never see, and it is exactly what fetch errors echo back.
  */
 export function redactSecrets(cfg: ReceiverConfig): string[] {
-  return [cfg.githubWebhookSecret, cfg.openclawHookToken, cfg.githubToken, cfg.openclawHooksUrl];
+  const repoTokens = Object.values(cfg.repos ?? {})
+    .map((rc) => rc?.githubToken)
+    .filter((t): t is string => typeof t === "string");
+  return [cfg.githubWebhookSecret, cfg.openclawHookToken, cfg.githubToken, cfg.openclawHooksUrl, ...repoTokens];
 }
 
 /**

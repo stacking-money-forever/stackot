@@ -80,13 +80,13 @@ export async function fetchItem(
   repo: string,
   kind: "issues" | "pulls",
   number: number,
-  opts: { apiBase?: string; maxCommentPages?: number; timeoutMs?: number } = {},
+  opts: { apiBase?: string; maxCommentPages?: number; timeoutMs?: number; token?: string } = {},
 ): Promise<GitHubItem> {
   const base = `${opts.apiBase ?? "https://api.github.com"}/repos/${repo}`;
   const commentsKind = kind === "pulls" ? "issues" : kind;
   const signal = AbortSignal.timeout(opts.timeoutMs ?? GITHUB_TIMEOUT_MS);
   const headers = {
-    Authorization: `Bearer ${cfg.githubToken}`,
+    Authorization: `Bearer ${opts.token ?? cfg.githubToken}`,
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
   };

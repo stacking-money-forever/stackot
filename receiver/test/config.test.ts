@@ -129,6 +129,69 @@ describe("loadConfig", () => {
     }
   });
 
+  test("accepts a per-repo githubToken", async () => {
+    const path = await writeConfig({
+      ...base,
+      repos: {
+        "owner/one": { issuesForumChannelId: "101", prsForumChannelId: "102", githubToken: "ghp_repo_one" },
+        "owner/two": { issuesForumChannelId: "201", prsForumChannelId: "202" },
+      },
+    });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.repos["owner/one"]!.githubToken).toBe("ghp_repo_one");
+    expect(cfg.repos["owner/two"]!.githubToken).toBeUndefined();
+  });
+
+  test("config without per-repo githubToken still passes (regression)", async () => {
+    const path = await writeConfig(base);
+    const cfg = await loadConfigWith(path);
+    expect(cfg.repos["owner/one"]!.githubToken).toBeUndefined();
+    expect(cfg.githubToken).toBe("g");
+  });
+
+  const invalidRepoTokens: Record<string, unknown> = {
+    "empty string": "",
+    "whitespace-only string": " \t\n ",
+    number: 12345,
+    boolean: true,
+    null: null,
+    object: { token: "x" },
+    array: ["x"],
+    "single placeholder": "<GITHUB_TOKEN>",
+    "padded placeholder": "  <repo-token>  ",
+  };
+  for (const [label, githubToken] of Object.entries(invalidRepoTokens)) {
+    test(`rejects repos githubToken: ${label}`, async () => {
+      const path = await writeConfig({
+        ...base,
+        repos: { "owner/x": { issuesForumChannelId: "201", prsForumChannelId: "202", githubToken } },
+      });
+      await expect(loadConfigWith(path)).rejects.toThrow('repos["owner/x"].githubToken');
+    });
+  }
+
+  test("accepts a per-repo githubToken with brackets that is not a single placeholder", async () => {
+    for (const githubToken of ["ghp_abc<def>", "<a><b>"]) {
+      const path = await writeConfig({
+        ...base,
+        repos: { "owner/x": { issuesForumChannelId: "201", prsForumChannelId: "202", githubToken } },
+      });
+      const cfg = await loadConfigWith(path);
+      expect(cfg.repos["owner/x"]!.githubToken).toBe(githubToken);
+    }
+  });
+
+  test("per-repo githubToken error names the offending repo", async () => {
+    const path = await writeConfig({
+      ...base,
+      repos: {
+        "owner/one": { issuesForumChannelId: "101", prsForumChannelId: "102" },
+        "owner/two": { issuesForumChannelId: "201", prsForumChannelId: "202", githubToken: "<TOKEN>" },
+      },
+    });
+    await expect(loadConfigWith(path)).rejects.toThrow('repos["owner/two"].githubToken');
+  });
+
   test("rejects missing shared fields", async () => {
     const { agentId: _drop, ...rest } = base;
     const path = await writeConfig(rest);

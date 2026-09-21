@@ -20,6 +20,7 @@ import { Outbox, MAX_DELIVERY_ATTEMPTS, retryDelayMs } from "./outbox.ts";
 import { DeliveryDrainer, type DeliveryOutbox, type PendingDelivery } from "./delivery.ts";
 import { normalize, type NormalizedEvent } from "./normalize.ts";
 import { findThreadId, fetchItem } from "./mapping.ts";
+import { authorizeRepo, assertGrantForRepo } from "./repo-policy.ts";
 import { route } from "./router.ts";
 import { forwardToGateway } from "./gateway.ts";
 import { describeError, redactSecrets } from "./redact.ts";
@@ -83,8 +84,14 @@ function queueMetrics(): QueueMetrics | null {
 
 /** GitHub reverse-link lookup, injected into the router so routing stays pure. */
 async function resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; number: number }): Promise<string | null> {
+  // Repo policy decides the credential before any network access: a repo with
+  // its own token is served only by that token, and an unconfigured repo is
+  // denied here so no lookup is attempted and routing falls back to admin.
+  const auth = authorizeRepo(cfg, input.repo);
+  if (!auth.allowed) return null;
   try {
-    const item = await fetchItem(cfg, input.repo, input.kind, input.number, { apiBase: githubApiBase });
+    assertGrantForRepo(auth.grant, input.repo);
+    const item = await fetchItem(cfg, input.repo, input.kind, input.number, { apiBase: githubApiBase, token: auth.grant.githubToken });
     return findThreadId(item, cfg);
   } catch (error) {
     // router.ts logs the caught error verbatim — hand it a masked message so a

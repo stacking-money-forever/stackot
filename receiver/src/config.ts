@@ -9,6 +9,12 @@ export type RepoConfig = {
   issuesForumChannelId: string;
   /** Discord forum channel ID for PR threads. */
   prsForumChannelId: string;
+  /**
+   * Optional per-repo GitHub token for reverse-link lookups. When set it is
+   * the only token that may authorize this repo's GitHub reads; when absent
+   * the shared `githubToken` applies.
+   */
+  githubToken?: string;
 };
 
 export type ReceiverConfig = {
@@ -123,6 +129,14 @@ export async function loadConfig(): Promise<ReceiverConfig> {
       }
       if (/^<[^<>]*>$/.test(value.trim())) {
         throw new Error(`config repos["${repo}"].${key} is an unfilled <...> placeholder — set the real forum channel ID`);
+      }
+    }
+    if (rc?.githubToken !== undefined) {
+      if (typeof rc.githubToken !== "string" || rc.githubToken.trim() === "") {
+        throw new Error(`config repos["${repo}"].githubToken must be a non-empty string when set`);
+      }
+      if (/^<[^<>]*>$/.test(rc.githubToken.trim())) {
+        throw new Error(`config repos["${repo}"].githubToken is an unfilled <...> placeholder — set the real token or remove the key`);
       }
     }
     if (!/^[^/]+\/[^/]+$/.test(repo)) {
