@@ -7,6 +7,8 @@
  *                  factor in: a down Gateway means deliveries stall and retry,
  *                  but intake still works, and an orchestrator restarting a
  *                  healthy receiver would needlessly drop the intake queue.
+ *                  S09Bb: decided by a real write probe plus the tracked
+ *                  outcome of the last write, not a bare SELECT 1.
  *   - status     — operator view. Intake keeps accepting while the Gateway is
  *                  unreachable, but the report shows "degraded" with the
  *                  masked error so the stalled drain is visible instead of
@@ -16,6 +18,7 @@
  */
 import { redact } from "./redact.ts";
 import type { QueueMetrics } from "./metrics.ts";
+import type { OutboxHealth } from "./outbox.ts";
 
 export type GatewayHealth = {
   /** false after a forward attempt fails; true again after the next success. */
@@ -69,16 +72,24 @@ export function readiness(outboxReady: boolean, _gateway: GatewayHealth): { stat
 export type StatusReport = {
   status: "ok" | "degraded";
   outboxReady: boolean;
+  /** S09Bb tracked outbox write-health; lastError is already masked. */
+  outbox: OutboxHealth;
   gateway: GatewayHealth;
   /** S43 backlog snapshot; null when the stats probe itself failed. */
   queue: QueueMetrics | null;
 };
 
 /** Operator report: degraded when intake or forwarding is impaired. */
-export function statusReport(outboxReady: boolean, gateway: GatewayHealth, queue?: QueueMetrics | null): StatusReport {
+export function statusReport(
+  outboxReady: boolean,
+  gateway: GatewayHealth,
+  queue?: QueueMetrics | null,
+  outbox?: OutboxHealth,
+): StatusReport {
   return {
     status: outboxReady && gateway.reachable ? "ok" : "degraded",
     outboxReady,
+    outbox: outbox ?? { ok: outboxReady, lastError: null },
     gateway: {
       reachable: gateway.reachable,
       lastError: gateway.lastError,

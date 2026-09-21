@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite";
 import { mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import type { NormalizedEvent } from "./normalize.ts";
+import { redact } from "./redact.ts";
 
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_DELIVERY_ATTEMPTS = 5;
@@ -23,12 +24,31 @@ export type OutboxStats = {
   oldestPendingAgeMs: number | null;
 };
 
-export class Outbox {
-  private db: Database;
+export type OutboxHealth = {
+  /** false after a write attempt fails; true again after the next successful write or recover(). */
+  ok: boolean;
+  /** Masked message of the failure that marked the outbox unhealthy. */
+  lastError: string | null;
+};
 
-  constructor(path: string) {
-    mkdirSync(dirname(path), { recursive: true });
-    this.db = new Database(path, { create: true });
+export class Outbox {
+  // Assigned by open(), which the constructor runs — `!` because tsc cannot
+  // see through the method call, and recover() re-assigns it the same way.
+  private db!: Database;
+  private readonly path: string;
+  private readonly secrets: readonly string[];
+  private state: OutboxHealth = { ok: true, lastError: null };
+
+  constructor(path: string, secrets: readonly string[] = []) {
+    this.path = path;
+    this.secrets = secrets;
+    this.open();
+  }
+
+  /** Connection setup shared by the constructor and recover(). */
+  private open(): void {
+    mkdirSync(dirname(this.path), { recursive: true });
+    this.db = new Database(this.path, { create: true });
     // busy_timeout comes first so the journal_mode switch itself can wait out a
     // lock held by another connection instead of failing with SQLITE_BUSY.
     this.db.run(`PRAGMA busy_timeout = ${BUSY_TIMEOUT_MS}`);
@@ -59,19 +79,87 @@ export class Outbox {
     this.db.run("DELETE FROM outbox WHERE state = 'delivered' AND COALESCE(delivered_at, received_at) < ?", [Date.now() - TTL_MS]);
   }
 
+  /** Last observed writability; returns a copy so callers cannot mutate the tracker. */
+  health(): OutboxHealth {
+    return { ok: this.state.ok, lastError: this.state.lastError };
+  }
+
+  private markHealthy(): void {
+    this.state = { ok: true, lastError: null };
+  }
+
+  private markUnhealthy(error: unknown): void {
+    const message = error instanceof Error ? error.message : String(error);
+    this.state = { ok: false, lastError: redact(message, this.secrets) };
+  }
+
+  /** Every mutation runs through here so the health flag mirrors the last write outcome. */
+  private write<T>(fn: () => T): T {
+    try {
+      const result = fn();
+      this.markHealthy();
+      return result;
+    } catch (error) {
+      this.markUnhealthy(error);
+      throw error;
+    }
+  }
+
+  /** BEGIN IMMEDIATE + ROLLBACK is the cheapest proof the write lock is acquirable. */
+  private probe(): boolean {
+    try {
+      this.db.run("BEGIN IMMEDIATE");
+      this.db.run("ROLLBACK");
+      this.markHealthy();
+      return true;
+    } catch (error) {
+      // If BEGIN landed and ROLLBACK threw, retry the rollback so a dangling
+      // transaction cannot hold the write lock across later calls.
+      try { this.db.run("ROLLBACK"); } catch { /* no transaction open */ }
+      this.markUnhealthy(error);
+      return false;
+    }
+  }
+
   has(id: string): boolean {
     return !!this.db.query("SELECT 1 FROM outbox WHERE id = ?").get(id);
   }
 
-  ready(): void {
-    this.db.query("SELECT 1").get();
+  /**
+   * Write capability, not liveness: false while the tracker is unhealthy
+   * (until a write or recover() clears it), otherwise a real write probe
+   * proves the lock is acquirable right now. A failed probe flips the
+   * tracker so later calls answer cheaply instead of re-waiting out
+   * busy_timeout on every readiness check.
+   */
+  ready(): boolean {
+    return this.state.ok ? this.probe() : false;
+  }
+
+  /**
+   * Self-repair: drop the possibly broken connection, reopen it, and verify
+   * with the same probe ready() uses. Never throws — the caller is a request
+   * handler — and is safe to repeat; the failure reason stays in
+   * health().lastError.
+   */
+  recover(): boolean {
+    try { this.db.close(); } catch { /* already closed */ }
+    try {
+      this.open();
+    } catch (error) {
+      this.markUnhealthy(error);
+      return false;
+    }
+    return this.probe();
   }
 
   enqueue(id: string, event: NormalizedEvent): boolean {
-    const now = Date.now();
-    const result = this.db.query("INSERT OR IGNORE INTO outbox (id, event, next_attempt_at, received_at) VALUES (?, ?, ?, ?)")
-      .run(id, JSON.stringify(event), now, now);
-    return result.changes > 0;
+    return this.write(() => {
+      const now = Date.now();
+      const result = this.db.query("INSERT OR IGNORE INTO outbox (id, event, next_attempt_at, received_at) VALUES (?, ?, ?, ?)")
+        .run(id, JSON.stringify(event), now, now);
+      return result.changes > 0;
+    });
   }
 
   due(): { id: string; event: NormalizedEvent; attempts: number } | null {
@@ -81,28 +169,32 @@ export class Outbox {
   }
 
   delivered(id: string): void {
-    this.db.query("UPDATE outbox SET state = 'delivered', delivered_at = ? WHERE id = ?").run(Date.now(), id);
+    this.write(() => this.db.query("UPDATE outbox SET state = 'delivered', delivered_at = ? WHERE id = ?").run(Date.now(), id));
   }
 
   retry(id: string, attempts: number): void {
-    const delay = retryDelayMs(attempts);
-    this.db.query("UPDATE outbox SET attempts = ?, next_attempt_at = ? WHERE id = ?")
-      .run(attempts, Date.now() + delay, id);
+    this.write(() => {
+      const delay = retryDelayMs(attempts);
+      this.db.query("UPDATE outbox SET attempts = ?, next_attempt_at = ? WHERE id = ?")
+        .run(attempts, Date.now() + delay, id);
+    });
   }
 
   fail(id: string, attempts: number, error: string): void {
     if (attempts >= MAX_DELIVERY_ATTEMPTS) {
-      this.db.query("UPDATE outbox SET state = 'dead_letter', attempts = ?, last_error = ? WHERE id = ?")
-        .run(attempts, error, id);
+      this.write(() => this.db.query("UPDATE outbox SET state = 'dead_letter', attempts = ?, last_error = ? WHERE id = ?")
+        .run(attempts, error, id));
       return;
     }
     this.retry(id, attempts);
   }
 
   requeue(id: string): boolean {
-    const result = this.db.query("UPDATE outbox SET state = 'pending', next_attempt_at = ?, last_error = NULL WHERE id = ? AND state = 'dead_letter'")
-      .run(Date.now(), id);
-    return result.changes > 0;
+    return this.write(() => {
+      const result = this.db.query("UPDATE outbox SET state = 'pending', next_attempt_at = ?, last_error = NULL WHERE id = ? AND state = 'dead_letter'")
+        .run(Date.now(), id);
+      return result.changes > 0;
+    });
   }
 
   /**

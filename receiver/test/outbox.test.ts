@@ -261,6 +261,75 @@ test("enqueue waits out a briefly held write lock instead of throwing SQLITE_BUS
   }
 });
 
+test("a contended write failure marks the outbox unhealthy until a successful write clears it", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-unhealthy-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+  const outbox = new Outbox(path);
+  const holder = new Database(path);
+  try {
+    expect(outbox.health()).toEqual({ ok: true, lastError: null });
+    expect(outbox.ready()).toBe(true);
+
+    // The lock holder forces enqueue to exhaust busy_timeout and fail — the
+    // same deterministic induction the S09B integration test uses.
+    holder.run("PRAGMA busy_timeout = 5000");
+    holder.run("BEGIN IMMEDIATE");
+    expect(() => outbox.enqueue("blocked-1", event)).toThrow();
+    expect(outbox.health().ok).toBe(false);
+    expect(outbox.health().lastError).toBeTruthy();
+    // Unhealthy state short-circuits ready() without touching the database.
+    expect(outbox.ready()).toBe(false);
+    holder.run("ROLLBACK");
+
+    // The next successful write flips the tracker back without a recover().
+    expect(outbox.enqueue("blocked-1", event)).toBe(true);
+    expect(outbox.health()).toEqual({ ok: true, lastError: null });
+    expect(outbox.ready()).toBe(true);
+  } finally {
+    holder.close();
+    outbox.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+}, 30_000);
+
+test("recover() reopens the connection and restores readiness, and is safe to repeat", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-recover-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+  const outbox = new Outbox(path);
+  const holder = new Database(path);
+  try {
+    holder.run("PRAGMA busy_timeout = 5000");
+    holder.run("BEGIN IMMEDIATE");
+    expect(() => outbox.enqueue("blocked-2", event)).toThrow();
+    expect(outbox.health().ok).toBe(false);
+
+    // The fault persists, so recovery must fail honestly — it never throws
+    // and never flips the flag without a proven write.
+    expect(outbox.recover()).toBe(false);
+    expect(outbox.health().ok).toBe(false);
+    expect(outbox.health().lastError).toBeTruthy();
+    expect(outbox.ready()).toBe(false);
+    holder.run("ROLLBACK");
+
+    // Fault cleared: reopen + probe heals the tracker and ready() follows.
+    expect(outbox.recover()).toBe(true);
+    expect(outbox.health()).toEqual({ ok: true, lastError: null });
+    expect(outbox.ready()).toBe(true);
+    expect(outbox.enqueue("blocked-2", event)).toBe(true);
+
+    // Idempotent: a second recover() reconnects and stays healthy.
+    expect(outbox.recover()).toBe(true);
+    expect(outbox.health().ok).toBe(true);
+    expect(outbox.has("blocked-2")).toBe(true);
+  } finally {
+    holder.close();
+    outbox.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+}, 30_000);
+
 test("a pending row is still due after close and reopen", () => {
   const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-durable-"));
   const path = join(dir, "outbox.sqlite");
