@@ -23,6 +23,8 @@ export type NormalizedEvent = {
   url: string;
   /** PR numbers linked to this event, when the payload reports them (e.g. check_run). */
   prNumbers?: number[];
+  /** Secondary notice channel, resolved by the router (e.g. #ci-alerts for CI on a PR thread). */
+  noticeChannelId?: string;
 };
 
 type Repo = { full_name: string };

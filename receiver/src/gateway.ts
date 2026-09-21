@@ -14,6 +14,7 @@ export async function forwardToGateway(cfg: ReceiverConfig, ev: NormalizedEvent,
   const forumChannelId = ev.createThread?.forumChannelId;
   const message = [
     ev.createThread ? `새 포럼 스레드 필요: 채널 ${forumChannelId}, 제목 "${ev.createThread.title}"` : `대상 스레드: ${ev.target}`,
+    ...(ev.noticeChannelId ? [`CI 알림 채널: ${ev.noticeChannelId}`] : []),
     "",
     ev.summary,
   ].join("\n");

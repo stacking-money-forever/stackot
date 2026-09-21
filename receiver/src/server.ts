@@ -5,10 +5,10 @@
  *   1. HMAC verify (X-Hub-Signature-256)        → 401 on mismatch
  *   2. Delivery dedupe (X-GitHub-Delivery)      → 200 no-op on duplicate
  *   3. Normalize event                          → 200 no-op on uninteresting
- *   4. Resolve Discord target
+ *   4. Route to a Discord target (router.ts)
  *      - issue/PR opened → createThread in #issues/#pull-requests
  *      - comment/review  → thread ID from GitHub reverse link
- *      - CI failure      → #ci-alerts
+ *      - CI failure      → linked PR thread + #ci-alerts notice, else #ci-alerts
  *      - unresolved      → 200 no-op + admin notice (spec: never guess)
  *   5. Forward to Gateway /hooks/agent
  */
@@ -19,6 +19,7 @@ import { Outbox } from "./outbox.ts";
 import { DeliveryDrainer } from "./delivery.ts";
 import { normalize, type NormalizedEvent } from "./normalize.ts";
 import { findThreadId, fetchItem } from "./mapping.ts";
+import { route } from "./router.ts";
 import { forwardToGateway } from "./gateway.ts";
 
 const cfg: ReceiverConfig = await loadConfig();
@@ -27,42 +28,10 @@ const drainer = new DeliveryDrainer(outbox, async (job) => forwardToGateway(cfg,
 const retryTimer = setInterval(() => { void drainer.drain(); }, 1000);
 void drainer.drain();
 
-async function resolveTarget(ev: NormalizedEvent): Promise<NormalizedEvent> {
-  const repoCfg = cfg.repos[ev.repo];
-  if (!repoCfg) {
-    // Unlisted repo: webhook pointed here but no routing configured. Admin notice.
-    console.warn(`repo not configured: ${ev.repo}`);
-    return { ...ev, target: cfg.adminChannelId };
-  }
-
-  // New items: create a forum thread in that repo's parent channel.
-  if (ev.targetKind === "channel") {
-    if (ev.item.startsWith("issue")) return { ...ev, createThread: { forumChannelId: repoCfg.issuesForumChannelId, title: titleFrom(ev) } };
-    if (ev.item.startsWith("PR")) return { ...ev, createThread: { forumChannelId: repoCfg.prsForumChannelId, title: titleFrom(ev) } };
-    if (ev.item.startsWith("CI")) return { ...ev, target: cfg.ciAlertsChannelId };
-    return ev;
-  }
-
-  // Follow-ups: resolve the thread via the GitHub reverse link.
-  const number = Number(/#(\d+)/.exec(ev.item)?.[1]);
-  const kind = ev.item.startsWith("issue") ? "issues" : "pulls";
-  try {
-    const item = await fetchItem(cfg, ev.repo, kind, number);
-    const threadId = findThreadId(item, cfg);
-    if (threadId) return { ...ev, target: threadId };
-  } catch (err) {
-    console.warn(`mapping lookup failed for ${ev.repo} ${ev.item}:`, err);
-  }
-
-  // Unresolved: never guess (spec §5). Route to #ci-alerts follow-ups or admin.
-  console.warn(`no thread mapping for ${ev.repo} ${ev.item}`);
-  return { ...ev, target: ev.item.startsWith("CI") ? cfg.ciAlertsChannelId : cfg.adminChannelId };
-}
-
-function titleFrom(ev: NormalizedEvent): string {
-  const number = /#(\d+)/.exec(ev.item)?.[1] ?? "";
-  const subject = /^제목: (.+)$/m.exec(ev.summary)?.[1] ?? ev.item;
-  return `[${ev.repo}#${number}] ${subject}`.slice(0, 100);
+/** GitHub reverse-link lookup, injected into the router so routing stays pure. */
+async function resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; number: number }): Promise<string | null> {
+  const item = await fetchItem(cfg, input.repo, input.kind, input.number);
+  return findThreadId(item, cfg);
 }
 
 Bun.serve({
@@ -125,7 +94,14 @@ Bun.serve({
     const ev = normalize(event, { full_name: repo.full_name }, (payload as { action?: unknown }).action, payload);
     if (!ev) return new Response("ignored", { status: 200 });
 
-    const routed = await resolveTarget(ev);
+    const decision = await route(ev, { cfg, resolveThreadId });
+    const routed: NormalizedEvent = {
+      ...ev,
+      target: decision.target,
+      targetKind: decision.targetKind,
+      createThread: decision.createThread,
+      noticeChannelId: decision.noticeChannelId,
+    };
     if (!outbox.enqueue(deliveryId, routed)) return new Response("duplicate", { status: 200 });
     void drainer.drain();
 
