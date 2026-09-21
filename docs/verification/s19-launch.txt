@@ -1,0 +1,59 @@
+S19 — 역링크 신뢰 검증 (owner launch contract, wave 02)
+
+Task: ONE changeset. 역링크로 인정하는 Discord 스레드 URL을 "설정된 길드 + 설정된 기록자 계정"이 남긴 것만으로 좁힌다. 임의 사용자가 이슈/PR 본문·댓글에 링크를 넣어 봇의 라우팅을 가로챌 수 없어야 한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Boundary: E. `discordGuildId`와 `githubBacklinkLogin`의 **실제 값**은 사용자 소유 자산이며 이 작업 범위 밖이다. 구현·테스트는 합성 값으로 하고, 실제 값은 배포 시 오너가 채운다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/mapping.ts
+- receiver/test/mapping.test.ts
+- receiver/src/config.ts
+- receiver/test/config.test.ts
+- receiver/config.example.json
+- receiver/src/server.ts (resolveTarget에서 매핑 호출 시 설정값을 전달하는 부분만)
+- receiver/test/server.*.integration.test.ts (아래 이유로 **config 픽스처에 신규 두 키를 추가하는 것만**)
+
+신규 필수 키를 추가하면 기존 서버 통합 테스트가 만드는 config JSON이 시작 검증을 통과하지 못해 전체 스위트가 깨진다. 그래서 그 픽스처에 `discordGuildId`/`githubBacklinkLogin`을 추가하는 것만 허용한다. 픽스처의 기존 단언·시나리오는 절대 바꾸지 말 것.
+
+outbox.ts, delivery.ts, replay.ts, ingress.ts, package.json, .github/ 는 범위 밖이다.
+
+## 현재 결함 (오너가 소스로 확인함)
+- `THREAD_URL_RE = /https:\/\/discord\.com\/channels\/\d+\/(\d+)/`가 **임의 길드·임의 채널** URL을 그대로 수용한다.
+- `findThreadId`는 그 텍스트를 남긴 주체를 보지 않는다.
+- 결과: 이슈/PR 본문이나 댓글에 Discord 채널 URL 한 줄을 넣을 수 있는 사람이면 누구나 봇의 이벤트 라우팅을 자기가 접근 가능한 채널로 돌릴 수 있다. spec.md:84는 이 링크를 "봇이 기록"한다고 규정한다.
+
+## 요구 동작
+1. `findThreadId`는 아래를 **모두** 만족하는 링크만 인정한다.
+   - URL 형태가 `https://discord.com/channels/<설정 길드 ID>/<threadId>`이고, 길드 세그먼트가 설정값과 정확히 일치한다.
+   - 그 텍스트를 남긴 주체가 설정된 기록자 계정(`githubBacklinkLogin`)과 일치한다(대소문자 무시).
+   - item body도 동일 규칙으로 검사한다(작성자가 기록자 계정일 때만 본문 링크를 인정).
+2. `fetchItem`은 본문 작성자와 각 댓글 작성자를 함께 반환한다(GitHub 응답의 `user.login`).
+3. 설정 추가: `discordGuildId`(숫자 문자열), `githubBacklinkLogin`(GitHub 로그인). 둘 다 필수이며 누락·빈 문자열·공백만·`<...>` placeholder·형식 오류는 시작 실패다. `receiver/config.example.json`도 갱신한다.
+4. `server.ts`의 `resolveTarget`은 매핑 호출 시 필요한 설정값을 전달한다. 그 외 server.ts 변경은 금지한다.
+5. S17/S18 동작(PR 댓글은 issues 표면, Link rel=next pagination, 조기 종료, 페이지 상한)은 그대로 유지한다. 기존 매핑 테스트 픽스처에 작성자 정보를 보강하는 것은 허용하지만, 기존 단언을 약화·삭제하지 말 것.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/mapping.test.ts test/config.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/mapping.test.ts)
+- 정상 1: 설정 길드 + 기록자 계정이 쓴 **댓글**의 링크가 스레드 ID로 복원된다.
+- 정상 2: 설정 길드 + 기록자 계정이 쓴 **본문**의 링크도 복원된다.
+- 거부 1: 같은 채널 ID지만 **다른 길드**인 링크는 무시된다.
+- 거부 2: **기록자가 아닌 사용자**가 쓴 댓글의 링크는 무시된다(같은 길드/다른 길드 각각).
+- 거부 3: 기록자 계정이지만 길드가 다른 링크는 무시된다.
+- 순서: 위조 링크가 앞에 있고 유효 링크가 뒤에 있으면 유효 링크를 채택한다(앞의 위조 링크를 채택하지 않는다).
+- 대소문자: `GitHubBot`과 `githubbot`은 같은 계정으로 취급한다.
+- 회귀: S17/S18 계약(요청 경로, per_page=20, pagination, 조기 종료, 상한)이 그대로 통과한다.
+- config.test.ts: 두 신규 키의 누락/빈/공백/placeholder/형식 오류 거부와 정상 통과 케이스.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크 호출, commit/push/merge/deploy, subagent 생성, formatter·linter 전체 실행. node_modules가 없으면 `cd receiver && bun install` 1회 허용(캐시 사용, 새 패키지 추가 금지).
+
+## 완료 산출물
+1. 위 오라클 실행 결과 원문.
+2. `docs/verification/s19-receipt.md`: 변경 파일, 핵심 diff 요약, 실행한 명령과 결과, 남은 리스크(설정값 미확보 상태 포함).
+3. Todo는 최대 2개. 최종 보고는 300줄 이내.

@@ -166,6 +166,36 @@ Defect the owner confirmed by reading the source: `fetchItem` requests `…/comm
 
 Owner envelope: pagination follows the server-provided `Link` `rel="next"` URL rather than guessing a `page` parameter; it stops as soon as a thread URL is found; it has an exported hard page cap (default 10) that is injectable through the same options object so the cap is testable without a ten-page fixture; `per_page=20`, the S17 comments-surface rule and `findThreadId` semantics are unchanged, so no S17 assertion needs re-pinning.
 
-Task checkout: `/Users/justn/dev/.worktrees/stackot-s18-20260921`, branch `codex/stackot-s18-20260921`, created from the baseline with `herdr worktree create --label stackot-s18 --no-focus --trust-repository` (workspace `w5R`, root pane `w5R:p1`). Launch prompt: `docs/verification/s18-launch.txt`, committed into the baseline so the checkout contains it.
+Task checkout: `/Users/justn/dev/.worktrees/stackot-s18-20260921`, branch `codex/stackot-s18-20260921`, created from the baseline with `herdr worktree create --label stackot-s18 --no-focus --trust-repository` (workspace `w5S`, root pane `w5S:p1`, owner read back from the create result rather than predicted). Launch prompt: `docs/verification/s18-launch.txt`, committed into the baseline so the checkout contains it.
+
+Status: launched 2026-09-21 from baseline `7bd0a3c`. Foreground argv verified from the process table: `devin --model swe-2 --permission-mode dangerous --prompt-file …/s18-launch.txt` (pid 15413), pane footer `SWE-2 High`, exactly one worker, no fallback model. `herdr agent start` again timed out waiting for startup while the real process ran; no relaunch (fifth occurrence: S01, S12, S13, S17, S18). One worker policy holds: the S17 workspace was already closed before this launch.
+
+### S18 decision — ACCEPT, no retry needed
+
+Candidate: `receiver/src/mapping.ts` (+30/-3) and `receiver/test/mapping.test.ts` (+94/-6); nothing else changed, HEAD unchanged at `7bd0a3c`. The worker ran one `bun install` (cached, no new packages) because the checkout had no `node_modules`.
+
+Owner verified by reading the delta and re-running every oracle. Implementation: an exported `MAX_COMMENT_PAGES = 10`; a `nextPageUrl` helper that splits the `Link` header and returns the `rel="next"` URL verbatim; `opts.maxCommentPages` injection; and a loop `for (let pages = 1; next && pages < maxPages && !findThreadId(result); pages++)` that fetches the next page, appends its comments, breaks on a non-ok page, and re-reads the new `Link` header. The item and page-1 requests are unchanged, `commentsKind` (issues surface for PRs) is unchanged, and `server.ts` still needs no change.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/mapping.test.ts` 8 pass / 27 assertions, `bun test` 115 pass / 247 assertions across 14 files (S17 left it at 111).
+
+Oracle discrimination check (owner, disposable copy outside the candidate): deleting only the pagination loop makes 2 of the 8 mapping tests fail — later-page recovery and the cap test — so the new tests fail against the pre-fix behaviour rather than passing vacuously.
+
+Test quality: the stub now accepts either a JSON body or a handler that can emit `Link` headers; the later-page test advertises an opaque `cursor=opaque-page-2` next URL (proving the server URL is used verbatim instead of a guessed `page` parameter) and asserts the exact query strings and bearer token per request; early termination is proven by exactly one comment request when page 1 already carries the thread URL; the cap test asserts exactly `maxCommentPages` requests; and the no-`Link` case asserts a single request.
+
+Owner integration: both files copied verbatim and md5-verified (two MATCH). Completion-side oracles: typecheck clean, 115 pass / 247 assertions, `bun run build` emits `dist/server.js` (19.63 KB).
+
+Residual risks accepted with the row (from the receipt, re-checked as accurate): a thread URL beyond the tenth page is still missed, now bounded by design rather than by accident; `maxCommentPages` below 1 cannot go below the single inherent first-page request; a failing page ≥2 truncates the collected comments silently (consistent with the pre-existing treatment); and the row remains contract-level evidence (S) because `server.ts` still talks to the live GitHub API.
+
+Worker lifecycle: the S18 worker settled `idle` after writing its receipt; workspace `w5S` (label `stackot-s18`) was closed after integration and the task worktree is retained.
+
+## S19 launch contract — reverse-link trust verification
+
+Baseline: `f1be5f5` (S18 integrated). Task checkout `/Users/justn/dev/.worktrees/stackot-s19-20260921`, branch `codex/stackot-s19-20260921`, created with `herdr worktree create --label stackot-s19 --no-focus --trust-repository`; the workspace and pane IDs are read back from the create result rather than predicted.
+
+Row: `mapping.ts` + `mapping.test.ts`, completion condition "임의 댓글 링크 거부" (an arbitrary comment's link must not steer routing), failure trigger "다른 길드로 라우팅".
+
+Owner envelope decision, wider than the row's nominal scope and justified the same way as S12's: the guard is only real if the expected guild and backlink author reach the lookup, so the row also covers `config.ts`, `config.test.ts`, `config.example.json`, the `resolveTarget` call site in `server.ts`, and **config-fixture-only** edits in `test/server.*.integration.test.ts`. Owner confirmed by inspection that five integration suites and the `config.test.ts` base fixture construct config JSON inline; adding two required keys without updating them would fail startup and break the whole suite. Fixture edits are limited to adding the new keys — no assertion or scenario change. Out of scope: `outbox.ts`, `delivery.ts`, `replay.ts`, `ingress.ts`, `package.json`, `.github/`.
+
+Two required keys are the owner's design choice over making them optional: `discordGuildId` and `githubBacklinkLogin`. The receiver has never been deployed, so fail-fast on a missing key costs nothing today, and an optional key that silently degrades to "no backlink is trusted" would push every follow-up event to the admin channel without any startup signal. Both keys are validated like the existing ones (non-blank, no `<...>` placeholder, shape-checked) and `config.example.json` is updated. The real values are boundary-E user assets and are not part of this row.
 
 Status: contract written; launch follows.
