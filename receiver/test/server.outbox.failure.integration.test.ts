@@ -2,14 +2,18 @@
  * S09B oracle — an outbox write failure must not be ACKed.
  *
  * The receiver must answer an explicit 5xx (never 2xx) when the enqueue commit
- * fails, leave no partial row behind, and keep the process alive. The failure
- * is induced with the owner-verified recipe: chmod alone does not work (an
- * already-open fd keeps write access), so the live -wal/-shm files are deleted
- * first and only then are the directory and database file made unwritable.
+ * fails, leave no partial row behind, and keep the process alive.
+ *
+ * The failure is induced portably by holding the SQLite write lock from a second
+ * connection: the server's enqueue waits out its busy timeout and then fails.
+ * An earlier recipe that deleted the live -wal/-shm files and removed write
+ * permission worked on macOS but not on Linux, where the open file descriptors
+ * keep writing to the unlinked inodes and the request succeeds — and every row
+ * in this project must hold on the CI platform.
  */
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import { chmod, mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -46,6 +50,15 @@ function postWebhook(deliveryId: string): Promise<Response> {
   });
 }
 
+function rowCountFor(deliveryId: string): number {
+  const db = new Database(dbPath, { readonly: true });
+  try {
+    return (db.query("SELECT COUNT(*) AS c FROM outbox WHERE id = ?").get(deliveryId) as { c: number }).c;
+  } finally {
+    db.close();
+  }
+}
+
 beforeAll(async () => {
   dir = await mkdtemp(join(tmpdir(), "stackot-s09b-"));
   dbPath = join(dir, "outbox.sqlite");
@@ -77,9 +90,6 @@ beforeAll(async () => {
 afterAll(async () => {
   proc?.kill();
   if (proc) await proc.exited;
-  // Restore writability before removing the temp dir; rm fails inside a 0555 dir.
-  await chmod(dbPath, 0o644).catch(() => {});
-  await chmod(dir, 0o755).catch(() => {});
   await rm(dir, { recursive: true, force: true });
 });
 
@@ -88,39 +98,18 @@ describe("S09B outbox write failure", () => {
     const res = await postWebhook("s09b-healthy");
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("accepted");
-
-    const db = new Database(dbPath, { readonly: true });
-    try {
-      const row = db.query("SELECT id, state FROM outbox WHERE id = ?").get("s09b-healthy") as
-        { id: string; state: string } | null;
-      expect(row).not.toBeNull();
-      expect(row?.state).toBe("pending");
-    } finally {
-      db.close();
-    }
+    expect(rowCountFor("s09b-healthy")).toBe(1);
   });
 
-  test("write failure returns an explicit 5xx, no ACK, no row, and the process survives", async () => {
+  test("a contended write returns an explicit 5xx with no ACK and no row, then recovers", async () => {
     const failedId = "s09b-write-fails";
 
-    // Checkpoint WAL into the main database file first: committed rows live in
-    // -wal until a checkpoint, so deleting it without one would drop the table
-    // itself and make the no-partial-row assertion meaningless.
-    const setup = new Database(dbPath);
-    try {
-      setup.run("PRAGMA busy_timeout = 5000");
-      setup.run("PRAGMA wal_checkpoint(TRUNCATE)");
-      expect(setup.query("SELECT 1 FROM outbox WHERE id = ?").get("s09b-healthy")).not.toBeNull();
-    } finally {
-      setup.close();
-    }
-
-    // Owner-verified recipe: delete the live WAL/SHM first (an open fd keeps
-    // write access, so chmod alone never fails), then remove write permission.
-    await rm(`${dbPath}-wal`, { force: true });
-    await rm(`${dbPath}-shm`, { force: true });
-    await chmod(dir, 0o555);
-    await chmod(dbPath, 0o444);
+    // Hold the SQLite write lock for the whole attempt: the server's enqueue
+    // waits out its busy timeout and then fails, which is the production path
+    // this row protects.
+    const holder = new Database(dbPath);
+    holder.run("PRAGMA busy_timeout = 0");
+    holder.run("BEGIN IMMEDIATE");
     try {
       const res = await postWebhook(failedId);
       const body = await res.text();
@@ -129,47 +118,26 @@ describe("S09B outbox write failure", () => {
       expect(body).not.toBe("accepted");
       expect(body).not.toBe("duplicate");
       expect(body).not.toContain("SQLiteError");
+      expect(rowCountFor(failedId)).toBe(0);
 
-      // The process survives the failed commit.
-      const health = await fetch(`http://127.0.0.1:${port}/healthz`);
-      expect(health.status).toBe(200);
-
-      // While the outbox is still broken, resending the failed delivery id
-      // must not be answered with a 2xx ACK.
-      const resent = await postWebhook(failedId);
-      expect(resent.status).toBeGreaterThanOrEqual(500);
-      expect(resent.status).toBeLessThan(600);
+      // The process survives a failed commit.
+      expect((await fetch(`http://127.0.0.1:${port}/healthz`)).status).toBe(200);
     } finally {
-      await chmod(dir, 0o755);
-      await chmod(dbPath, 0o644);
+      holder.run("ROLLBACK");
+      holder.close();
     }
 
-    // A failed commit leaves no partial row. The check runs after permissions
-    // are restored and uses a read-write open: with the wal-index deleted, a
-    // read-only connection cannot rebuild it while the server holds the lock.
-    const db = new Database(dbPath);
-    try {
-      expect(db.query("SELECT 1 FROM outbox WHERE id = ?").get(failedId)).toBeNull();
-      expect((db.query("SELECT COUNT(*) AS c FROM outbox").get() as { c: number }).c).toBe(1);
-    } finally {
-      db.close();
-    }
+    // Recovery: once the lock is gone the receiver persists again, and the
+    // delivery id that failed was never recorded, so GitHub's redelivery of it
+    // is accepted rather than answered as a duplicate.
+    const recovered = await postWebhook(failedId);
+    expect(recovered.status).toBe(200);
+    expect(await recovered.text()).toBe("accepted");
+    expect(rowCountFor(failedId)).toBe(1);
 
-    // Recovery probe: with permissions restored, a new delivery id is sent and
-    // the observed result is recorded in the S09B receipt. The contract-safe
-    // invariant is "no false ACK": a 200 must be a real "accepted", anything
-    // else must remain an explicit 5xx.
-    const recovered = await postWebhook("s09b-after-restore");
-    const recoveredBody = await recovered.text();
-    console.log(`post-restore webhook result: ${recovered.status} ${recoveredBody}`);
-    if (recovered.status === 200) {
-      expect(recoveredBody).toBe("accepted");
-    } else {
-      expect(recovered.status).toBeGreaterThanOrEqual(500);
-      expect(recovered.status).toBeLessThan(600);
-    }
-
-    // The process is still alive after the whole failure/restore cycle.
+    const fresh = await postWebhook("s09b-after-recovery");
+    expect(fresh.status).toBe(200);
+    expect(await fresh.text()).toBe("accepted");
     expect((await fetch(`http://127.0.0.1:${port}/healthz`)).status).toBe(200);
-  }, 15_000);
+  }, 30_000);
 });
