@@ -62,6 +62,8 @@ GitHub 카테고리 (프로젝트마다 반복 — 이름은 프로젝트명 추
      "openclawHooksUrl": "http://127.0.0.1:18789/hooks",
      "openclawHookToken": "<LONG_RANDOM_HOOK_TOKEN — gateway와 동일>",
      "githubToken": "<repo:read 최소권한 PAT>",
+     "discordGuildId": "<역링크로 신뢰할 Discord 길드(서버) ID>",
+     "githubBacklinkLogin": "<GitHub 이슈/PR에 스레드 URL을 기록하는 계정 로그인>",
      "repos": {
        "owner/repo-a": { "issuesForumChannelId": "<...>", "prsForumChannelId": "<...>" },
        "owner/repo-b": { "issuesForumChannelId": "<...>", "prsForumChannelId": "<...>" }
@@ -86,7 +88,7 @@ Add webhook). Secret은 전부 같은 값으로:
 - Content type: `application/json`
 - Secret: `<WEBHOOK_SECRET>` (receiver config와 동일)
 - Events: Issues, Issue comments, Pull requests, Pull request reviews,
-  Pull request review comments, Check runs, Check suites
+  Pull request review comments, Check runs
 
 webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼야
 스레드가 생성된다.
@@ -105,7 +107,9 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
 
 ## 6. 운영 메모
 
-- Receiver dedupe DB: `receiver/var/dedupe.sqlite` (7일 TTL, 자동 정리).
+- Receiver outbox/dedupe DB: `receiver/var/outbox.sqlite` (delivery ID dedupe와 미전달
+  이벤트를 함께 보관, 전달 완료 행은 7일 뒤 시작 시 정리). 경로는 `STACKOT_OUTBOX_PATH`로
+  바꿀 수 있다.
 - 로그: Gateway는 `openclaw logs --follow`, Receiver는 stdout.
 - 재시도: `openclaw tasks list` / `openclaw tasks retry <id>`.
 - Worktree 보존: 중단된 작업의 worktree는 자동 삭제되지 않는다

@@ -93,7 +93,10 @@ OpenClaw 포럼 지원: forum parent로 메시지를 보내면 첫 줄을 제목
 
 `issues`(opened/edited/closed/reopened), `issue_comment`, `pull_request`(opened/
 edited/synchronize/closed), `pull_request_review`, `pull_request_review_comment`,
-`check_run`, `check_suite`, `push`, `release`.
+`check_run`.
+
+`check_suite`, `push`, `release`는 **아직 구독하지 않는다**. Receiver의 정규화기가
+해당 payload를 처리하지 않으므로, 그 webhook을 붙여도 이벤트는 무시된다.
 
 ### 동기화 규칙
 

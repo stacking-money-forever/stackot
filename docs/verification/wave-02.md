@@ -289,3 +289,19 @@ Reading the accepted wiring exposed a real M1-relevant gap that is **not** fixed
 Proposed candidate row (owner, TODO in this ledger): persist the normalized event first and resolve the destination inside the drainer, add a bounded lookup timeout, and prove it with a hanging-GitHub probe plus a redelivery test. Do not fold this into S22, which is a documentation-truth row.
 
 Worker lifecycle: the S21 worker settled `idle` at its prompt with its report delivered; workspace `w5W` (label `stackot-s21`) was closed after integration and the task worktree is retained.
+
+## S22 decision — ACCEPT (owner-authored), M1 documentation truth
+
+Baseline: `b7254f8`. Owner decision: this row is documentation truth whose oracle is a source comparison, so the owner wrote it directly instead of spending a worker round-trip on prose. The record below is the acceptance evidence.
+
+Owner oracle (throwaway script, run against this checkout, then deleted):
+
+- `normalize.ts` handles `issues`, `issue_comment`, `pull_request`, `pull_request_review`, `pull_request_review_comment`, `check_run`.
+- `docs/spec.md` §4 now declares exactly that list, plus an explicit note that `check_suite`, `push` and `release` are **not** subscribed and are ignored if a webhook is attached. Comparison result: `spec.md event list matches source: true`.
+- `deploy/README.md` §4 now tells the operator to subscribe to Issues, Issue comments, Pull requests, Pull request reviews, Pull request review comments, Check runs — the same six events (`deploy/README subscription list matches source: true`). "Check suites" was removed.
+- `deploy/README.md` §3's config example gained the two keys that became required in S19 (`discordGuildId`, `githubBacklinkLogin`); with its `<...>` placeholders filled, the documented example **loads through the real `loadConfig`** (`deploy guide config loads: true`), so the guide can no longer produce a config that fails startup for a reason the guide never mentions.
+- `deploy/README.md` §6 documented the dedupe store as `receiver/var/dedupe.sqlite`, but `server.ts` defaults to `receiver/var/outbox.sqlite`; the guide now names the real file, notes that it holds dedupe and undelivered events together, and records the `STACKOT_OUTBOX_PATH` override. Verified against the source default.
+
+Files changed: `docs/spec.md`, `deploy/README.md`. No source or test change, so no code oracle was re-run beyond this comparison; the suite was unaffected and CI ran on the push.
+
+Residual risks: the note about unsubscribed events states current behaviour only, so whichever row implements `check_suite`/`push`/`release` must update both documents in the same change; and the guide's CI checklist step ("CI 실패 → #ci-alerts 알림 + PR 스레드 답글") is now backed by S21's routing plus the `CI 알림 채널` message line, but the actual Discord posting still depends on the agent and the blocked runtime rows.
