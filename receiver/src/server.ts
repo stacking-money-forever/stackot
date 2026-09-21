@@ -25,8 +25,12 @@ import { forwardToGateway } from "./gateway.ts";
 const cfg: ReceiverConfig = await loadConfig();
 const outbox = new Outbox(process.env.STACKOT_OUTBOX_PATH ?? new URL("../var/outbox.sqlite", import.meta.url).pathname);
 const drainer = new DeliveryDrainer(outbox, async (job) => forwardToGateway(cfg, job.event, job.id));
-const retryTimer = setInterval(() => { void drainer.drain(); }, 1000);
-void drainer.drain();
+/** A drain failure (e.g. outbox I/O error) must not become an unhandled rejection. */
+function logDrainError(error: unknown): void {
+  console.error("delivery drain failed:", error);
+}
+const retryTimer = setInterval(() => { void drainer.drain().catch(logDrainError); }, 1000);
+void drainer.drain().catch(logDrainError);
 
 /** GitHub reverse-link lookup, injected into the router so routing stays pure. */
 async function resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; number: number }): Promise<string | null> {
@@ -87,9 +91,14 @@ Bun.serve({
       return new Response("invalid repository", { status: 400 });
     }
 
-    if (outbox.has(deliveryId)) {
-      return new Response("duplicate", { status: 200 });
+    let seen: boolean;
+    try {
+      seen = outbox.has(deliveryId);
+    } catch (error) {
+      console.error(`outbox dedupe check failed for delivery ${deliveryId}:`, error);
+      return new Response("outbox unavailable", { status: 503 });
     }
+    if (seen) return new Response("duplicate", { status: 200 });
 
     const ev = normalize(event, { full_name: repo.full_name }, (payload as { action?: unknown }).action, payload);
     if (!ev) return new Response("ignored", { status: 200 });
@@ -102,8 +111,15 @@ Bun.serve({
       createThread: decision.createThread,
       noticeChannelId: decision.noticeChannelId,
     };
-    if (!outbox.enqueue(deliveryId, routed)) return new Response("duplicate", { status: 200 });
-    void drainer.drain();
+    let enqueued: boolean;
+    try {
+      enqueued = outbox.enqueue(deliveryId, routed);
+    } catch (error) {
+      console.error(`outbox enqueue failed for delivery ${deliveryId}:`, error);
+      return new Response("outbox unavailable", { status: 503 });
+    }
+    if (!enqueued) return new Response("duplicate", { status: 200 });
+    void drainer.drain().catch(logDrainError);
 
     return new Response("accepted", { status: 200 });
   },
