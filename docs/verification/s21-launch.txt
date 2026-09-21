@@ -1,0 +1,65 @@
+S21 — 라우팅 결정 모듈 (owner launch contract, wave 02)
+
+Task: ONE changeset. 지원 이벤트의 목적지 결정을 테스트 가능한 단일 모듈로 모으고, CI 실패가 연결 PR 스레드로 라우팅되게 한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/router.ts (신규)
+- receiver/test/routing.test.ts (S20에서 만든 파일 확장)
+- receiver/src/server.ts (인라인 resolveTarget/titleFrom 제거, router 사용)
+- receiver/src/normalize.ts (NormalizedEvent에 `noticeChannelId?: string` 필드 추가만)
+- receiver/src/gateway.ts (메시지에 알림 채널 한 줄 추가만)
+
+금지: mapping.ts, config.ts, outbox.ts, delivery.ts, replay.ts, ingress.ts, package.json, docs/*.
+
+## 현재 상태 (오너가 소스로 확인함)
+- server.ts의 `resolveTarget`이 목적지 결정을 인라인으로 갖고 있어 테스트가 불가능하다(통합 테스트로만 간접 확인).
+- CI 실패(check_run)는 항상 `cfg.ciAlertsChannelId`로 간다. spec.md 104행은 "CI 실패 → PR 스레드 답글 + #ci-alerts 알림"이다. S20으로 `NormalizedEvent.prNumbers`가 생겼으니 연결 PR 스레드를 찾을 수 있다.
+- 스레드 역링크 조회(`fetchItem`+`findThreadId`)는 GitHub API를 호출하므로 라우터가 직접 부르면 테스트가 네트워크에 묶인다.
+
+## 요구 동작
+1. `router.ts`에 순수 결정 함수를 만든다. 시그니처 예:
+   `export type RouteDeps = { cfg: ReceiverConfig; resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; number: number }): Promise<string | null> };`
+   `export type RouteDecision = { target: string; targetKind: "thread" | "channel"; createThread?: { forumChannelId: string; title: string }; noticeChannelId?: string; reason: string };`
+   `export async function route(ev: NormalizedEvent, deps: RouteDeps): Promise<RouteDecision>`
+   `resolveThreadId`는 주입되어야 한다 — 라우터 안에서 fetch/mapping을 직접 호출하지 않는다.
+2. 라우팅 표(우선순위 순):
+   - repo가 설정에 없음 → `target = cfg.adminChannelId`, targetKind "channel", reason "unconfigured-repo".
+   - CI 이벤트(`ev.item`이 `CI `로 시작):
+     - `ev.prNumbers`가 있으면 첫 번호로 `resolveThreadId({repo, kind: "pulls", number})`를 조회. 스레드가 있으면 `target = 스레드`, targetKind "thread", `noticeChannelId = cfg.ciAlertsChannelId`, reason "ci-linked-pr-thread".
+     - 스레드가 없거나 번호가 없으면 `target = cfg.ciAlertsChannelId`, targetKind "channel", reason "ci-alerts".
+   - `targetKind === "channel"`(새 이슈/PR): 이슈면 `repoCfg.issuesForumChannelId`, PR이면 `repoCfg.prsForumChannelId`로 `createThread`를 만들고 reason "opened-issue"/"opened-pr". 제목은 기존 규칙 `[owner/repo#N] 제목`(100자 절단)을 유지한다.
+   - `targetKind === "thread"`(후속): `ev.item`에서 번호를 뽑아 `resolveThreadId({repo, kind: 이슈면 "issues", PR이면 "pulls", number})`. 찾으면 targetKind "thread", reason "followup-resolved". 못 찾으면 `cfg.adminChannelId` + reason "followup-unresolved".
+3. server.ts는 `route()`를 호출해 나온 결정을 이벤트에 반영한다(`target`, `targetKind`, `createThread`, `noticeChannelId`). 인라인 `resolveTarget`과 `titleFrom`은 제거한다(중복 금지). 조회 실패/예외 시 기존과 동일하게 admin 폴백이 되도록 reason이 남아야 한다.
+4. gateway.ts는 `ev.noticeChannelId`가 있을 때 메시지에 알림 채널 한 줄을 추가한다(예: `CI 알림 채널: <id>`). 없으면 메시지는 지금과 동일하다.
+5. 라우터는 결정만 한다. 스레드 생성, GitHub 쓰기, outbox 조작, dedupe를 하지 않는다.
+6. 기존 동작 회귀 금지: 설정된 repo의 opened 이슈/PR 스레드 생성, 후속 스레드 해석, 미해결 시 admin 폴백.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/routing.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/routing.test.ts 확장, 네트워크 금지)
+- 라우팅 표 재생: 최소 아래 케이스를 표로 단언한다(각 케이스의 target/targetKind/forum/notice/reason).
+  1) 설정된 repo의 opened 이슈 → issues 포럼 createThread
+  2) 설정된 repo의 opened PR → prs 포럼 createThread
+  3) 후속(이슈/PR 댓글) 스레드 해석 성공 → 해당 스레드
+  4) 후속 스레드 해석 실패 → admin 채널
+  5) CI + 연결 PR 스레드 해석 성공 → PR 스레드 + noticeChannelId = ci-alerts
+  6) CI + 연결 PR 스레드는 실패 → ci-alerts 채널
+  7) CI + 연결 PR 없음 → ci-alerts 채널
+  8) 설정에 없는 repo → admin 채널
+- repo 간 혼선 방지: repo A(이슈 포럼 101)와 repo B(이슈 포럼 201)를 설정하고, 각 이벤트가 자기 repo의 포럼/스레드로만 간다는 것을 단언한다. `resolveThreadId`가 받은 인자(repo/kind/number)도 함께 단언한다.
+- `resolveThreadId`가 throw하면 admin으로 폴백하고 프로세스가 죽지 않는다.
+- S20의 기존 check_run/prNumbers 단언은 그대로 통과해야 한다.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크 호출, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install` 1회 허용(캐시 사용).
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s21-receipt.md`: 변경 파일, 핵심 diff 요약, 라우팅 표, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개, 보고 300줄 이내.

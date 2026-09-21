@@ -237,3 +237,31 @@ Defect the owner confirmed by reading the source: `CheckRunPayload` ignores `che
 Owner envelope: `NormalizedEvent` gains an optional `prNumbers?: number[]` set only by the check_run branch (every other branch stays untouched), numbers are order-preserving and deduplicated with non-finite/zero/negative/fractional/missing entries dropped silently, and the CI summary gains a `PR #<n>` reference when one exists so the identity is visible to both the agent and a human reader. Existing check_run gating (completed only, failure conclusions only, channel target, `CI <name>` item) must not change. `server.ts`, `gateway.ts`, `mapping.ts` and `config.ts` stay out of scope — the routing change is S21.
 
 Status: contract written; launch follows.
+
+### S20 decision — ACCEPT, no retry needed
+
+Candidate: `receiver/src/normalize.ts` (+20/-2), `receiver/test/normalize.test.ts` (+18), new `receiver/test/routing.test.ts` (10 tests); nothing else changed, HEAD unchanged at `6139bb9`, no commit by the worker. It ran the permitted single cached `bun install`.
+
+Owner verified by reading the delta and re-running every oracle. `NormalizedEvent` gains optional `prNumbers?: number[]`; `CheckRunPayload.check_run` gains `pull_requests?: { number?: unknown }[]`; the failure branch collects entries where `typeof n === "number" && Number.isInteger(n) && n > 0`, dedupes in first-seen order, sets `prNumbers` only when non-empty, and adds a `연결 PR: PR #12, PR #34` summary line. The existing guards are byte-identical: `action !== "completed"` → null, missing/success/skipped/neutral conclusion → null, otherwise `target: ""`, `targetKind: "channel"`, `item: "CI <name>"`. No other branch sets the new field.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/routing.test.ts test/normalize.test.ts` 27 pass / 70 assertions, `bun test` **162 pass / 319 assertions** across 15 files (S19 left it at 151).
+
+Oracle discrimination check (owner, disposable copy outside the candidate): the new `routing.test.ts` against the previous `normalize.ts` fails 3 of its 10 tests (linked-PR preservation, order/dedupe, malformed entries), so it detects the defect rather than passing vacuously.
+
+Owner integration: three files copied verbatim and md5-verified (three MATCH). Completion-side oracles: typecheck clean, 162 pass / 319 assertions, `bun run build` emits `dist/server.js` (21.66 KB).
+
+Residual risks accepted with the row: only the `check_run` payload's own `pull_requests` list is used, so an event GitHub sends without it still routes to the CI channel; the summary line is agent-visible text, so a future summary format change must keep the PR reference; and this row is data-only by design — nothing consumes `prNumbers` until S21 routes it.
+
+Worker lifecycle: the S20 worker settled `idle` at its prompt with the report delivered; workspace `w5V` (label `stackot-s20`) was closed after integration and the task worktree is retained.
+
+## S21 launch contract — routing decision module
+
+Baseline: `74ebffc` (S20 integrated). Task checkout `/Users/justn/dev/.worktrees/stackot-s21-20260921`, branch `codex/stackot-s21-20260921`, created with `herdr worktree create --label stackot-s21 --no-focus --trust-repository`; workspace and pane IDs are read back from the create result.
+
+Row: new `router.ts` plus `routing.test.ts`, completion condition "opened/followup/CI 목적지 일치", failure trigger "repo 간 혼선".
+
+Owner envelope decision: the destination decision currently lives inline in `server.ts`'s `resolveTarget` and is only reachable through integration tests, so the row also covers `server.ts` (call the router, delete the inline `resolveTarget`/`titleFrom`), `normalize.ts` (a `noticeChannelId?: string` field on `NormalizedEvent` only), and `gateway.ts` (one extra message line when a notice channel is present). Without the last two the spec's "CI 실패 → PR 스레드 답글 + #ci-alerts 알림" would be half-realized: the event would reach the PR thread but nothing would tell the agent about the CI channel. The router itself must take the thread lookup as an injected dependency (`resolveThreadId`), so no test touches the network and the GitHub call stays in `server.ts`.
+
+Routing table the owner specified, in priority order: unconfigured repo → admin; CI with a resolvable linked PR thread → that thread plus `noticeChannelId = ciAlertsChannelId`; CI otherwise → `ciAlertsChannelId`; opened issue/PR → `createThread` in that repo's forum with the existing title rule; follow-up resolved → that thread; follow-up unresolved or a throwing lookup → admin. The router decides only — no thread creation, no GitHub writes, no outbox or dedupe work.
+
+Status: contract written; launch follows.
