@@ -470,3 +470,17 @@ Evidence class for all of M1: local and synthetic process-level only. There is s
 Baseline at close-out: `ca6a9b0`, `bun test` 210 pass / 453 assertions across 17 files, `bun run typecheck` clean, `bun run build` emits 24.0 KB, CI green on every push.
 
 Two candidate rows were opened from this wave and are **not** part of M1: persist-then-resolve so the ACK no longer waits on the GitHub lookup (from S21), and outbox-failure recovery or readiness failure (from S09B).
+
+### S09B retry — platform-specific failure induction, found by CI
+
+The candidate integrated as `ca6a9b0` induced the write failure by deleting the live `-wal`/`-shm` files and removing write permission. That recipe was verified on macOS (it produced `SQLiteError: disk I/O error`) and the owner's local run of the whole suite was green, but **CI failed on the same commit**: on the Linux runner the enqueue succeeded and the test failed on `Expected: >= 500, Received: 200` in 3.5 ms. The mechanism is that an unlinked file with an open descriptor keeps accepting writes on Linux, so removing the path never breaks the connection there.
+
+Owner-applied retry (recorded as an owner delta rather than a worker turn: the accepted implementation in `server.ts` was never in question — only the test's failure-induction recipe was non-portable, and the owner had already diagnosed it):
+
+- The failure is now induced by holding the SQLite write lock from a second connection (`BEGIN IMMEDIATE`, `busy_timeout = 0`) while the webhook is posted, so the server's own five-second busy timeout expires and the enqueue fails. This is portable, deterministic, and it exercises the production path rather than a filesystem quirk.
+- The test also gained a recovery half that the old recipe could not assert: after the lock is released, the delivery id that failed is accepted (`200 accepted`) rather than answered as a duplicate, proving the failed attempt left no trace and that GitHub's redelivery of it works; a fresh id is then persisted normally.
+- Discrimination re-verified against the previous handler in a disposable copy: it still fails, now on the leaked `SQLiteError: database is locked` development error page.
+
+Evidence: `bun run typecheck` clean, the new file 2 pass / 16 assertions locally in 5.1 s (the busy timeout dominates), full suite 210 pass / 451 assertions, and CI run on `2042df6` **success** — the platform where the first attempt failed.
+
+Lesson recorded for later rows: a failure-induction recipe must hold on the CI platform, and a green local run is not evidence for a mechanism that depends on filesystem or permission semantics. This is the second time this wave caught a defect only because CI ran on the pushed SHA.
