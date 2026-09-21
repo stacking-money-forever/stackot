@@ -1,0 +1,46 @@
+S20 — check_run의 연결 PR 보존 (owner launch contract, wave 02)
+
+Task: ONE changeset. CI 실패 이벤트에서 GitHub가 알려주는 연결 PR 번호를 보존한다. 지금은 CI 이름만 남아 PR 스레드로 라우팅할 근거가 사라진다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/normalize.ts
+- receiver/test/routing.test.ts (신규)
+- receiver/test/normalize.test.ts (기존 check_run·PR 케이스에 한해 단언 유지 하에 보강만)
+
+그 외 파일 금지: server.ts, mapping.ts, config.ts, outbox.ts, delivery.ts, replay.ts, gateway.ts, package.json.
+
+## 현재 상태 (오너가 소스로 확인함)
+- `CheckRunPayload`는 `check_run.{name,status,conclusion,html_url}`만 본다. `check_run.pull_requests`는 버려진다.
+- `NormalizedEvent`에는 PR 번호 필드가 없다. 결과적으로 check_run 이벤트는 `item: "CI <name>"`만 남고, 후속 라우팅(spec 104행 "CI 실패 → PR 스레드 답글 + #ci-alerts 알림")에 필요한 PR 식별자가 사라진다.
+
+## 요구 동작
+1. `CheckRunPayload.check_run`에 `pull_requests?: { number?: unknown }[]`를 추가한다.
+2. check_run 케이스는 연결 PR 번호를 **순서 보존·중복 제거**해 `NormalizedEvent.prNumbers`에 담는다. 각 항목은 유한한 양의 정수만 채택하고, 결측·비숫자·NaN·소수·0 이하는 조용히 버린다.
+3. `NormalizedEvent`에 선택 필드 `prNumbers?: number[]`를 추가한다(기존 브랜치는 건드리지 않는다 — 설정하지 않는다).
+4. 연결 PR이 하나 이상 있으면 CI 요약에 `PR #<n>` 참조를 포함한다(여러 개면 모두, 순서대로). 사람과 에이전트가 읽는 요약에서도 PR을 알 수 있어야 한다.
+5. 기존 check_run 동작은 그대로다: `action !== "completed"`는 null, `conclusion`이 없거나 success/skipped/neutral이면 null, 그 외 실패는 `target: ""`, `targetKind: "channel"`, `item: "CI <name>"`를 유지한다.
+6. normalize.ts의 다른 이벤트 분기와 `findThreadId`/mapping 관련 동작은 절대 바꾸지 않는다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/routing.test.ts test/normalize.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/routing.test.ts 신규)
+- 연결 PR이 있는 failed check_run: `prNumbers`가 그 번호를 담고, `item`은 CI 이름을 유지하며, 요약에 `PR #<n>`이 포함된다.
+- 연결 PR이 여러 개면 순서 보존 + 중복 제거를 단언한다.
+- `pull_requests`가 없거나 빈 배열이면 `prNumbers`가 설정되지 않거나 빈 배열이고, 기존대로 channel 목적지다.
+- 결측 number, 문자열, NaN, 0, 음수, 소수 항목은 버려진다(예: 유효 1건 + 불량 4건 → 1건만).
+- 회귀: conclusion이 success/skipped/neutral이면 null, status가 completed가 아니면 null.
+- 기존 normalize.test.ts의 check_run 케이스는 그대로 통과한다(약화 금지).
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `cd receiver && bun install` 1회 허용(캐시 사용).
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s20-receipt.md`: 변경 파일, 핵심 diff 요약, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개, 보고 300줄 이내.

@@ -225,3 +225,15 @@ Residual risks carried with the row: the real `discordGuildId` and `githubBackli
 Worker lifecycle: the S19 worker settled `done` after the retry; workspace `w5T` (label `stackot-s19`) was closed after integration and the task worktree is retained. D3 (S17–S19) is therefore complete at contract level; the live end-to-end claim still depends on the blocked runtime rows.
 
 One process note for future owners: the first S19 turn spent a long time exploring without editing, and the steering message submitted while it was working sat queued in the Devin TUI (Herdr reported the pane `idle` while a message waited for Enter). `herdr agent send-keys <pane> enter` delivered it and the worker resumed. Treat a Herdr `idle` on a worker pane as "awaiting input" until the pane text is checked.
+
+## S20 launch contract — preserve the linked PR on check_run
+
+Baseline: `537c0d0` (S19 integrated). Task checkout `/Users/justn/dev/.worktrees/stackot-s20-20260921`, branch `codex/stackot-s20-20260921`, created with `herdr worktree create --label stackot-s20 --no-focus --trust-repository`; workspace and pane IDs are read back from the create result.
+
+Row: `normalize.ts` + new `routing.test.ts`, with `normalize.test.ts` limited to strengthening its existing check_run/PR cases. Completion condition: the CI event keeps the PR id and the CI identity. Failure trigger: the CI channel is the only thing the event can reach.
+
+Defect the owner confirmed by reading the source: `CheckRunPayload` ignores `check_run.pull_requests`, and `NormalizedEvent` has no PR field, so a failed check leaves only `item: "CI <name>"`. spec.md line 104 requires "CI 실패 → PR 스레드 답글 + #ci-alerts 알림", which needs the PR identity to survive normalization — that routing decision is S21's, so S20 is deliberately data-only.
+
+Owner envelope: `NormalizedEvent` gains an optional `prNumbers?: number[]` set only by the check_run branch (every other branch stays untouched), numbers are order-preserving and deduplicated with non-finite/zero/negative/fractional/missing entries dropped silently, and the CI summary gains a `PR #<n>` reference when one exists so the identity is visible to both the agent and a human reader. Existing check_run gating (completed only, failure conclusions only, channel target, `CI <name>` item) must not change. `server.ts`, `gateway.ts`, `mapping.ts` and `config.ts` stay out of scope — the routing change is S21.
+
+Status: contract written; launch follows.
