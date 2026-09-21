@@ -492,3 +492,15 @@ The first corrected oracle passed twice on this machine and failed on the CI run
 Fix (`edfd4b7`): the holder uses the same five-second busy timeout as production, so it waits out the receiver's transient writes and still holds the lock while the request is posted. Three consecutive local runs pass, and CI run on `edfd4b7` is **success** — the platform that exposed both defects in this test.
 
 Combined lesson for the remaining rows, in two parts: a failure-induction recipe has to hold on the CI platform, and a test that deliberately owns a shared resource has to tolerate the production process's legitimate transient use of it. Neither defect was reachable from a local green run.
+
+## S21b launch contract — persist before resolve (wave 03 opens)
+
+Baseline: `f797ae7`. Task checkout `/Users/justn/dev/.worktrees/stackot-s21b-20260921`, branch `codex/stackot-s21b-20260921`, created with `herdr worktree create --label stackot-s21b --no-focus --trust-repository`; workspace and pane IDs are read back from the create result.
+
+Owner-observed defect (from S21): the request path runs `await route(ev, deps)` before `outbox.enqueue`, and `route` reaches GitHub through the injected `resolveThreadId` for every follow-up event. The ACK and the persistence of the event are therefore coupled to a third-party API, and `fetchItem` sets no request timeout, so a hanging GitHub response can stall a drain indefinitely.
+
+Owner envelope: `server.ts` (persist the unrouted event, move `route` into the drainer's forward callback, read `STACKOT_GITHUB_API_BASE` with the real API as default and pass it as `apiBase`), `mapping.ts` (an `opts.timeoutMs` with an exported `GITHUB_TIMEOUT_MS` default applied through `AbortSignal.timeout`), plus new tests in `mapping.test.ts` and a new `server.routing.integration.test.ts`. The API-base override exists so the routing path becomes process-testable without the live network, which the disposable integration environment will also need; unset, production behaviour is unchanged. Routing results are deliberately **not** persisted: the stored event stays unrouted so a retry re-resolves rather than replaying a stale destination.
+
+The oracle is a local stub pair (GitHub + Gateway): a follow-up event must be ACKed with its row committed and no GitHub request yet made, then resolved to the stubbed backlink thread when it drains; an unmapped event must land on the admin channel; and with a GitHub stub that never answers, the ACK must still be immediate and the row committed while the drain remains a failure.
+
+Status: contract written; launch follows.

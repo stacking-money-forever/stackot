@@ -1,0 +1,51 @@
+S21b — persist-then-resolve (owner launch contract, wave 03)
+
+Task: ONE changeset. 웹훅 ACK와 이벤트 영속화가 GitHub 역링크 조회에 묶여 있지 않게 한다. 이벤트를 먼저 저장하고, 목적지 결정은 전달(drain) 시점에 한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (오너가 소스로 확인한 사실)
+- 현재 `server.ts`는 요청 경로에서 `await route(ev, {...})`를 먼저 실행한다. `route`는 후속 이벤트에서 주입된 `resolveThreadId`를 호출하고, 그 안에서 `fetchItem`이 실제 GitHub API를 부른다. 그래서 ACK와 영속화가 서드파티 API 지연에 묶인다.
+- `mapping.ts`의 `fetchItem`에는 요청 타임아웃이 없다(`gateway.ts`는 10초로 제한한다). GitHub이 응답하지 않으면 drain이 무기한 대기할 수 있다.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/server.ts
+- receiver/src/mapping.ts
+- receiver/test/mapping.test.ts (타임아웃 테스트 추가)
+- receiver/test/server.routing.integration.test.ts (신규)
+
+금지: router.ts(결정 로직은 그대로 쓴다), outbox.ts, delivery.ts, normalize.ts, config.ts, ingress.ts, replay.ts, gateway.ts, package.json, 기존 테스트 파일 수정.
+
+## 요구 동작
+1. **요청 경로**: normalize 결과(라우팅되지 않은 이벤트)를 그대로 `outbox.enqueue`에 넣고 즉시 ACK한다. 요청 경로에서 GitHub 호출이 절대 발생하지 않아야 한다.
+2. **전달 경로**: drainer의 forward 콜백 안에서 `route(job.event, deps)`를 호출하고, 결정(target/targetKind/createThread/noticeChannelId)을 이벤트에 적용한 뒤 `forwardToGateway`로 보낸다. 라우팅 결과는 저장하지 않는다(저장된 이벤트는 항상 라우팅 전 상태).
+3. **재시도 의미 유지**: 전달 실패는 기존대로 재시도/dead-letter로 이어진다. `route`가 예외를 던져도 drainer가 실패로 처리한다(라우터 내부의 lookup 실패는 이전처럼 admin 폴백이므로 전달 실패가 아니다).
+4. **조회 타임아웃**: `fetchItem`에 `opts.timeoutMs`를 추가하고 기본값을 export 상수(예: `GITHUB_TIMEOUT_MS = 10_000`)로 둔다. `AbortSignal.timeout`으로 적용하고, 타임아웃은 거부(reject)로 표면화한다.
+5. **테스트 가능한 API base**: `server.ts`가 환경변수 `STACKOT_GITHUB_API_BASE`(기본 `https://api.github.com`)를 읽어 `fetchItem`의 `apiBase`로 전달한다. 설정하지 않으면 프로덕션 동작은 지금과 동일하다. 이것은 테스트가 실제 네트워크 없이 라우팅 경로를 검증하기 위한 최소 통로다.
+6. 기존 계약 회귀 금지: 200 accepted는 "행이 이미 커밋됨"을 의미(S09A), 중복 ID는 200 duplicate, outbox 쓰기 실패는 5xx + 내부 정보 비노출(S09B), `/healthz`·`/readyz` 동작 유지.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/mapping.test.ts test/server.routing.integration.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구
+### receiver/test/server.routing.integration.test.ts (신규, 실제 네트워크 금지)
+- 로컬 `Bun.serve`로 GitHub API 스텁과 Gateway 스텁을 띄우고, 서버 자식 프로세스에 `STACKOT_GITHUB_API_BASE`를 스텁 주소로 준다.
+- 스텁 GitHub은 `/repos/owner/repo/issues/7`와 `/repos/owner/repo/issues/7/comments`를 제공하며, 댓글에 설정 길드(`discordGuildId`)와 기록자 계정(`githubBacklinkLogin`)이 남긴 스레드 URL을 담는다. 또한 스텁이 받은 요청 경로를 기록한다.
+- 케이스 1(핵심): 후속 `issue_comment` 이벤트를 POST하면 (a) 200 accepted이고, (b) 응답 직후 outbox 행이 존재하며 그 이벤트는 **라우팅되지 않은 상태**다(target이 비어 있고 noticeChannelId가 없다), (c) 그 시점까지 GitHub 스텁이 호출되지 않았음을 단언한다.
+- 케이스 2: 그 행이 drain되어 Gateway 스텁에 도착할 때, 대상이 역링크로 해석된 스레드 ID이고 GitHub 스텁이 호출되었음을 단언한다.
+- 케이스 3: 역링크가 없는 이벤트는 admin 채널로 전달된다.
+- 케이스 4(수용 기준): GitHub 스텁이 응답하지 않도록 만들고 후속 이벤트를 POST하면 여전히 200 accepted이고 행이 즉시 커밋된다(요청 경로가 조회를 기다리지 않음). 이 케이스에서 drain은 실패/재시도로 남아 있어야 하며, 테스트는 그 사실만 확인하고 오래 기다리지 않는다.
+### receiver/test/mapping.test.ts (추가)
+- 응답하지 않는 로컬 스텁에 대해 `fetchItem(..., { apiBase, timeoutMs: 50 })`이 정해진 시간 안에 거부되는지 단언한다(2초 미만).
+- `GITHUB_TIMEOUT_MS` 기본값이 export되어 있고 10초임을 단언한다.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크 호출, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s21b-receipt.md`: 변경 파일, 핵심 diff 요약, 라우팅이 이동한 위치, 실행한 명령과 결과, 남은 리스크(예: 라우팅이 재시도마다 재실행됨, 저장된 이벤트가 라우팅 전이라는 사실이 다른 소비자에 미치는 영향).
+3. Todo는 최대 2개, 보고 300줄 이내.
