@@ -5,6 +5,11 @@ import type { NormalizedEvent } from "./normalize.ts";
 
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_DELIVERY_ATTEMPTS = 5;
+// Concurrency policy: a writer waits up to this long for the SQLite write lock
+// before SQLITE_BUSY surfaces. Finite so a stuck peer can never block forever;
+// nonzero so short WAL write-lock overlap (e.g. two deliveries arriving
+// together) resolves by waiting instead of throwing into the webhook path.
+export const BUSY_TIMEOUT_MS = 5000;
 
 export class Outbox {
   private db: Database;
@@ -12,7 +17,16 @@ export class Outbox {
   constructor(path: string) {
     mkdirSync(dirname(path), { recursive: true });
     this.db = new Database(path, { create: true });
+    // busy_timeout comes first so the journal_mode switch itself can wait out a
+    // lock held by another connection instead of failing with SQLITE_BUSY.
+    this.db.run(`PRAGMA busy_timeout = ${BUSY_TIMEOUT_MS}`);
     this.db.run("PRAGMA journal_mode = WAL");
+    // Durability policy: synchronous=FULL fsyncs the WAL on every commit, so a
+    // pending row written before the webhook ACK — and delivered/dead_letter
+    // updates that gate dedupe — survive a process crash and even power loss.
+    // NORMAL would only survive a process crash (WAL frames sit in the OS page
+    // cache until the next checkpoint fsync), and OFF can lose committed rows.
+    this.db.run("PRAGMA synchronous = FULL");
     this.db.run(`CREATE TABLE IF NOT EXISTS outbox (
       id TEXT PRIMARY KEY,
       event TEXT NOT NULL,
