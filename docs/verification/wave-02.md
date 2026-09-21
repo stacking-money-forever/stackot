@@ -352,7 +352,7 @@ Defect the owner confirmed by reading the source: the 10 s limit exists (`signal
 
 Owner envelope: the timeout becomes injectable through an options argument with the default exported as a constant, the abort must surface as a rejection the drainer treats as a failure (so a hanging gateway schedules a retry rather than hanging forever), and `server.ts` stays untouched so production keeps the default. The hanging case must be tested against a local stub that never responds using a small injected timeout, keeping the suite fast, and the existing framing/header/bearer assertions must survive unchanged.
 
-Status: contract written; launch follows S15.
+Status: launch follows the S15 integration commit `ce5791c`.
 
 ### S09A decision — oracle gap closed (owner-authored test)
 
@@ -392,4 +392,4 @@ Owner integration: both files copied verbatim and md5-verified (two MATCH). Comp
 
 Residual risks: the contention test depends on real process timing, so a machine that cannot spawn a child process within the handshake window would fail loudly rather than silently pass; `synchronous = FULL` costs an fsync per commit, which is the deliberate price of the ACK-durability claim and would be the first thing to revisit if ingress throughput ever matters; and the busy timeout only helps when the *other* writer is a cooperating process — an external tool holding the lock longer than five seconds still produces SQLITE_BUSY, which is a deliberate bound.
 
-Worker lifecycle: the S15 worker settled with its receipt written; workspace `w5Y` (label `stackot-s15`) was closed after integration and the task worktree is retained.
+Worker lifecycle: the worker's candidate was already complete — both source and test files written, receipt on disk — and the owner had finished verifying and integrating it when workspace `w5Y` (label `stackot-s15`) was closed. The worker's final summary turn was still composing text at that moment, so that turn was cut short on purpose after integration; nothing needed from it remained. The task worktree is retained.
