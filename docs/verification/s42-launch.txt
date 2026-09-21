@@ -1,0 +1,57 @@
+S42 — 전달 상태 구조화 로그 (owner launch contract, wave 03)
+
+Task: ONE changeset. 전달 한 건의 생애주기(시도/실패/재시도/성공/dead-letter)와 라우팅 폴백을 상관 가능한 구조화 로그로 남긴다. 본문과 secret은 로그에 남기지 않는다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (오너가 소스로 확인한 사실)
+- 현재 drainer/delivery 경로는 성공·실패를 구조화해 남기지 않는다. 실패는 `last_error` 한 컬럼과 산발적 `console.error`뿐이라 "이 delivery가 몇 번 시도됐고 왜 실패했는지"를 로그로 따라갈 수 없다.
+- S21b로 라우팅이 drain 시점으로 이동했다. 그런데 매핑 조회가 실패해 admin 채널로 폴백해도 그 사실은 `console.warn` 한 줄뿐이고 전달은 성공으로 기록된다 → **폴백이 관측되지 않는다**(S21b 잔여 리스크).
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/telemetry.ts (신규)
+- receiver/test/telemetry.test.ts (신규)
+- receiver/test/server.telemetry.integration.test.ts (신규)
+- receiver/src/server.ts (텔레메트리 배선)
+
+금지: delivery.ts, outbox.ts, router.ts, mapping.ts, normalize.ts, config.ts, gateway.ts, ingress.ts, redact.ts, replay.ts, package.json, 기존 테스트 파일 수정.
+
+## 요구 동작
+1. `telemetry.ts`에 구조화 이벤트 로거를 만든다.
+   - `export type TelemetryEvent = "delivery.delivered" | "delivery.failed" | "delivery.dead_letter" | "routing.fallback";`
+   - `export function createTelemetry(sink: (line: string) => void, secrets: readonly string[]): Telemetry` — 각 메서드가 **한 줄 JSON**을 sink로 보낸다.
+   - 메서드: `delivered({ deliveryId, attempts, target })`, `failed({ deliveryId, attempts, error, nextAttemptAt })`, `deadLettered({ deliveryId, attempts, error })`, `routingFallback({ deliveryId, repo, item, reason })`.
+   - 모든 문자열 필드는 `redact.ts`의 redaction을 거친다. 이벤트 **본문(summary/body)은 절대 담지 않는다**. attempts는 숫자, 시각은 epoch ms.
+   - 라인은 파싱 가능한 JSON이어야 한다(한 줄에 객체 하나).
+2. `server.ts` 배선:
+   - `createTelemetry((line) => console.log(line), secrets)`를 만들고, drainer에 넘기는 outbox를 **텔레메트리 데코레이터**로 감싼다. 데코레이터는 `DeliveryOutbox` 포트를 구현하고 실제 outbox로 위임하면서 다음을 emit한다: `delivered(id)` → `delivery.delivered`, `fail(id, attempts, message)` 중 한도 미만이면 `delivery.failed`(nextAttemptAt 포함), 한도 도달이면 `delivery.dead_letter`. attempts는 최근 `due()`가 돌려준 값에서 가져온다(없으면 0).
+   - `delivery.ts`와 `outbox.ts`는 수정하지 않는다(감싸는 방식으로 해결).
+   - 라우팅 폴백: `route()` 결정의 `reason`을 확인해 admin/ci-alerts로 폴백한 경우 `routingFallback`을 emit한다(예: reason이 `followup-unresolved`, `unconfigured-repo`, `ci-alerts`). 정상 라우팅(opened/followup-resolved/ci-linked-pr-thread)에는 emit하지 않는다.
+3. 기존 동작 회귀 금지: 200 accepted/duplicate, 503, retry/dead-letter 동작, S09A/S09B/S21b/S39 계약, `/healthz`·`/readyz` 응답.
+4. 로그 한 줄은 비밀정보를 포함하지 않아야 하며(S39 redaction 사용), 사람이 읽을 수 있는 짧은 문장이 아니라 기계 판독 가능한 JSON이어야 한다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/telemetry.test.ts test/server.telemetry.integration.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구
+### receiver/test/telemetry.test.ts (단위)
+- 각 이벤트가 한 줄 JSON으로 나오고 필수 필드(deliveryId, attempts, event)를 갖는다.
+- secret 문자열이 필드에 들어가도 `[redacted]`로 대체된다.
+- 이벤트 본문 필드가 없고, 넘겨도 라인에 포함되지 않는다(화이트리스트 방식이면 자연히 만족).
+- `failed`에는 nextAttemptAt이, `deadLetter`에는 error가 담긴다.
+### receiver/test/server.telemetry.integration.test.ts (프로세스, 실제 네트워크 금지)
+- **상관 테스트(핵심)**: gateway 스텁이 처음 N회 실패 후 성공하도록 만들고 하나의 delivery를 보낸다. 서버 stdout에서 그 deliveryId를 가진 라인만 모아 `failed`(attempts 1..N) 이후 `delivered`가 나오는 순서를 단언한다. 즉 한 delivery의 생애주기가 로그로 따라온다.
+- dead-letter: gateway가 항상 실패하고 재시도를 다음 시각으로 앞당겨(테스트에서 DB의 next_attempt_at을 0으로) 한도를 넘기면 `dead_letter` 라인이 나온다.
+- 폴백 관측: 매핑 조회가 실패하는(또는 역링크가 없는) 후속 이벤트에서 `routing.fallback` 라인이 나오고 reason이 담긴다.
+- 어떤 라인에도 secret 원문과 댓글/이슈 본문 텍스트가 없다.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s42-receipt.md`: 변경 파일, 핵심 diff 요약, 이벤트 스키마 표(필드 의미), 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개, 보고 300줄 이내.
