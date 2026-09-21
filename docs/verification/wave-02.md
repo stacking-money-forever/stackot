@@ -484,3 +484,11 @@ Owner-applied retry (recorded as an owner delta rather than a worker turn: the a
 Evidence: `bun run typecheck` clean, the new file 2 pass / 16 assertions locally in 5.1 s (the busy timeout dominates), full suite 210 pass / 451 assertions, and CI run on `2042df6` **success** — the platform where the first attempt failed.
 
 Lesson recorded for later rows: a failure-induction recipe must hold on the CI platform, and a green local run is not evidence for a mechanism that depends on filesystem or permission semantics. This is the second time this wave caught a defect only because CI ran on the pushed SHA.
+
+### S09B retry, second correction — the holder must tolerate transient writes
+
+The first corrected oracle passed twice on this machine and failed on the CI runner *before* posting any webhook: its own holder connection ran `BEGIN IMMEDIATE` with `busy_timeout = 0` and lost the race against the receiver's one-second drain timer, which takes the write lock briefly. Locally the timing never collided, so only CI caught it.
+
+Fix (`edfd4b7`): the holder uses the same five-second busy timeout as production, so it waits out the receiver's transient writes and still holds the lock while the request is posted. Three consecutive local runs pass, and CI run on `edfd4b7` is **success** — the platform that exposed both defects in this test.
+
+Combined lesson for the remaining rows, in two parts: a failure-induction recipe has to hold on the CI platform, and a test that deliberately owns a shared resource has to tolerate the production process's legitimate transient use of it. Neither defect was reachable from a local green run.
