@@ -341,3 +341,25 @@ Defect the owner confirmed by reading the source: `Outbox` sets only `journal_mo
 Owner envelope: declare both policies in code — a finite exported `busy_timeout` constant and an explicit `synchronous` level with the reason for that choice — without changing the schema or the public API. The oracle is a concurrent duplicate insert (two connections racing the same delivery id must yield exactly one row and exactly one `true`), a lock-contention case where a short write transaction on one connection does not make the other fail, and a durability case where a pending row survives close and reopen. Schema changes and column additions are forbidden.
 
 Status: contract written; launch follows S03C4.
+
+### S09A decision — oracle gap closed (owner-authored test)
+
+Baseline: `0374d34`. S09A had been recorded as ACCEPT-WITH-GAP because the row's named oracle `test/server.outbox.integration.test.ts` did not exist. The owner wrote that file: one signed webhook against a running receiver whose gateway is unreachable, then a read of the outbox **immediately** after the `200 accepted` response with no delay, asserting the delivery row exists, is `pending` with `delivered_at` null, and that a redelivery of the same id is answered `duplicate` with the row count still one. The unreachable gateway is what makes the assertion meaningful: a missing row could not be explained by a successful delivery.
+
+Result: `bun test test/server.outbox.integration.test.ts` 2 pass / 9 assertions, `bun run typecheck` clean, full suite 177 pass at that commit. S09A's gap is closed; the row is ACCEPT rather than ACCEPT-WITH-GAP.
+
+## S03C4 decision — ACCEPT, no retry needed
+
+Baseline: `1471dee`. Task checkout `/Users/justn/dev/.worktrees/stackot-s03c4-20260921` (workspace `w5X`), candidate limited to `receiver/src/config.ts` and `receiver/test/config.test.ts`, HEAD unchanged at the baseline, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. The truthiness check became a loop over the two repo forum channel keys: each must be a string whose trim is non-empty and must not match `/^<[^<>]*>$/`, and the thrown message names both the repo and the key. Values such as `<a><b>` remain valid, and every other validation in `loadConfig` is untouched — the diff is ten lines of source.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/config.test.ts` 101 pass / 118 assertions, full suite 198 pass / 378 assertions.
+
+Oracle discrimination check (owner, disposable copy outside the candidate): restoring the previous truthiness check makes 22 of the 101 config assertions fail, including the placeholder cases, so the new tests detect the defect.
+
+Owner integration: both files copied verbatim and md5-verified (two MATCH). Completion-side oracles: typecheck clean, **200 pass / 387 assertions** across 16 files.
+
+Residual risks: channel IDs are intentionally not enforced as numeric here (the row's scope is placeholders, and over-rejecting would break valid deployments); a syntactically valid but wrong channel ID still starts the receiver, and the failure would only surface as a Discord API error inside the agent — the runtime rows remain the place where that is proven.
+
+Worker lifecycle: the S03C4 worker settled `idle` at its prompt with its receipt written; workspace `w5X` (label `stackot-s03c4`) was closed after integration and the task worktree is retained.
