@@ -16,6 +16,13 @@ export function retryDelayMs(attempts: number): number {
 // together) resolves by waiting instead of throwing into the webhook path.
 export const BUSY_TIMEOUT_MS = 5000;
 
+export type OutboxStats = {
+  pending: number;
+  deadLetter: number;
+  delivered: number;
+  oldestPendingAgeMs: number | null;
+};
+
 export class Outbox {
   private db: Database;
 
@@ -96,6 +103,26 @@ export class Outbox {
     const result = this.db.query("UPDATE outbox SET state = 'pending', next_attempt_at = ?, last_error = NULL WHERE id = ? AND state = 'dead_letter'")
       .run(Date.now(), id);
     return result.changes > 0;
+  }
+
+  /**
+   * Backlog snapshot in one aggregate query — no rows are pulled into JS.
+   * `oldestPendingAgeMs` is null when nothing is pending, and clamped at 0 so
+   * a received_at in the future (clock skew) never reports a negative age.
+   */
+  stats(): OutboxStats {
+    const row = this.db.query(`SELECT
+        COUNT(CASE WHEN state = 'pending' THEN 1 END) AS pending,
+        COUNT(CASE WHEN state = 'dead_letter' THEN 1 END) AS deadLetter,
+        COUNT(CASE WHEN state = 'delivered' THEN 1 END) AS delivered,
+        MIN(CASE WHEN state = 'pending' THEN received_at END) AS oldestPendingAt
+      FROM outbox`).get() as { pending: number; deadLetter: number; delivered: number; oldestPendingAt: number | null };
+    return {
+      pending: row.pending,
+      deadLetter: row.deadLetter,
+      delivered: row.delivered,
+      oldestPendingAgeMs: row.oldestPendingAt === null ? null : Math.max(0, Date.now() - row.oldestPendingAt),
+    };
   }
 
   close(): void { this.db.close(); }
