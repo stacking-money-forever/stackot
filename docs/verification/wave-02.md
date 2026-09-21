@@ -578,3 +578,21 @@ Baselines follow S41's integration commit; each task checkout is created from th
 **S46 — consistent SQLite backup.** Owner-observed: there is no backup path, and under WAL a plain file copy can drop the most recent committed rows (the row's "WAL 누락" failure trigger). Envelope: new `backup.ts` + test only. The snapshot must come from SQLite's own consistent-snapshot mechanism (not `copyFile`), be a standalone file that opens without `-wal`/`-shm`, preserve state/attempts/last_error/event for every row state, fail loudly with no half-written destination, and expose the same CLI shape as `replay.ts` (exit 0/1/2). The oracle asserts `PRAGMA integrity_check` on the snapshot **and** that a row existing only in the WAL is present in it.
 
 Status: contracts written; S42 launches after S41, then S43, then S46.
+
+### S41 decision — ACCEPT, no retry needed
+
+Baseline: `c82de3c`. Candidate: new `health.ts`, `health.test.ts`, `server.health.integration.test.ts`, plus `server.ts` wiring; nothing else, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `health.ts` documents and implements three separate questions: `liveness` always 200, `readiness` decided only by the outbox (the Gateway is explicitly ignored), and `statusReport` returning `ok` or `degraded` with the Gateway's masked `lastError`. `createGatewayHealth` starts optimistic so a fresh process is not reported degraded before it has attempted anything, and re-masks on `recordFailure` even though callers already pass masked text. `server.ts` records `recordSuccess` on an accepted forward and `recordFailure` with `gateway rejected delivery (status N)` otherwise, serves `/status` as JSON, and keeps `/healthz` = `ok` and `/readyz` = `ready`.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, focused 13 pass / 188 assertions, full suite **244 pass / 696 assertions** across 22 files.
+
+Oracle discrimination check (owner, disposable copy with the pre-S41 `server.ts`): `/status` answers 404, so the new assertions fail — the row's operator view genuinely did not exist before, rather than being restated by the test.
+
+Test quality: the integration suite drives the exact property the row exists for — with the Gateway held down, a webhook is still accepted and committed, `/readyz` and `/healthz` stay green, `/status` reports degraded with an error that provably does not contain the hook token, a second webhook is still accepted, and once the stub serves again `/status` returns to ok with a `lastSuccessAt`.
+
+Owner integration: four files copied verbatim and md5-verified (four MATCH). Completion-side oracles: typecheck clean, 244 pass / 696 assertions, `bun run build` emits `dist/server.js` (26.75 KB). CI runs on the push.
+
+Residual risks: the Gateway state is in-process only, so a restart reports "no attempt yet" and an operator must know that; a Gateway that accepts connections but never answers still shows `reachable: true` until a forward fails, since the signal is the drain outcome rather than an active probe; and `/status` reflects the last attempt, not a rolling window, so a flapping Gateway is only visible as the latest sample.
+
+Worker lifecycle: the S41 worker settled with its receipt written; workspace `w63` (label `stackot-s41`) was closed after integration and the task worktree is retained.
