@@ -375,3 +375,21 @@ Owner integration: both files copied verbatim and md5-verified (two MATCH). Comp
 Residual risks: channel IDs are intentionally not enforced as numeric here (the row's scope is placeholders, and over-rejecting would break valid deployments); a syntactically valid but wrong channel ID still starts the receiver, and the failure would only surface as a Discord API error inside the agent — the runtime rows remain the place where that is proven.
 
 Worker lifecycle: the S03C4 worker settled `idle` at its prompt with its receipt written; workspace `w5X` (label `stackot-s03c4`) was closed after integration and the task worktree is retained.
+
+### S15 decision — ACCEPT, no retry needed
+
+Baseline: `ee19025`. Candidate: `receiver/src/outbox.ts` (+14) and `receiver/test/outbox.test.ts` (+86), nothing else, HEAD unchanged, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `BUSY_TIMEOUT_MS = 5000` is exported and applied **before** the journal-mode switch — the worker's comment explains why that order matters, and the owner confirmed the reasoning: the WAL switch itself writes, so it can hit a lock too. `synchronous = FULL` is set with a written rationale tied to the ACK contract. No schema or column change, and the public API is untouched.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/outbox.test.ts` 12 pass / 48 assertions (three consecutive runs, stable at ~180 ms), full suite 203 pass / 402 assertions.
+
+Discrimination checks (owner, disposable copies outside the candidate): `bun:sqlite`'s **default `busy_timeout` is 0**, so the explicit pragma is load-bearing rather than decorative; removing the two pragma lines makes the suite fail. One precision the owner recorded: `synchronous` already defaults to 2 (FULL) in bun:sqlite, so that line states the policy rather than changing behaviour — the commit message says so explicitly.
+
+Test quality: the race test opens two `Outbox` connections and asserts exactly one `true` plus one row; the contention test spawns a separate process that holds `BEGIN IMMEDIATE` for ~100 ms behind a stdout handshake, then asserts the enqueue waits longer than 0 ms, less than the busy timeout, and still inserts; the durability test closes and reopens the outbox and asserts the pending row is still due. Deleting the pragmas reproduces the failure the row exists to prevent.
+
+Owner integration: both files copied verbatim and md5-verified (two MATCH). Completion-side oracles: typecheck clean, 203 pass / 402 assertions, `bun run build` emits `dist/server.js` (23.35 KB). CI runs on the push.
+
+Residual risks: the contention test depends on real process timing, so a machine that cannot spawn a child process within the handshake window would fail loudly rather than silently pass; `synchronous = FULL` costs an fsync per commit, which is the deliberate price of the ACK-durability claim and would be the first thing to revisit if ingress throughput ever matters; and the busy timeout only helps when the *other* writer is a cooperating process — an external tool holding the lock longer than five seconds still produces SQLITE_BUSY, which is a deliberate bound.
+
+Worker lifecycle: the S15 worker settled with its receipt written; workspace `w5Y` (label `stackot-s15`) was closed after integration and the task worktree is retained.
