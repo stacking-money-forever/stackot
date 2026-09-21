@@ -548,3 +548,21 @@ Owner envelope: `health.ts` plus a unit suite and a process-level probe (`health
 The decisive property the oracle must show: with the Gateway unreachable, `/readyz` stays 200 and webhooks keep being accepted and committed, while `/status` reports degraded with the last error; once the Gateway comes back and a delivery succeeds, `/status` returns to ok.
 
 Status: contract written; launch follows S39.
+
+### S39 decision — ACCEPT, no retry needed
+
+Baseline: `e8c3fae`. Candidate: new `redact.ts`, new `redact.test.ts` and `server.redact.integration.test.ts`, plus `server.ts` wiring; nothing else, HEAD unchanged, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `redact` drops blank secrets, sorts by length descending, and replaces every occurrence with a fixed `[redacted]` token; `redactSecrets` returns the webhook secret, the hook token, the GitHub token **and the hooks URL** — the last one deliberately, because it can carry credentials the token fields never see and it is what fetch errors echo back. `describeError` inspects the whole error instead of only `.message`, which matters because Bun puts the request URL on the error's `path` property.
+
+Wiring covers both leak paths: `resolveThreadId` masks before rethrowing so `router.ts`'s verbatim `console.warn` cannot leak it; the drainer's forward callback masks the failure, logs it and rethrows the masked text so `last_error` is clean without `delivery.ts` being touched; and the outbox error logs are masked too.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, focused 15 pass / 30 assertions, full suite **231 pass / 508 assertions** across 20 files.
+
+Oracle discrimination check (owner, disposable copy with the pre-S39 `server.ts`): the integration test fails, and the reproduction is visible in the output — `path: "http://127.0.0.1:1/s39-gh-token-1a2b3c4d/repos/owner/repo/issues/7"` printed to stderr, and a `last_error` containing no `[redacted]` marker. So the row fixes a leak that really existed on both surfaces.
+
+Owner integration: four files copied verbatim and md5-verified (four MATCH). Completion-side oracles: typecheck clean, 231 pass / 508 assertions, `bun run build` emits `dist/server.js` (25.25 KB). CI runs on the push.
+
+Residual risks: redaction is substring-based on the configured values, so a secret that is partially transformed before being logged (URL-encoded, base64) would not match — the honest bound is "the exact configured values never appear"; `describeError`'s inspect dump is longer than a plain message, which is the price of catching property-carried values; and the router's own `console.warn` still prints the (now masked) message it received, so masking depends on callers handing it a masked error — which `resolveThreadId` does, and a future caller must.
+
+Worker lifecycle: the S39 worker settled with its receipt written; workspace `w62` (label `stackot-s39`) was closed after integration and the task worktree is retained.
