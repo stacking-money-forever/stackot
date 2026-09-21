@@ -57,6 +57,23 @@ A GitHub redelivery whose delivery ID is already `dead_letter` is still answered
 
 Worker lifecycle: the S12 worker settled `done` and its pane `w5N:p1` is idle in workspace `w5N` (label `stackot-s12`). The pane and the task worktree are retained until the S13 bootstrap copies from this integrated baseline.
 
+## S13 launch contract — dead-letter manual replay
+
+Baseline: `eb0dba7` (S12 integrated and pushed; CI run `35580391739` success on that SHA).
+
+Task checkout: `/Users/justn/dev/.worktrees/stackot-s13-20260921` on new branch `codex/stackot-s13-20260921`, created with `herdr worktree create --base eb0dba7 --label stackot-s13 --no-focus --trust-repository`, which provisioned workspace `w5P` with root pane `w5P:p1` rooted at the checkout (same placement deviation as S12: Herdr supplied the pane, no caller-tab split, no focus change).
+
+Launch prompt: `docs/verification/s13-launch.txt`, committed into the baseline so the checkout already contains it.
+
+Route evidence: foreground argv read from the process table after launch —
+`devin --model swe-2 --permission-mode dangerous --prompt-file /Users/justn/dev/.worktrees/stackot-s13-20260921/docs/verification/s13-launch.txt` (pid 8476), pane footer `SWE-2 High`. Exactly one worker; no fallback model. `herdr agent start` again timed out waiting for startup while the real process ran, and the owner did not relaunch it (third occurrence of this Herdr behaviour: S01, S12, S13).
+
+Scope: `receiver/src/replay.ts` + `receiver/test/replay.test.ts` (new), plus at most one `receiver/package.json` script line. `server.ts`, `outbox.ts` and every existing test are out of scope. The prompt forbids weakening existing tests and requires the receipt to document that a redelivered dead-letter id is still answered `200 duplicate` by design, with the replay CLI as the operator recovery path.
+
+Predecessor evidence reused: the owner reproduction against a real receiver process showing the redelivery gap (`200 "duplicate"`, row unchanged) is recorded in the S12 boundary section above.
+
+Status: launched; acceptance pending.
+
 ## Retro acceptance record for the unrecorded wave (S05A–S14)
 
 The previous owner wave integrated this block without leaving a decision record, so the owner reconstructed it at baseline `db95b2a` by reading the source and tests and re-running the suite: `bun test` 99 pass / 0 fail / 181 assertions across 12 files, `bun run typecheck`, `bun run build`, plus CI run `35579247524` on that SHA. Rows below are marked ACCEPT (oracle met as written), ACCEPT-WITH-GAP (behaviour present, the row's named oracle is missing or narrower than the claim), or NOT DONE. No row is accepted on the strength of a file merely existing.
