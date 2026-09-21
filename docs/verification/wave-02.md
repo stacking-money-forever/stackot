@@ -403,3 +403,21 @@ Owner-verified reproduction (probed directly before writing this contract): chmo
 Owner envelope: `server.ts` plus a new `test/server.outbox.failure.integration.test.ts`. The failure path must return 5xx (503 preferred) with a short body and must not leak internals or secrets, the process must still answer `/healthz`, a failed delivery id must leave no partial row, and the healthy path (200 accepted with the row committed, 200 duplicate) must stay intact. `outbox.ts` is out of scope. Whether the connection recovers once permissions return must be reported as a fact rather than assumed.
 
 Status: contract written; launch follows the S10 integration commit.
+
+### S10 decision — ACCEPT, no retry needed (oracle gap closed)
+
+Baseline: `78247be`. Candidate: `receiver/src/gateway.ts` (+3/-1) and `receiver/test/gateway.test.ts` (+51), nothing else, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `GATEWAY_TIMEOUT_MS = 10_000` is exported, `forwardToGateway` takes `opts: { timeoutMs?: number } = {}` and uses `opts.timeoutMs ?? GATEWAY_TIMEOUT_MS`, and `server.ts` was left untouched so production keeps the default. The response contract (`{ ok, status, body }`), the message framing and all headers are unchanged.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/gateway.test.ts` 5 pass / 15 assertions, full suite 207 pass / 411 assertions.
+
+Oracle discrimination check (owner, disposable copy outside the candidate): keeping the export but making the call ignore `opts` — i.e. restoring the old hardcoded behaviour while the test file still compiles — makes the hanging-gateway test fail after its 5 s test budget, so the assertion detects an unbounded fetch rather than restating the implementation.
+
+Test quality: the hanging case serves a promise that never resolves and asserts rejection within 2 s using the injected 50 ms budget, so the suite stays fast; a second case uses the default path against a fast stub; the pre-existing framing, idempotency-key and bearer assertions are untouched.
+
+Owner integration: both files copied verbatim and md5-verified (two MATCH). Completion-side oracles: typecheck clean, 207 pass / 411 assertions, `bun run build` emits `dist/server.js` (23.43 KB).
+
+Residual risks: the row proves the timeout shape, not that ten seconds is the right value for the Gateway, which is a runtime-tuning question for the deployment rows; and a timed-out forward surfaces as a rejection the drainer turns into a retry, so a permanently hanging Gateway now produces dead-lettered deliveries rather than an unbounded queue — that behaviour is covered by S12's tests, not by this row.
+
+Worker lifecycle: the S10 worker settled `idle` at its prompt with its receipt written; workspace `w5Z` (label `stackot-s10`) was closed after integration and the task worktree is retained.
