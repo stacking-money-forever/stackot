@@ -1,0 +1,45 @@
+S18 — 역링크 댓글 pagination (owner launch contract, wave 02)
+
+Task: ONE changeset. 봇이 기록한 Discord 스레드 URL이 댓글 첫 페이지 이후에 있어도 역링크로 찾아낸다. 첫 20개만 조회하고 끝나면 안 된다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/mapping.ts
+- receiver/test/mapping.test.ts
+그 외 파일은 수정하지 않는다. server.ts, config.ts, outbox.ts, delivery.ts, package.json 모두 범위 밖이다.
+
+## 현재 결함 (오너가 소스로 확인함)
+- `fetchItem`은 댓글을 `?per_page=20`으로 **한 번만** 요청한다. GitHub 응답의 `Link` 헤더(rel="next")를 따라가지 않으므로, 댓글이 21개 이상인 이슈/PR에서 뒤 페이지에 기록된 스레드 URL은 조회되지 않고 admin 채널로 흘러간다.
+
+## 요구 동작
+1. 댓글 조회는 `Link` 헤더의 `rel="next"` 체인을 따라 다음 페이지를 가져온다. `page` 파라미터를 추측해 증가시키지 말고 서버가 준 next URL만 사용한다.
+2. 조기 종료: 현재까지 모은 본문+댓글에서 스레드 URL이 발견되면 즉시 중단하고 더 이상 페이지를 요청하지 않는다.
+3. 상한: 추적 페이지 수에 하드 상한을 둔다(기본값 10, 상수로 export). 상한에 도달하면 추가 요청 없이 지금까지 모은 결과로 정상 반환한다(스레드 미발견이면 기존 폴백 경로 유지).
+4. 상한은 같은 opts 객체로 주입 가능해야 한다(예: maxCommentPages). 테스트가 10페이지 픽스처 없이 상한 동작을 검증할 수 있어야 한다.
+5. `per_page=20`과 기존 요청 경로(PR의 일반 댓글은 issues 표면)는 그대로 유지한다. S17 계약 테스트를 수정할 필요가 없어야 한다.
+6. `findThreadId`의 기존 의미는 바꾸지 않는다.
+7. 모든 페이지 요청에 Authorization 헤더를 계속 보낸다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/mapping.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/mapping.test.ts 확장)
+- 로컬 `Bun.serve` 스텁만 사용한다. 실제 네트워크와 전역 fetch monkey-patching은 금지한다. 스텁은 `Link` 헤더를 반환할 수 있어야 한다.
+- 2페이지째 댓글에 있는 스레드 URL이 복원된다(1페이지에는 없음).
+- 조기 종료: 1페이지에 스레드 URL이 있으면 2페이지를 요청하지 않는다(스텁이 관찰한 경로/쿼리로 단언).
+- 상한: `maxCommentPages`를 작게 주고 next 체인이 그보다 길며 스레드가 없으면, 요청 수가 상한과 정확히 일치하고 결과는 스레드 없음이다.
+- `Link` 헤더가 없으면 댓글 요청은 1회뿐이다(회귀).
+- 각 페이지 요청에 Authorization 헤더가 실린다.
+- S17의 기존 단언(경로 계약, per_page=20, issue 회귀)은 그대로 통과해야 한다.
+
+## 금지
+- 위 2개 파일 밖의 수정, 기존 테스트 약화·삭제, 실제 네트워크 호출, commit/push/merge/deploy, subagent 생성, formatter·linter 전체 실행. node_modules가 없으면 `cd receiver && bun install` 1회는 허용(캐시 사용, 새 패키지 추가 금지).
+
+## 완료 산출물
+1. 위 오라클 실행 결과 원문.
+2. `docs/verification/s18-receipt.md`: 변경 파일, 핵심 diff 요약, 실행한 명령과 결과, 남은 리스크(상한 도달 시 동작 포함).
+3. Todo는 최대 2개. 최종 보고는 300줄 이내.

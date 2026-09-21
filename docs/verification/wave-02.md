@@ -155,3 +155,17 @@ Owner integration: both files copied verbatim into the completion checkout and v
 Residual risk accepted with the row: this lookup is verified at contract level (evidence class S) only. `server.ts` calls `fetchItem` without an `apiBase`, so the running receiver always talks to the live GitHub API, which means an end-to-end proof of reverse-link routing needs real GitHub credentials — the same boundary as S49. A candidate follow-up row (not part of S17) is to let the receiver take an API base from configuration so a disposable integration environment can point it at a stub; that would also make the mapping path testable at the process level.
 
 Worker lifecycle: the S17 worker settled `idle` after writing its receipt; workspace `w5Q` (label `stackot-s17`) was closed after integration and the task worktree is retained.
+
+## S18 launch contract — reverse-link comment pagination
+
+Baseline: `360350f` (S17 integrated; CI run success on that SHA).
+
+Row: `mapping.ts` + `mapping.test.ts`. Completion condition: a backlink recorded beyond the first comment page is still resolved. Failure trigger: only the first 20 comments are read.
+
+Defect the owner confirmed by reading the source: `fetchItem` requests `…/comments?per_page=20` exactly once and never follows the `Link: rel="next"` chain, so on an issue or PR with more than 20 comments a thread URL on a later page is missed and the event falls through to the admin channel.
+
+Owner envelope: pagination follows the server-provided `Link` `rel="next"` URL rather than guessing a `page` parameter; it stops as soon as a thread URL is found; it has an exported hard page cap (default 10) that is injectable through the same options object so the cap is testable without a ten-page fixture; `per_page=20`, the S17 comments-surface rule and `findThreadId` semantics are unchanged, so no S17 assertion needs re-pinning.
+
+Task checkout: `/Users/justn/dev/.worktrees/stackot-s18-20260921`, branch `codex/stackot-s18-20260921`, created from the baseline with `herdr worktree create --label stackot-s18 --no-focus --trust-repository` (workspace `w5R`, root pane `w5R:p1`). Launch prompt: `docs/verification/s18-launch.txt`, committed into the baseline so the checkout contains it.
+
+Status: contract written; launch follows.
