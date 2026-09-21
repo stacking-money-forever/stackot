@@ -106,9 +106,12 @@ describe("S09B outbox write failure", () => {
 
     // Hold the SQLite write lock for the whole attempt: the server's enqueue
     // waits out its busy timeout and then fails, which is the production path
-    // this row protects.
+    // this row protects. The holder needs a non-zero busy timeout of its own:
+    // the receiver's drain timer takes the write lock for brief moments, and
+    // with busy_timeout 0 the holder loses that race on a busy CI runner (it
+    // did exactly that on the first attempt at this fix).
     const holder = new Database(dbPath);
-    holder.run("PRAGMA busy_timeout = 0");
+    holder.run("PRAGMA busy_timeout = 5000");
     holder.run("BEGIN IMMEDIATE");
     try {
       const res = await postWebhook(failedId);
