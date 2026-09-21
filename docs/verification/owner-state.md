@@ -17,24 +17,28 @@ User-mandated execution form: one interactive Devin worker per row with the exac
 - Row launch prompts live at `docs/verification/s<row>-launch.txt`, committed into the baseline before the row's worktree is created so the checkout already contains it.
 - Task worktrees are retained, never deleted: `stackot-s12-20260921`, `stackot-s13-20260921`, `stackot-s17-20260921`, `stackot-s18-20260921`, `stackot-s19-20260921`, plus the older `stackot-ps-todos-20260913`, `stackot-receiver-delivery-20260914` and `/Users/justn/dev/stackot-roadmap`.
 
-## Accepted in this session
+## M1 status — reliable ingress (S01–S22) closed at contract level
 
-- Baseline release: `814cf2c` (receiver reliability work + CI), `db95b2a` (ledger and owner re-check). CI runs `35579247524`, `35580391739` and later runs are green on their head SHAs.
-- S12 dead-letter wiring (`57be0b6`): `DeliveryDrainer` reports failure through the single port method `fail(id, attempts, message)`; `Outbox.fail` owns the exhaustion policy. Owner runtime proof: below-limit failure stays `pending` with attempts 1; at the limit the row becomes `dead_letter` with `last_error = "gateway rejected delivery (status 502)"` and `due()` returns null.
-- S13 manual replay (`47df399`): `receiver/src/replay.ts` plus CLI. Owner runtime proof: a dead-lettered row recovered by the CLI became `pending` with attempts preserved and was then delivered by the running drainer with a stable idempotency key. Owner decision: redelivery of a dead-letter id stays `200 duplicate`; the CLI is the recovery path (closed, see wave-02).
-- S17 reverse-link comments surface (`49e1d94`): PR discussion comments are read from the issues surface. Two of the new mapping tests fail against the previous code.
-- S18 comment pagination (`f1be5f5`): follows `Link rel="next"`, stops early on a hit, bounded by `MAX_COMMENT_PAGES` (10). Two of the new mapping tests fail against the previous code.
-- S19 backlink trust (`bfefe5a`, ACCEPT after one narrowed retry): `findThreadId` requires trust inputs, only a link whose guild equals `discordGuildId` and whose text was written by `githubBacklinkLogin` counts, the unauthenticated fallback is deleted, and the two keys are required config that fails startup when missing or placeholder. Ten of the new mapping assertions fail against the previous implementation; the config guard was also checked against the real server process.
-- Retro record for the unrecorded wave (S05A–S14) with per-row ACCEPT / ACCEPT-WITH-GAP / NOT DONE in wave-02. S09A and S10 carry ACCEPT-WITH-GAP because their named oracles are absent.
-- Test baseline after S19: `bun test` 151 pass / 290 assertions across 14 files, `bun run typecheck` clean, `bun run build` emits `dist/server.js`.
+Every M1 row has an owner decision recorded in `docs/verification/wave-02.md` (launch contract, ACCEPT/REJECT, oracles, residual risks). Highlights of this session, in commit order:
 
-## Next queue after S19
+- Baseline release: `814cf2c` (receiver reliability work + CI), `db95b2a` (atomic completion ledger, wave-01 correction).
+- S12 dead-letter wiring (`57be0b6`), S13 manual replay (`47df399`) — both proven against a real receiver process, not only in unit tests.
+- S17 comments surface (`49e1d94`), S18 pagination (`f1be5f5`), S19 backlink trust (`bfefe5a`) — the reverse-link path now only trusts a link whose guild matches and whose author is the configured recorder.
+- S20 check_run PR preservation (`74ebffc`), S21 routing module (`b7254f8`), S22 documentation truth (`b5be3d0`).
+- S04D lockfile layout (`0374d34`), S09A oracle (`5484670`), S03C4 placeholder rejection (`0f53822`), S11 backoff oracle (`5b47809`), S15 concurrency/durability policy (`7ee1c78`), S10 timeout oracle (`4ba3da9`), S09B write-failure handling (`ca6a9b0`) with a portable oracle (`2042df6`).
 
-1. M1 close-out: S20 (check_run PR destination), S21 (`router.ts` destination decision), S22 (spec/deploy docs claiming unimplemented `check_suite`/`push`/`release`), plus the missing named oracles for S09A and S10.
-2. S03C4 (repo forum channel placeholder validation) — no surviving candidate, must run as a fresh row.
-3. S04D + S38 (lockfile location, CI reproducibility): `receiver/bun.lock` is gitignored, so `bun install --frozen-lockfile` in CI resolves fresh on every run.
-4. S15 (SQLite busy/durability), S39 (redaction), S41 (health split), S42 (telemetry), S43 (metrics), S46 (backup).
-5. Candidate row suggested by S17: let the receiver take a GitHub API base from configuration so a disposable environment can point mapping lookups at a stub and the mapping path becomes process-testable.
+Baseline at close-out: `2042df6`, `bun test` 210 pass / 451 assertions across 17 files, `bun run typecheck` clean, `bun run build` emits `dist/server.js`, CI green on the pushed SHA.
+
+Evidence class: local and synthetic process-level only. No runtime, deployment or human evidence exists — no live GitHub delivery, no OpenClaw Gateway, no Discord delivery, no deployed SHA, no restore/rollback drill, no human QA. Read every "works" claim with that class attached.
+
+## Next queue
+
+Two candidate rows were opened by this wave's findings and are not part of M1:
+
+1. **Persist-then-resolve** (from S21): `server.ts` awaits the GitHub reverse-link lookup before `outbox.enqueue`, and `fetchItem` has no request timeout, so a slow GitHub API delays both the ACK and the persistence. Store the normalized event first and resolve the destination in the drainer, with a bounded lookup timeout; prove it with a hanging-lookup probe plus a redelivery test.
+2. **Outbox-failure recovery or readiness failure** (from S09B): after an outbox I/O failure the receiver keeps answering `/healthz` 200 and `/readyz` `ready` while every new delivery gets 503, because `ready()` is a plain `SELECT 1`. The row must make the receiver either reopen the database or fail readiness so a supervisor restarts it.
+
+Then the remaining P1 local rows from `docs/atomic-completion.md`: S39 (redaction), S41 (health split), S42 (telemetry), S43 (metrics), S46 (backup), plus B01–B03. S37 is effectively satisfied by the committed scripts. S38's CI evidence exists for the current SHA but should be re-stated when S21-era routing lands in a release candidate.
 
 ## Blocked, with evidence
 
