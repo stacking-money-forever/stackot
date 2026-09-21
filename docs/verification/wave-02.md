@@ -596,3 +596,17 @@ Owner integration: four files copied verbatim and md5-verified (four MATCH). Com
 Residual risks: the Gateway state is in-process only, so a restart reports "no attempt yet" and an operator must know that; a Gateway that accepts connections but never answers still shows `reachable: true` until a forward fails, since the signal is the drain outcome rather than an active probe; and `/status` reflects the last attempt, not a rolling window, so a flapping Gateway is only visible as the latest sample.
 
 Worker lifecycle: the S41 worker settled with its receipt written; workspace `w63` (label `stackot-s41`) was closed after integration and the task worktree is retained.
+
+### S42 decision — ACCEPT after one narrowed retry
+
+Baseline: `0d56fdc`. First candidate implemented the contract correctly (whitelist JSON lines, redaction on every string field, decorator around the drainer's outbox so `delivery.ts`/`outbox.ts` stay untouched, `routing.fallback` for `unconfigured-repo`, `ci-alerts`, `followup-unresolved` and `unrouted`), but the owner rejected one shape: `server.ts` **mirrored** the retry backoff formula from `Outbox.retry`, and the test only asserted that `nextAttemptAt` was a number — a duplicated policy with no drift detector, the same defect the owner rejected in S12's first candidate. One narrowed retry was issued.
+
+Corrected candidate — ACCEPT. `retryDelayMs` is exported from `outbox.ts` and used by `Outbox.retry` and by the telemetry decorator, so the schedule has one owner, and the integration test now asserts the reported `nextAttemptAt` is within 1 s of the row's persisted `next_attempt_at` after two consecutive failures — a direct drift detector, not a restatement.
+
+Owner oracles after the retry: `bun run typecheck` clean, focused 12 pass / 156 assertions, full suite **256 pass / 854 assertions** across 24 files. Owner integration: five files copied verbatim and md5-verified (five MATCH); completion-side typecheck clean, 256 pass / 852 assertions, `bun run build` emits `dist/server.js` (29.21 KB). CI runs on the push.
+
+Test quality: the suite reads the receiver's own stdout and correlates on `deliveryId` — failures 1..N then `delivered` in order, `dead_letter` at the cap with the gateway's status in the error, `routing.fallback` with reason/repo/item for an unresolved follow-up, no fallback line for normal routing, and no line containing a raw secret or event body text.
+
+Residual risks: telemetry goes to stdout only, so a deployment must ship it somewhere (the observability rows in M3 own that); the decorator's in-memory `seenAttempts`/`targets` maps are keyed by delivery id and cleaned on delivered/dead-letter, so a permanently retrying row keeps a small entry until the cap; and `delivery.delivered` reports the attempts count from the last `due()`, i.e. prior failures, which is documented in the event type but worth remembering when reading logs.
+
+Worker lifecycle: the S42 worker settled `done` after the retry; workspace `w64` (label `stackot-s42`) was closed after integration and the task worktree is retained.
