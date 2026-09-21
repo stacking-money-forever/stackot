@@ -1,0 +1,57 @@
+B03 — GitHub 429 Retry-After 준수 (owner launch contract, wave 04)
+
+Task: ONE changeset. GitHub rate limit 응답을 만나면 `Retry-After`가 지시한 시각까지 기다렸다가 재시도한다(burst 재시도 금지).
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (오너가 소스로 확인한 사실)
+- `mapping.ts`의 `fetchItem`은 평범한 `fetch`를 쓴다. GitHub이 429(+`Retry-After`)를 주면 즉시 실패하고, 그 실패는 라우터의 admin 폴백으로 이어져 **역링크가 조용히 사라진다**.
+- 재시도가 없으므로 레이트리밋 구간에서는 모든 후속 이벤트가 admin으로 몰린다. 반대로 성급한 재시도(burst)는 제한을 악화시킨다.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/github-client.ts (신규)
+- receiver/test/github-client.test.ts (신규)
+- receiver/src/mapping.ts (`fetchItem`이 github-client를 쓰도록)
+- receiver/test/mapping.test.ts (레이트리밋 경로 테스트 추가; 기존 단언 유지)
+
+금지: outbox.ts, delivery.ts, router.ts, normalize.ts, config.ts, gateway.ts, ingress.ts, redact.ts, telemetry.ts, metrics.ts, replay.ts, backup.ts, health.ts, repo-policy.ts, server.ts, package.json.
+
+## 요구 동작
+1. `github-client.ts`:
+   - `export type GithubFetchOptions = { maxRetries?: number; maxRetryAfterMs?: number; sleep?: (ms: number) => Promise<void>; now?: () => number };`
+   - `export async function githubFetch(url: string, init: RequestInit, opts: GithubFetchOptions = {}): Promise<Response>`
+   - 429(그리고 `x-ratelimit-remaining: 0`인 403) 응답에서 `Retry-After`를 해석한다: 초 단위 숫자와 HTTP-date 형식 모두. 해석 불가면 안전한 기본 대기(예: 1초)를 쓴다.
+   - 대기 시간은 `maxRetryAfterMs`(기본 60초)로 상한을 둔다. 상한을 넘는 지시는 상한까지만 기다린다(무한 대기 금지).
+   - `maxRetries`(기본 2)까지 재시도하고, 소진되면 **마지막 응답을 그대로 반환**한다(예외를 던지지 않는다 — 호출자가 판단한다).
+   - `sleep`/`now`는 주입 가능해야 한다 → 테스트가 실제 시간을 기다리지 않고 지시된 지연을 관찰할 수 있다.
+   - 재시도 사이에 지수 백오프를 얹지 않는다(Retry-After가 권위다). 재시도는 순차적이어야 한다.
+2. `mapping.ts`의 `fetchItem`은 항목·댓글·페이지네이션 요청 모두 `githubFetch`를 사용한다. 기존 `opts.timeoutMs`(AbortSignal.timeout)와 `apiBase`, `token` 오버라이드, `maxCommentPages` 동작은 그대로 유지한다.
+3. 회귀 금지: 매핑의 URL 계약(PR 댓글은 issues 표면, per_page=20, Link rel=next 페이지네이션, 조기 종료, 상한), `findThreadId` 신뢰 규칙, 그리고 기존 테스트 전체.
+4. 로그/텔레메트리에 토큰이 남지 않는다(S39 redaction).
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/github-client.test.ts test/mapping.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (fake-clock: 실제 대기 금지)
+### receiver/test/github-client.test.ts
+- 429 + `Retry-After: 2` → 주입한 sleep이 정확히 2000ms로 호출되고 재시도가 성공한다.
+- `Retry-After`가 HTTP-date 형식 → `now()` 기준 차이만큼 대기한다(경계: 과거 날짜면 0 또는 최소).
+- 상한 초과 지시(예: 3600초) → `maxRetryAfterMs`까지만 대기한다.
+- `Retry-After` 없음/해석 불가 → 기본 대기(예: 1000ms).
+- 재시도 소진: 429가 계속되면 `maxRetries`만큼만 재시도하고 마지막 응답을 반환한다(throw 금지). 이때 sleep 호출 횟수로 burst가 아님을 단언한다.
+- 200/404 등은 재시도 없이 즉시 반환한다.
+- 403 + `x-ratelimit-remaining: 0`도 레이트리밋으로 취급한다.
+### receiver/test/mapping.test.ts (추가)
+- 스텁이 첫 요청에 429+Retry-After, 다음 요청에 정상 댓글을 주면 `fetchItem`이 재시도 후 역링크가 담긴 아이템을 반환한다(주입한 sleep으로 즉시).
+- 재시도 소진 시 `fetchItem`은 기존처럼 실패한다(!ok → throw). 메시지에 토큰이 없어야 한다.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크, 실제 wall-clock 대기(수백 ms 초과) 사용, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/b03-receipt.md`: 변경 파일, 핵심 diff 요약, Retry-After 해석 규칙 표, 실행한 명령과 결과, 남은 리스크(예: 상한 때문에 제한이 오래 지속될 때의 동작).
+3. Todo는 최대 2개, 보고 300줄 이내.

@@ -1,0 +1,63 @@
+B01 — repo별 권한 분리 (owner launch contract, wave 04)
+
+Task: ONE changeset. 저장소별 자격증명을 분리하고, 한 repo의 권한이 다른 repo에 절대 쓰이지 않게 한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (오너가 소스로 확인한 사실)
+- 지금은 모든 repo가 `cfg.githubToken` 하나를 공유한다. 역링크 조회는 이벤트의 repo로만 나가지만, 토큰이 하나이므로 한 repo 사고의 영향 범위가 전체 저장소가 된다(원장 failure trigger: "공유 credential 누출").
+- repo별 권한을 강제하는 단일 지점이 없다. `resolveThreadId`가 설정에서 토큰을 직접 꺼내 쓴다.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/repo-policy.ts (신규)
+- receiver/test/repo-policy.test.ts (신규)
+- receiver/test/server.repo-policy.integration.test.ts (신규)
+- receiver/src/config.ts (`repos[*].githubToken?` 선택 키 추가 + 검증)
+- receiver/test/config.test.ts (신규 키 케이스 추가; 기존 단언 유지)
+- receiver/src/mapping.ts (`fetchItem`이 선택적 토큰 오버라이드를 받도록)
+- receiver/src/server.ts (repo-policy로 조회 자격 결정 + 교차 repo 사용 금지)
+
+금지: outbox.ts, delivery.ts, router.ts, normalize.ts, gateway.ts, ingress.ts, redact.ts, telemetry.ts, metrics.ts, replay.ts, backup.ts, health.ts, package.json.
+
+## 요구 동작
+1. 설정: `repos["owner/name"].githubToken?: string` (선택). 있으면 trim 후 비어 있으면 안 되고, `<...>` placeholder는 거부한다. 없으면 전역 `githubToken`을 쓴다. 기존 repo 검증·전역 검증은 변경 금지.
+2. `repo-policy.ts`:
+   - `export type RepoGrant = { repo: string; githubToken: string; tokenSource: "repo" | "shared"; issuesForumChannelId: string; prsForumChannelId: string };`
+   - `export type RepoAuthorization = { allowed: true; grant: RepoGrant } | { allowed: false; reason: string };`
+   - `export function authorizeRepo(cfg: ReceiverConfig, repo: string): RepoAuthorization` — 설정에 없는 repo는 `{ allowed: false, reason: "unconfigured-repo" }`, 있으면 자기 토큰이면 `tokenSource: "repo"`, 없으면 전역 토큰으로 `"shared"`.
+   - `export function assertGrantForRepo(grant: RepoGrant, repo: string): void` (또는 boolean) — grant의 repo와 요청 repo가 다르면 **거부**한다. 즉 다른 repo의 권한을 빌려 쓸 수 없다.
+   - 모듈은 순수해야 한다(네트워크·DB 접근 금지).
+3. `mapping.ts`: `fetchItem`에 선택적 토큰 오버라이드(예: `opts.token`)를 추가한다. 주어지면 `cfg.githubToken` 대신 그 토큰을 Authorization에 쓴다. 주어지지 않으면 기존 동작과 완전히 동일해야 한다(기존 테스트 통과).
+4. `server.ts`: `resolveThreadId`가 `authorizeRepo`로 자격을 얻어 그 grant의 토큰으로만 조회한다. 설정에 없는 repo면 조회를 시도하지 않는다(기존 admin 폴백 경로로). grant와 다른 repo로 조회하는 경로는 존재하면 안 된다(있으면 거부).
+5. 기존 계약 회귀 금지: 라우팅 표(S21), persist-then-resolve(S21b), 마스킹(S39), health/readiness(S41), 텔레메트리(S42), 메트릭(S43), backup(S46), S09A/S09B/S09Bb.
+6. 토큰 원문은 로그·텔레메트리·`last_error`에 남지 않는다(S39 redaction 목록에 repo별 토큰도 포함되는지 확인하고, 필요하면 `redactSecrets`에 추가한다 — 이 경우 redact.ts 수정을 허용한다).
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/repo-policy.test.ts test/config.test.ts test/mapping.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구
+### receiver/test/repo-policy.test.ts
+- 두 repo 테스트(핵심): repo A와 repo B가 각자 토큰을 가지면 각 grant가 자기 토큰을 반환하고 `tokenSource`는 `"repo"`다.
+- 교차 거부: A의 grant로 B를 요청하면 거부된다(반대도 동일).
+- 공유 폴백: 토큰이 없는 repo C는 전역 토큰을 받고 `tokenSource: "shared"`로 표시된다.
+- 미설정 repo는 `allowed: false`이며 grant를 만들지 않는다.
+- grant의 포럼 채널 ID가 그 repo의 설정값과 일치한다(다른 repo 값이 섞이지 않는다).
+### receiver/test/config.test.ts (추가)
+- repo별 토큰: 정상 통과 / 빈 문자열·공백 거부 / `<...>` placeholder 거부.
+- repo별 토큰이 없어도 기존 설정이 그대로 통과한다(회귀).
+### receiver/test/server.repo-policy.integration.test.ts (프로세스)
+- GitHub 스텁 두 개(또는 한 스텁이 경로로 구분)를 두고 repo A·B 각각의 후속 이벤트를 보낸다.
+- A에 대한 요청의 Authorization이 A의 토큰이고, B에 대한 요청은 B의 토큰임을 스텁이 관찰한 헤더로 단언한다(교차 사용 0).
+- 설정에 없는 repo의 이벤트는 GitHub 호출 없이 admin 채널로 폴백한다.
+- 로컬 프로세스만 사용하고 실제 네트워크를 쓰지 않는다.
+
+## 금지
+- 위 범위 밖 파일 수정, 스키마 변경, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/b01-receipt.md`: 변경 파일, 핵심 diff 요약, 권한 결정 표, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개, 보고 300줄 이내.

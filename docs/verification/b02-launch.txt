@@ -1,0 +1,66 @@
+B02 — repo별 동시 실행 상한과 공정성 (owner launch contract, wave 04)
+
+Task: ONE changeset. 전달 drain에 동시성과 repo별 상한을 넣어, 한 repo의 느린 전달이 다른 repo의 전달을 막지 않게 한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (오너가 소스로 확인한 사실)
+- `DeliveryDrainer.drain()`은 `outbox.due()`로 한 건씩 꺼내 `await forward()`를 순차 실행한다. 따라서 repo A의 Gateway가 느리거나 멈추면 repo B의 전달이 그 뒤에서 대기한다(원장 failure trigger: "기아").
+- 동시성이 없으므로 repo별 상한 개념도 없다(전역 유효 상한 1).
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/scheduler.ts (신규)
+- receiver/test/scheduler.test.ts (신규)
+- receiver/src/outbox.ts (`dueBatch(limit)` 추가만; 기존 `due()`/API/스키마/PRAGMA 변경 금지)
+- receiver/src/delivery.ts (동시 drain + repo별 상한)
+- receiver/test/delivery.test.ts (동시성/공정성 테스트 추가; 기존 단언 유지)
+
+금지: server.ts, router.ts, mapping.ts, normalize.ts, config.ts, gateway.ts, ingress.ts, redact.ts, telemetry.ts, metrics.ts, replay.ts, backup.ts, health.ts, repo-policy.ts, github-client.ts, package.json.
+
+## 요구 동작
+1. `scheduler.ts` (순수 모듈, 네트워크·DB 접근 금지):
+   - `export type ScheduledJob = { id: string; repo: string };`
+   - `export type SchedulerLimits = { maxGlobal: number; maxPerRepo: number };`
+   - `export function selectRunnable(ready: readonly ScheduledJob[], inFlight: readonly ScheduledJob[], limits: SchedulerLimits): ScheduledJob[]` — 지금 시작해도 되는 작업만 **공정한 순서**로 반환한다.
+     - 전역 상한: `inFlight.length + 결과.length <= maxGlobal`.
+     - repo별 상한: 어떤 repo도 `maxPerRepo`를 넘겨 선택되지 않는다.
+     - 공정성: 현재 in-flight가 가장 적은 repo를 우선하고, 동률이면 ready 순서(FIFO)를 지킨다. 한 repo가 ready에 많이 있어도 다른 repo의 작업이 굶지 않는다.
+   - 순수 함수여야 하며 입력을 변형하지 않는다.
+2. `outbox.ts`: `dueBatch(limit: number): PendingDelivery[]` — due 조건을 만족하는 pending 행을 최대 limit개 반환한다(단일 쿼리, `due()`와 같은 정렬 규칙). 기존 `due()`는 그대로 둔다.
+3. `delivery.ts`: drain이 동시성을 갖는다.
+   - 생성자에 선택적 `limits: SchedulerLimits`(기본 `{ maxGlobal: 4, maxPerRepo: 1 }`)를 받는다.
+   - 한 번의 drain 패스에서 `dueBatch`로 후보를 얻고 `selectRunnable`로 시작 대상을 정한 뒤, 선택된 작업들을 **동시에** forward한다(서로 기다리지 않는다).
+   - 진행 중인 작업의 id는 drainer가 추적해 **같은 행을 두 번 전달하지 않는다**(중복 전달 금지). 진행 중인 id는 `selectRunnable`의 inFlight로도 넘긴다.
+   - 각 작업의 성공/실패 처리는 기존과 동일하다(delivered/fail, 재시도 예약). 실패가 다른 작업을 중단시키지 않는다.
+   - 기존 `draining` 재진입 방지 의미는 유지한다(동시 drain 패스가 겹쳐 같은 행을 중복 처리하면 안 된다).
+   - repo는 `job.event.repo`에서 얻는다.
+4. 회귀 금지: delivery의 기존 계약(한 번만 전달, 실패 시 retry/fail 호출, 재진입 방지, MAX_DELIVERY_ATTEMPTS 한도)과 outbox/delivery 테스트 전체.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/scheduler.test.ts test/delivery.test.ts test/outbox.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구
+### receiver/test/scheduler.test.ts
+- 전역 상한: inFlight가 maxGlobal이면 빈 배열.
+- repo별 상한: repo A가 이미 maxPerRepo만큼 in-flight면 A의 ready는 선택되지 않고 B의 ready가 선택된다(핵심).
+- 공정성: 두 repo가 각각 여러 건 ready일 때 선택 순서가 A,B,(A,B)로 교대한다(한 repo 독식 금지).
+- 결정성: 같은 입력에 같은 출력, 입력 배열 변형 없음.
+- 경계: maxPerRepo > maxGlobal, maxGlobal 0, ready 비어 있음.
+### receiver/test/delivery.test.ts (추가)
+- **포화/기아 테스트(핵심)**: 실제 `Outbox`와 계측된 forwarder를 쓴다. repo A의 forward는 제어된 promise로 붙잡아 두고, repo B의 forward는 즉시 성공시킨다. A가 붙잡혀 있는 동안 B의 작업들이 전달 완료되어야 한다(A가 B를 막지 않음).
+- repo별 상한 준수: forwarder가 동시 실행 중인 repo별 개수를 기록해, 어느 시점에도 같은 repo가 `maxPerRepo`를 넘지 않았음을 단언한다.
+- 중복 전달 금지: 동시 실행 중에도 같은 delivery id가 두 번 forward되지 않는다.
+- 실패 격리: A의 forward가 실패해도 B의 성공이 유지되고 재시도 예약이 정확하다.
+### receiver/test/outbox.test.ts (추가)
+- `dueBatch`: limit만큼/그 이하 반환, 정렬 규칙이 `due()`와 일치, pending이 없으면 빈 배열, limit 0이면 빈 배열.
+
+## 금지
+- 위 범위 밖 파일 수정, 스키마/컬럼 변경, 기존 테스트 약화·삭제, 실제 네트워크, 실제 wall-clock 장시간 대기, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/b02-receipt.md`: 변경 파일, 핵심 diff 요약, 스케줄러 규칙 표(우선순위·상한), 실행한 명령과 결과, 남은 리스크(예: 동시성이 outbox 쓰기 경합에 미치는 영향).
+3. Todo는 최대 2개, 보고 300줄 이내.
