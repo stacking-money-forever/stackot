@@ -536,3 +536,15 @@ Owner-observed defect: nothing redacts secrets today. A hook token embedded in `
 Owner envelope: `redact.ts` + `redact.test.ts` as the row nominates, plus `server.ts` wiring and a new `server.redact.integration.test.ts`. The wiring is what makes the row load-bearing in two places at once: the forward callback redacts the error message **before rethrowing**, so the drainer stores a clean `last_error` without `delivery.ts` being touched, and the server's own error logs redact before printing. The integration test induces the leak with an unreachable gateway and a token-in-URL config, then asserts the secret is absent from both the child's stderr and the stored `last_error`.
 
 Status: contract written; launch follows.
+
+## S41 launch contract — separate readiness from dependency health
+
+Row: `health.ts` + `health.test.ts`, completion condition "수신 queue 유지, dependency 경고", failure trigger "Gateway down 수신 중지".
+
+Owner-observed defect: `/healthz` answers `ok` whenever the process runs and `/readyz` only checks `outbox.ready()`, so a dead Gateway is invisible while deliveries pile up as retries and dead letters. The inverse mistake is also in scope: if Gateway reachability were folded into readiness, an orchestrator would restart a healthy receiver and lose its queue.
+
+Owner envelope: `health.ts` plus a unit suite and a process-level probe (`health.test.ts`, `server.health.integration.test.ts`) and `server.ts` wiring — the forward callback records gateway success or failure (with the message redacted as S39 requires), `/healthz`, `/readyz` and `/status` expose the three views, and the existing `/healthz` = `ok`, `/readyz` = `ready` contracts stay intact so the earlier integration suites keep passing. State is deliberately in-process only.
+
+The decisive property the oracle must show: with the Gateway unreachable, `/readyz` stays 200 and webhooks keep being accepted and committed, while `/status` reports degraded with the last error; once the Gateway comes back and a delivery succeeds, `/status` returns to ok.
+
+Status: contract written; launch follows S39.

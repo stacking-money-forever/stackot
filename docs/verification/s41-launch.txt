@@ -1,0 +1,60 @@
+S41 — health/readiness 분리 (owner launch contract, wave 03)
+
+Task: ONE changeset. outbox 준비 상태와 Gateway 도달 가능성을 구분해 노출한다. Gateway가 죽어도 수신은 계속되고, 그 사실은 degraded로 보인다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (오너가 소스로 확인한 사실)
+- 현재 `/healthz`는 프로세스가 살아 있으면 무조건 `ok`, `/readyz`는 `outbox.ready()`(단순 `SELECT 1`)만 본다.
+- Gateway 도달 가능성은 어디에도 드러나지 않는다. Gateway가 죽어 있으면 전달이 계속 실패해 재시도/dead-letter로 쌓이는데, 운영자는 health만 보고 정상이라고 판단하게 된다.
+- 반대로 Gateway down이 readiness 실패로 이어지면 오케스트레이터가 멀쩡한 receiver를 재시작해 수신 queue를 잃을 수 있다(원장 failure trigger: "Gateway down 수신 중지").
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/health.ts (신규)
+- receiver/test/health.test.ts (신규)
+- receiver/test/server.health.integration.test.ts (신규)
+- receiver/src/server.ts (엔드포인트 배선 + gateway 상태 기록)
+
+금지: outbox.ts, delivery.ts, router.ts, mapping.ts, normalize.ts, config.ts, gateway.ts, ingress.ts, redact.ts, replay.ts, package.json, 기존 테스트 파일 수정.
+
+## 요구 동작
+1. `health.ts`에 상태 모델과 판정 함수를 둔다.
+   - `export type GatewayHealth = { reachable: boolean; lastError: string | null; lastSuccessAt: number | null }`
+   - `export function createGatewayHealth(): GatewayHealth & { recordSuccess(): void; recordFailure(error: string): void }` (또는 동등한 형태)
+   - `export function liveness(outboxReady: boolean, gateway: GatewayHealth): { status: 200; body: string }` — 프로세스 생존 신호. outbox/gateway 상태와 무관하게 200이다.
+   - `export function readiness(outboxReady: boolean, gateway: GatewayHealth): { status: 200 | 503; body: string }` — **outbox가 준비됐으면 200**, 아니면 503. Gateway 상태는 절대 readiness를 실패시키지 않는다.
+   - `export function statusReport(outboxReady: boolean, gateway: GatewayHealth): { status: "ok" | "degraded"; ... }` — Gateway가 unreachable이면 `degraded`와 함께 `lastError`를 담는다. secret은 담지 않는다(필요하면 S39의 redaction을 쓴다).
+2. `server.ts` 배선:
+   - drainer의 forward 콜백에서 성공/실패를 gateway 상태에 기록한다(성공 시 `recordSuccess`, 실패 시 오류 메시지로 `recordFailure`). 오류 메시지는 **redaction 후** 기록한다.
+   - `GET /healthz` → liveness(200), `GET /readyz` → readiness, `GET /status` → statusReport의 JSON(200 + `Content-Type: application/json`).
+   - 기존 `/healthz`/`/readyz`의 경로와 성공 상태 코드/본문 계약은 유지한다(기존 통합 테스트가 그대로 통과해야 한다: `/healthz`는 `ok`, `/readyz`는 `ready`).
+3. Gateway가 unreachable이어도 webhook 수신은 계속 200 accepted이고 행이 커밋되어야 한다(기존 S21b/S09A 계약 유지).
+4. 상태는 프로세스 메모리에만 둔다(DB 저장 금지).
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/health.test.ts test/server.health.integration.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구
+### receiver/test/health.test.ts (단위)
+- outbox 미준비 → readiness 503, 준비됨 → 200 (Gateway 상태와 무관).
+- Gateway unreachable이어도 readiness는 200이다(핵심).
+- liveness는 어떤 조합에서도 200.
+- statusReport: 초기 상태(아직 시도 없음)와 실패 후 상태를 구분하고, 실패 시 degraded + lastError 포함. 성공 후에는 ok로 돌아온다.
+- lastError에 secret 원문이 남지 않는다(새니티 수준).
+### receiver/test/server.health.integration.test.ts (프로세스)
+- Gateway 스텁을 띄우지 않은 상태(도달 불가 주소)에서: webhook POST → 200 accepted, outbox 행 커밋, `/readyz` 200 `ready`, `/status`가 degraded + Gateway unreachable을 보고.
+- 같은 상태에서 webhook을 한 번 더 POST → 여전히 200 accepted(수신이 멈추지 않음).
+- Gateway 스텁을 살려서 정상 전달이 발생하면 `/status`가 다시 ok로 돌아온다(재시도 후 성공).
+- `/healthz`는 두 상황 모두 200.
+- 로컬 프로세스만 사용하고 실제 네트워크를 쓰지 않는다.
+
+## 금지
+- 위 범위 밖 파일 수정, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s41-receipt.md`: 변경 파일, 핵심 diff 요약, 엔드포인트 계약 표, 실행한 명령과 결과, 남은 리스크(예: 상태가 메모리라 재시작 시 초기화됨).
+3. Todo는 최대 2개, 보고 300줄 이내.
