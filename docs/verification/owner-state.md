@@ -33,10 +33,10 @@ Evidence class: local and synthetic process-level only. No runtime, deployment o
 
 ## Next queue
 
-Two candidate rows were opened by this wave's findings and are not part of M1:
+Two candidate rows were opened by this wave's findings. The first is now **done**:
 
-1. **Persist-then-resolve** (from S21): `server.ts` awaits the GitHub reverse-link lookup before `outbox.enqueue`, and `fetchItem` has no request timeout, so a slow GitHub API delays both the ACK and the persistence. Store the normalized event first and resolve the destination in the drainer, with a bounded lookup timeout; prove it with a hanging-lookup probe plus a redelivery test.
-2. **Outbox-failure recovery or readiness failure** (from S09B): after an outbox I/O failure the receiver keeps answering `/healthz` 200 and `/readyz` `ready` while every new delivery gets 503, because `ready()` is a plain `SELECT 1`. The row must make the receiver either reopen the database or fail readiness so a supervisor restarts it.
+1. **Persist-then-resolve** — completed as S21b (`76a27ed`): the request path persists the unrouted event and ACKs, routing moved into the drainer, `fetchItem` gained a 10 s timeout, and the ordering is proven with a held gate in front of a stubbed GitHub API. The routing path is now process-testable via `STACKOT_GITHUB_API_BASE`.
+2. **Outbox-failure recovery or readiness failure** (from S09B, still open): after an outbox I/O failure the receiver keeps answering `/healthz` 200 and `/readyz` `ready` while every new delivery gets 503, because `ready()` is a plain `SELECT 1`. The row must make the receiver either reopen the database or fail readiness so a supervisor restarts it.
 
 Then the remaining P1 local rows from `docs/atomic-completion.md`: S39 (redaction), S41 (health split), S42 (telemetry), S43 (metrics), S46 (backup), plus B01–B03. S37 is effectively satisfied by the committed scripts. S38's CI evidence exists for the current SHA but should be re-stated when S21-era routing lands in a release candidate.
 

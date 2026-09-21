@@ -504,3 +504,25 @@ Owner envelope: `server.ts` (persist the unrouted event, move `route` into the d
 The oracle is a local stub pair (GitHub + Gateway): a follow-up event must be ACKed with its row committed and no GitHub request yet made, then resolved to the stubbed backlink thread when it drains; an unmapped event must land on the admin channel; and with a GitHub stub that never answers, the ACK must still be immediate and the row committed while the drain remains a failure.
 
 Status: contract written; launch follows.
+
+## S21b (wave 03) — decision: ACCEPT, no retry needed
+
+Baseline: `bdd7441`. Task checkout `/Users/justn/dev/.worktrees/stackot-s21b-20260921` (workspace `w61`), candidate limited to `server.ts`, `mapping.ts`, `mapping.test.ts` and a new `server.routing.integration.test.ts`; HEAD unchanged, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. The request path now stores the **unrouted** normalized event (`outbox.enqueue(deliveryId, ev)`) and ACKs; the drainer's forward callback runs `route(job.event, deps)`, applies the decision and forwards. Routing results are never persisted, so a retry re-resolves. `fetchItem` gained `GITHUB_TIMEOUT_MS = 10_000` (injectable) applied through `AbortSignal.timeout` on the item, the first comments page and every paginated request, and `server.ts` reads `STACKOT_GITHUB_API_BASE` (default the real API) so the routing path is process-testable without the live network.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/mapping.test.ts test/server.routing.integration.test.ts` 25 pass / 70 assertions, full suite 216 pass / 478 assertions. Owner integration: four files copied verbatim and md5-verified (four MATCH); completion-side typecheck clean, **216 pass / 478 assertions**, `bun run build` emits `dist/server.js` (24.27 KB). CI on `76a27ed` is green, so the stub/gate design is portable — unlike S09B's original recipe, which only failed on the runner.
+
+Discrimination check, done two ways because the first attempt was inconclusive (0/4 pass could have meant a broken copy):
+1. Reverting the ordering in a disposable copy fails all four tests, **and** the copy boots normally (`healthz: ok`), so the failures are behavioural.
+2. Direct probe on that same copy with a GitHub stub that never answers: the receiver boots, and the webhook POST does **not** return — the test client aborts it after 3 s. That is the defect in one line: with routing on the request path, a hanging GitHub API blocks the ACK. On the fixed code the same POST answers `200 accepted` immediately and the row stays pending for retry.
+
+Test quality: the ordering is proven with a **held gate** in front of the GitHub stub rather than by timing — while the gate is held the drain's lookup is in flight and provably has not reached the stub, so `ghSeen` is empty at ACK time and the row is asserted unrouted at the moment the 200 was observed. The suite then releases the gate and asserts the drain resolves the stubbed backlink, forwards to that thread, and leaves the stored event unrouted; a second case covers the admin fallback for an unmapped item; a third covers the hanging lookup (ACK immediate, row still pending, gateway untouched).
+
+Residual risks accepted with the row:
+- Routing now runs on every delivery attempt, so a delivery that fails its forward issues another GitHub read per retry — bounded by `MAX_DELIVERY_ATTEMPTS` but real against the GitHub rate limit.
+- A mapping failure is **not** a delivery failure: the router falls back to the admin channel, the delivery succeeds, and nothing in the delivery telemetry records that the backlink lookup failed. The only evidence is a `console.warn`. Turning that into a recorded fallback counter or log field belongs to the telemetry row (S42), not here.
+- `STACKOT_GITHUB_API_BASE` is now a production knob: unset it keeps the real API, but a typo would silently point lookups at nothing and every follow-up would become an admin notice.
+- The ACK no longer implies the destination was resolved; it implies the event is durably stored. That is the intended contract change and it is what S21b's completion condition asked for.
+
+Worker lifecycle: the S21b worker settled with its receipt written; workspace `w61` (label `stackot-s21b`) was closed after integration and the task worktree is retained.
