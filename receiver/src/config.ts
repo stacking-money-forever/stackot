@@ -116,8 +116,14 @@ export async function loadConfig(): Promise<ReceiverConfig> {
     throw new Error("config missing: repos (at least one owner/name entry)");
   }
   for (const [repo, rc] of Object.entries(cfg.repos)) {
-    if (!rc.issuesForumChannelId || !rc.prsForumChannelId) {
-      throw new Error(`config repos["${repo}"] missing issuesForumChannelId or prsForumChannelId`);
+    for (const key of ["issuesForumChannelId", "prsForumChannelId"] as const) {
+      const value = rc?.[key];
+      if (typeof value !== "string" || value.trim() === "") {
+        throw new Error(`config repos["${repo}"].${key} must be a non-empty channel ID string`);
+      }
+      if (/^<[^<>]*>$/.test(value.trim())) {
+        throw new Error(`config repos["${repo}"].${key} is an unfilled <...> placeholder — set the real forum channel ID`);
+      }
     }
     if (!/^[^/]+\/[^/]+$/.test(repo)) {
       throw new Error(`config repos key "${repo}" must be owner/name`);
