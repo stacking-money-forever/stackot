@@ -421,3 +421,11 @@ Owner integration: both files copied verbatim and md5-verified (two MATCH). Comp
 Residual risks: the row proves the timeout shape, not that ten seconds is the right value for the Gateway, which is a runtime-tuning question for the deployment rows; and a timed-out forward surfaces as a rejection the drainer turns into a retry, so a permanently hanging Gateway now produces dead-lettered deliveries rather than an unbounded queue — that behaviour is covered by S12's tests, not by this row.
 
 Worker lifecycle: the S10 worker settled `idle` at its prompt with its receipt written; workspace `w5Z` (label `stackot-s10`) was closed after integration and the task worktree is retained.
+
+### S11 decision — oracle gap closed (owner-authored test)
+
+Baseline: `067e7ce`. S11 was recorded as ACCEPT-WITH-GAP because the drain path existed and worked but no test pinned the retry schedule, and S11's named oracle was a fake-clock retry test. The owner added that assertion to `delivery.test.ts` (the row's own scope): after `outbox.retry(id, attempts)` for attempts 1 through 8, the stored `next_attempt_at` must be 2 s, 4 s, 8 s, 16 s, 32 s and then a flat 60 s. Real time is read by the production code, so the schedule is asserted from the stored timestamp instead of holding fake timers; the tolerance is 250 ms lower and 1 s upper to stay deterministic without being slack, and attempts are asserted to be recorded as given.
+
+Discrimination check (owner, disposable copy): changing the exponent cap from 6 to 4 in `outbox.ts` fails the new test, so it pins the schedule rather than restating it. Full suite after the addition: 208 pass / 435 assertions, typecheck clean.
+
+S11 is therefore ACCEPT rather than ACCEPT-WITH-GAP.
