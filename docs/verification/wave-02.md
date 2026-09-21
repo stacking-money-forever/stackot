@@ -628,3 +628,19 @@ Owner integration: five files copied verbatim and md5-verified (five MATCH). Com
 Residual risks: counts are read live from SQLite, so on a large delivered history the aggregate scans the table on every interval — acceptable at current volume and the first thing to revisit with an index or a retention cutoff if the delivered set grows; the interval is a compile-time constant, so changing the cadence needs a rebuild; and the delivered count grows with traffic while the TTL sweep only removes delivered rows older than seven days.
 
 Worker lifecycle: the S43 worker settled with its receipt written; workspace `w65` (label `stackot-s43`) was closed after integration and the task worktree is retained.
+
+### S46 decision — ACCEPT, no retry needed
+
+Baseline: `2da1e79`. Candidate: new `backup.ts` and `backup.test.ts` only — no other file touched, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `backupOutbox` uses `VACUUM INTO` against a **read-only** source, escapes the destination path (it cannot be bound as a parameter), refuses an existing destination rather than overwriting an operator's backup, removes the destination on any failure so no half-written file survives, and returns the snapshot size. The same file is the CLI (`bun src/backup.ts <dest>`, source from `STACKOT_OUTBOX_PATH`, exit 0/1/2) mirroring `replay.ts`.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/backup.test.ts` 8 pass / 33 assertions, full suite **271 pass / 939 assertions** across 26 files.
+
+Oracle discrimination check (owner probe, outside the candidate): with a commit made and no checkpoint, the outbox's main file is 4 096 bytes while `<db>-wal` holds 20 632 bytes — every row lives in the WAL. A naive `copyFile` of the main file produces a database that fails to open at all ("unable to open database file"), which is the row's "WAL 누락" failure trigger in its strongest form. `VACUUM INTO` produced a 12 288-byte standalone snapshot that passed `PRAGMA integrity_check` and contained the WAL-only row.
+
+Owner integration: both files copied verbatim and md5-verified (two MATCH). Completion-side oracles: typecheck clean, 271 pass / 939 assertions, `bun run build` emits `dist/server.js` (30.95 KB). CI runs on the push.
+
+Residual risks: `VACUUM INTO` rewrites the database, so its cost scales with size — fine for an outbox, and it takes a read transaction on the source, which does not block the receiver's writes; the destination must be on a filesystem with room for a full copy; the operation is not scheduled anywhere yet, so the backup cadence and retention policy belong to the deployment rows (S44/S47/S48); and because the destination is refused when it exists, a runbook must rotate names rather than reuse a path.
+
+Worker lifecycle: the S46 worker settled with its receipt written; workspace `w66` (label `stackot-s46`) was closed after integration and the task worktree is retained.
