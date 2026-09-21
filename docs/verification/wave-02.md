@@ -31,7 +31,31 @@ Readiness: `herdr agent start` timed out waiting for agent startup although the 
 
 Placement record — deviation, documented: the worktree was created with `herdr worktree create --cwd /Users/justn/dev/stackot --base db95b2a --path /Users/justn/dev/.worktrees/stackot-s12-20260921 --label stackot-s12 --no-focus --trust-repository`, which provisioned workspace `w5N` (label `stackot-s12`) with root pane `w5N:p1` already rooted at the task checkout. `place-new-pane` was therefore not applied: Herdr supplied the pane, no caller-tab split was made, the protected `dev/lobby` surface was untouched, and nothing was focused. The caller pane `w5E:p1` remains the owner pane.
 
-Status: launched; acceptance pending.
+## S12 decision — ACCEPT after one narrowed retry
+
+First candidate (worker receipt 1): scope correct (delivery.ts, delivery.test.ts, outbox.test.ts), owner re-ran the oracles at 13 focused / 102 full pass, but it branched in the drainer on `attempts >= MAX_DELIVERY_ATTEMPTS` to choose between `retry` and `fail`. Owner rejected that shape for three reasons: the exhaustion policy existed in two places, `delivery.ts` (a port-only module) imported the concrete `bun:sqlite`-backed `outbox.ts`, and `Outbox.fail`'s below-limit branch became unreachable from production. One narrowed retry was issued with an explicit owner override permitting the `retry` → `fail` re-pin in `delivery.test.ts`.
+
+Corrected candidate — ACCEPT. Owner verified by reading the whole delta and re-running every oracle:
+
+- `receiver/src/delivery.ts`: `DeliveryOutbox` is now `due`/`delivered`/`fail` only; the `MAX_DELIVERY_ATTEMPTS` import is gone; the catch path is unconditional — `const message = error instanceof Error ? error.message : String(error); this.outbox.fail(job.id, job.attempts + 1, message);`. The `{ ok: false }` branch throws `gateway rejected delivery (status ${result.status ?? "unknown"})`, so `last_error` carries the gateway status.
+- `receiver/src/outbox.ts`: **unchanged**. `fail` remains the single owner of the policy (at/over `MAX_DELIVERY_ATTEMPTS` → `dead_letter` + `last_error`; below → `retry` with exponential backoff), and that below-limit branch is reachable again.
+- `receiver/test/delivery.test.ts`: mocks dropped `retry`; below-limit rejection asserts `fail("d2", 3, "gateway rejected delivery …")`, a thrown error asserts `fail("d3", 1, "timeout")`, and both at-limit cases assert `fail(id, MAX, message)` with the status. The success case asserts `fail` is unreachable. No assertion was weakened; the `retry` re-pin was owner-authorized.
+- `receiver/test/outbox.test.ts`: the end-to-end test drives a real `Outbox` + `DeliveryDrainer` with a permanently failing forwarder through `MAX_DELIVERY_ATTEMPTS` drains and asserts `dead_letter`, `attempts = MAX`, non-empty `last_error`, and `due() === null`. A new below-limit test asserts `fail(id, 1, "boom")` leaves the row `pending` with `attempts = 1`, `due()` null until `next_attempt_at` passes, then due again.
+- Scope: `git status` in the task checkout showed exactly those three files; `outbox.ts`, `server.ts` and everything else untouched. HEAD unchanged at `db95b2a` — the worker did not commit.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/delivery.test.ts test/outbox.test.ts` 14 pass / 45 assertions, `bun test` 103 pass / 198 assertions across 12 files.
+
+Owner integration: the three accepted files were copied verbatim into the completion checkout and verified byte-identical by md5 (three MATCH). Completion-side oracles: `bun run typecheck` clean, `bun test` 103 pass / 198 assertions, `bun run build` emits `dist/server.js` (18.85 KB).
+
+Owner runtime proof (throwaway script, real receiver process, gateway stubbed to always answer 502): POST /webhook → `200 accepted`; the server's own drain recorded the first failure (`pending`, attempts 1, `last_error` null, gateway hit 1); after forcing `attempts = 4` the next real drain failure produced `state = dead_letter`, `attempts = 5`, `last_error = "gateway rejected delivery (status 502)"` (gateway hit 2); `due()` returned null afterwards, so retries stop for good. This closes the row's completion condition ("한도 후 재시도 멈춤") in the running process, not only in unit tests.
+
+Residual risks carried forward, none blocking this row: no non-Error throw message quality test; `(status unknown)` when the forwarder omits a status; and the redelivery boundary below.
+
+## S12 boundary that remains open (owner decision pending)
+
+A GitHub redelivery whose delivery ID is already `dead_letter` is still answered `200 duplicate` and nothing is requeued, because `outbox.has(id)` is state-agnostic. Owner reproduced this against a real receiver process before the fix: seeded `dead_letter` row (attempts 5) → redelivery answered `200 "duplicate"` → row unchanged, no retry, no recovery. S13 (replay CLI) is the recovery path for this; whether `server.ts` should also auto-requeue a redelivered dead-letter ID is a separate owner decision and is deliberately not bundled into S13.
+
+Worker lifecycle: the S12 worker settled `done` and its pane `w5N:p1` is idle in workspace `w5N` (label `stackot-s12`). The pane and the task worktree are retained until the S13 bootstrap copies from this integrated baseline.
 
 ## Retro acceptance record for the unrecorded wave (S05A–S14)
 

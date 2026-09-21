@@ -1,0 +1,43 @@
+S13 — dead_letter 수동 재개 경로 (owner launch contract, wave 02)
+
+Task: ONE changeset. dead_letter로 확정된 전달 한 건을 운영자가 정확한 delivery ID로 pending에 복귀시킬 수 있는 좁은 재개 경로를 만든다.
+
+Base: 이 worktree의 HEAD (S12 통합 이후 오너 baseline). 브랜치/베이스 SHA는 오너가 launch 시 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/replay.ts (신규)
+- receiver/test/replay.test.ts (신규)
+- receiver/package.json (CLI 진입점을 script로 노출해야 할 때 한 줄만)
+
+## 현재 상태 (오너가 소스로 확인함)
+- `Outbox.requeue(id)`는 dead_letter 행만 pending으로 되돌리고 그 외에는 false를 반환한다. 이 프리미티브와 단위 테스트는 `test/outbox.test.ts`에 이미 있다.
+- 그러나 이 프리미티브를 호출하는 진입점이 없다: `receiver/src/replay.ts`도, CLI도, 운영 절차도 없다. 그래서 전달 한도를 넘겨 확정된 이벤트는 복구 수단이 전혀 없다.
+
+## 요구 동작
+1. `receiver/src/replay.ts`에 좁은 재개 API를 만든다: 정확한 delivery ID 한 건만 재개하고 결과를 명시적으로 구분해 반환한다(재개됨 / 대상 아님 / dead_letter 아님).
+2. 같은 파일이 CLI 진입점으로도 동작한다: `bun src/replay.ts <delivery-id>` (cwd는 receiver, outbox 경로는 `STACKOT_OUTBOX_PATH`, 기본 규칙은 `outbox.ts`/`server.ts`와 동일). 사람이 읽는 한 줄 출력 + 종료 코드(재개 성공 0, 대상 아님 1).
+3. dead_letter가 아닌 행(delivered, pending)은 절대 변경하지 않는다.
+4. 재개된 행은 attempts를 보존한 채 pending이 되고, next_attempt_at은 즉시(now)로 설정되어 다음 drain에서 전달된다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/replay.test.ts`
+- `cd receiver && bun test`
+
+## 필수 테스트 (test/replay.test.ts)
+- dead_letter 행 한 건이 정확한 ID로 재개되고 due()에 나타나며 attempts가 보존된다.
+- 같은 ID를 다시 재개하면 대상 아님을 반환하고 행을 바꾸지 않는다.
+- 다른 dead_letter 행과 delivered 행은 영향을 받지 않는다.
+- CLI 경로를 한 번 실제로 실행해 종료 코드까지 확인한다.
+
+## 금지
+- `server.ts` 변경, 테이블/컬럼 추가, 기존 테스트 수정·약화, 외부 네트워크 호출, commit/push/merge/deploy, subagent 생성, formatter·linter 전체 실행.
+
+## 경계 (문서화 필수, 동작 변경 금지)
+GitHub 재배달은 같은 delivery ID로 도착하지만 `outbox.has(id)`가 상태를 구분하지 않으므로, dead_letter 행의 재배달은 `200 duplicate`로 응답되고 자동 재개되지 않는다. 이번 행은 그 동작을 바꾸지 않는다. receipt의 "남은 리스크"에 이 사실과 운영 절차(replay CLI로 수동 재개)를 명시한다. server.ts의 dedupe 동작 변경 여부는 오너가 별도 행으로 결정한다.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s13-receipt.md`: 변경 파일 목록, 핵심 diff 요약, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개. 최종 보고는 300줄 이내.
