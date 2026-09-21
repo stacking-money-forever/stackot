@@ -48,6 +48,24 @@ describe("normalize", () => {
     });
     expect(ev!.item).toContain("CI");
     expect(ev!.summary).toContain("failure");
+    expect(ev!.target).toBe("");
+    expect(ev!.targetKind).toBe("channel");
+    expect(ev!.prNumbers).toBeUndefined();
+  });
+
+  test("failed check_run with pull_requests → prNumbers preserved", () => {
+    const ev = normalize("check_run", repo, "completed", {
+      check_run: {
+        name: "build",
+        status: "completed",
+        conclusion: "failure",
+        html_url: "u3",
+        pull_requests: [{ number: 12 }, { number: 34 }],
+      },
+    });
+    expect(ev!.prNumbers).toEqual([12, 34]);
+    expect(ev!.summary).toContain("PR #12");
+    expect(ev!.summary).toContain("PR #34");
   });
 
   test("successful check_run → null", () => {
