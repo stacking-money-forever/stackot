@@ -610,3 +610,21 @@ Test quality: the suite reads the receiver's own stdout and correlates on `deliv
 Residual risks: telemetry goes to stdout only, so a deployment must ship it somewhere (the observability rows in M3 own that); the decorator's in-memory `seenAttempts`/`targets` maps are keyed by delivery id and cleaned on delivered/dead-letter, so a permanently retrying row keeps a small entry until the cap; and `delivery.delivered` reports the attempts count from the last `due()`, i.e. prior failures, which is documented in the event type but worth remembering when reading logs.
 
 Worker lifecycle: the S42 worker settled `done` after the retry; workspace `w64` (label `stackot-s42`) was closed after integration and the task worktree is retained.
+
+### S43 decision — ACCEPT, no retry needed
+
+Baseline: `0e8261c`. Candidate: new `metrics.ts` and `metrics.test.ts`, an additive `Outbox.stats()`, a `health.ts` extension so `/status` carries the queue numbers, and `server.ts` wiring; nothing else, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `stats()` is one aggregate query over the existing schema (no schema, PRAGMA or existing-method change), returns `oldestPendingAgeMs` as null when nothing is pending and clamps it at zero so clock skew cannot produce a negative age. `collectMetrics` normalizes hostile input to 0/null rather than trusting it. `server.ts` collects through a try/catch that logs a redacted error and yields null, emits one line at startup so a backlog from a previous run is visible immediately, emits on `METRICS_INTERVAL_MS`, and clears the timer on both signals.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/metrics.test.ts` 7 pass / 47 assertions, full suite **263 pass / 906 assertions** across 25 files.
+
+Oracle discrimination check (owner, disposable copy with the pre-S43 `server.ts`): the six unit tests still pass and only the process-level test fails, timing out while waiting for a `queue.metrics` line — so the process test detects the missing wiring instead of restating the unit assertions.
+
+Test quality: the unit half seeds a known population (including a deliberately aged pending row) and asserts exact counts with a tolerance on the age, covers the empty outbox and hostile inputs, and asserts the log line is parseable JSON with every field; the process half spawns the receiver, reads its stdout for the `queue.metrics` line and asserts `/status` reports the same numbers.
+
+Owner integration: five files copied verbatim and md5-verified (five MATCH). Completion-side oracles: typecheck clean, 263 pass / 908 assertions, `bun run build` emits `dist/server.js` (30.95 KB). CI runs on the push.
+
+Residual risks: counts are read live from SQLite, so on a large delivered history the aggregate scans the table on every interval — acceptable at current volume and the first thing to revisit with an index or a retention cutoff if the delivered set grows; the interval is a compile-time constant, so changing the cadence needs a rebuild; and the delivered count grows with traffic while the TTL sweep only removes delivered rows older than seven days.
+
+Worker lifecycle: the S43 worker settled with its receipt written; workspace `w65` (label `stackot-s43`) was closed after integration and the task worktree is retained.
