@@ -1,0 +1,41 @@
+S17 — PR 일반 댓글 역링크 조회 (owner launch contract, wave 02)
+
+Task: ONE changeset. pull request의 **일반 discussion 댓글**에 봇이 기록한 Discord 스레드 URL을 역링크로 찾아낸다. review comment 표면만 검색해서는 안 된다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/mapping.ts
+- receiver/test/mapping.test.ts (신규)
+그 외 파일은 수정하지 않는다. server.ts, outbox.ts, delivery.ts, config.ts, package.json 모두 범위 밖이다.
+
+## 현재 결함 (오너가 소스로 확인함)
+- server.ts의 resolveTarget은 `fetchItem(cfg, ev.repo, kind, number)`를 kind = "issues" | "pulls"로 호출한다.
+- fetchItem은 `${base}/${kind}/${number}/comments`를 요청한다. PR의 경우 이 경로는 **review comment**(인라인 리뷰) 표면이다. 봇이 PR에 일반 댓글로 남긴 스레드 URL은 조회되지 않아 admin 채널로 흘러간다.
+- mapping.ts에는 테스트가 전혀 없다.
+
+## 요구 동작
+1. pull request 조회에서 일반 discussion 댓글을 issues 댓글 표면에서 읽는다(GitHub는 PR의 일반 댓글을 `/issues/{number}/comments`로 제공한다). issue 조회는 기존과 동일하게 동작해야 한다.
+2. item body는 해당 본문을 실제로 제공하는 표면에서 그대로 가져온다.
+3. `findThreadId`의 기존 의미(본문 + 댓글에서 Discord 스레드 URL 추출)는 바꾸지 않는다. 조회 대상 표면만 바로잡는다.
+4. 두 댓글 표면을 모두 받아 합치는 방식은 금지한다(불필요한 요청과 중복).
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/mapping.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/mapping.test.ts, 신규)
+- 실제 네트워크를 쓰지 않는다. `fetchItem`이 받는 API base를 로컬 `Bun.serve` 스텁으로 지정할 수 있어야 한다. 이를 위해 `fetchItem`에 선택적 옵션 인자(예: apiBase, 기본값 https://api.github.com)를 추가하는 것은 허용된다. 전역 fetch monkey-patching은 금지한다.
+- URL 계약 테스트: PR 조회 시 일반 댓글 요청 경로가 issues 댓글 표면(`/issues/<n>/comments`)인지, 스텁이 실제로 받은 경로로 단언한다. review comment 표면(`/pulls/<n>/comments`)만 호출하면 실패해야 한다.
+- 동작 테스트: PR 일반 댓글에 기록된 Discord 스레드 URL이 `findThreadId` 결과로 복원된다. issue 경로도 회귀 없이 동작한다.
+- Authorization 헤더가 여전히 전송되는지 확인한다(토큰 없이 호출되지 않아야 한다).
+
+## 금지
+- 위 2개 파일 밖의 수정, 기존 테스트 약화·삭제, 외부 네트워크 호출, commit/push/merge/deploy, subagent 생성, formatter·linter 전체 실행. node_modules가 없으면 `cd receiver && bun install`을 1회 실행해도 된다(캐시 사용, 새 패키지 추가 금지).
+
+## 완료 산출물
+1. 위 오라클 실행 결과 원문.
+2. `docs/verification/s17-receipt.md`: 변경 파일, 핵심 diff 요약, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개. 최종 보고는 300줄 이내.

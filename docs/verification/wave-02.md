@@ -119,3 +119,23 @@ The previous owner wave integrated this block without leaving a decision record,
 | S14 | ACCEPT | `test/server.restart.integration.test.ts`: first delivery 502 → row stays `pending` with attempts 1 → process restart → re-delivery succeeds and the row becomes `delivered`, with the gateway receiving the same `stackot-<deliveryId>` idempotency key twice. |
 
 Consequence for milestone M1: S03C4, S04D, S15, S17–S22 remain, and S07/S03C4 have no surviving candidate, so those rows must run as fresh tasks. S09A and S10 need their named oracles before M1 can be called closed.
+
+## S13 boundary — owner decision closed: CLI-only recovery
+
+Owner decision (2026-09-21, after S13 ACCEPT): a GitHub redelivery whose delivery ID is already `dead_letter` stays answered `200 duplicate` and is **not** auto-requeued. The replay CLI is the documented operator recovery path, because a dead-lettered row means the Gateway rejected the event through its full retry budget, and silently re-arming it from an inbound header would let any replayed request drive delivery attempts. Removing that boundary later requires a separate row with its own oracle; it is not an implied extension of S12/S13.
+
+Operator procedure recorded for the runbook work: `cd receiver && STACKOT_OUTBOX_PATH=<outbox path> bun src/replay.ts <delivery-id>` → exit 0 and `replayed <id>: dead_letter -> pending`; exit 1 means the ID is not a replay target (missing, pending or already delivered); exit 2 means the argument was missing.
+
+## S17 launch contract — PR general-comment backlink lookup
+
+Baseline: `0365a32`.
+
+Row: `mapping.ts` + `mapping.test.ts`. Completion condition: a backlink recorded in a pull request's **general discussion comment** is resolved, not only one recorded in a review comment. Failure trigger: only the review-comment surface is searched.
+
+Defect the owner confirmed by reading the source: `server.ts` resolves follow-ups with `fetchItem(cfg, ev.repo, kind, number)` where `kind` is `"issues"` or `"pulls"`, and `fetchItem` requests `${base}/${kind}/${number}/comments`. For a pull request that is the *review comment* surface (`/pulls/{n}/comments`), so a Discord thread URL the bot records as an ordinary PR comment is never found and the event falls through to the admin channel.
+
+Envelope (owner decision): the row's own scope is `mapping.ts` + `mapping.test.ts`. To make the row's oracle — a fetch URL contract test — actually expressible, `fetchItem` may gain an optional options argument carrying an API base that defaults to `https://api.github.com`, so a test can point it at a local stub server instead of reaching the network or monkey-patching global `fetch`. No `server.ts` change is expected: `resolveTarget` already passes the kind, and only the URLs `fetchItem` builds change.
+
+Required behaviour for the worker: the general-discussion comments are read from the issues comments surface for pull requests as well as issues, while the item body still comes from the surface that carries it. The owner will reject a candidate that "fixes" this by fetching both comment surfaces and merging them without a stated reason, or that weakens the existing `findThreadId` semantics.
+
+Status: contract written; not yet launched.
