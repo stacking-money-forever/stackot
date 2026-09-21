@@ -16,14 +16,15 @@
 import { loadConfig, type ReceiverConfig } from "./config.ts";
 import { verifySignature } from "./verify.ts";
 import { PayloadTooLargeError, readBodyWithinLimit, requireDeliveryId } from "./ingress.ts";
-import { Outbox } from "./outbox.ts";
-import { DeliveryDrainer } from "./delivery.ts";
+import { Outbox, MAX_DELIVERY_ATTEMPTS, retryDelayMs } from "./outbox.ts";
+import { DeliveryDrainer, type DeliveryOutbox, type PendingDelivery } from "./delivery.ts";
 import { normalize, type NormalizedEvent } from "./normalize.ts";
 import { findThreadId, fetchItem } from "./mapping.ts";
 import { route } from "./router.ts";
 import { forwardToGateway } from "./gateway.ts";
 import { describeError, redactSecrets } from "./redact.ts";
 import { createGatewayHealth, liveness, readiness, statusReport } from "./health.ts";
+import { createTelemetry } from "./telemetry.ts";
 
 const cfg: ReceiverConfig = await loadConfig();
 const secrets = redactSecrets(cfg);
@@ -54,9 +55,68 @@ async function resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; 
   }
 }
 
-const drainer = new DeliveryDrainer(outbox, async (job) => {
+const telemetry = createTelemetry((line) => console.log(line), secrets);
+
+/** Route reasons that landed on the admin or #ci-alerts channel instead of the normal target. */
+const ROUTING_FALLBACK_REASONS = new Set(["unconfigured-repo", "ci-alerts", "followup-unresolved", "unrouted"]);
+
+/**
+ * DeliveryOutbox decorator that mirrors each state transition as a structured
+ * telemetry line. delivery.ts/outbox.ts stay untouched: the drainer sees this
+ * wrapper, which delegates to the real outbox and emits after each successful
+ * write so a line always reflects persisted state.
+ */
+class TelemetryOutbox implements DeliveryOutbox {
+  /** `attempts` value the most recent due() returned per delivery, for correlation. */
+  private readonly seenAttempts = new Map<string, number>();
+  /** Routed target recorded by the forwarder, so `delivered` can name the destination. */
+  private readonly targets = new Map<string, string>();
+
+  constructor(private readonly inner: DeliveryOutbox) {}
+
+  /** Called by the forwarder once route() resolves the destination for this delivery. */
+  noteTarget(id: string, target: string): void {
+    this.targets.set(id, target);
+  }
+
+  due(): PendingDelivery | null {
+    const job = this.inner.due();
+    if (job) this.seenAttempts.set(job.id, job.attempts);
+    return job;
+  }
+
+  delivered(id: string): void {
+    this.inner.delivered(id);
+    telemetry.delivered({
+      deliveryId: id,
+      attempts: this.seenAttempts.get(id) ?? 0,
+      target: this.targets.get(id) ?? "",
+    });
+    this.seenAttempts.delete(id);
+    this.targets.delete(id);
+  }
+
+  fail(id: string, attempts: number, error: string): void {
+    this.inner.fail(id, attempts, error);
+    if (attempts >= MAX_DELIVERY_ATTEMPTS) {
+      telemetry.deadLettered({ deliveryId: id, attempts, error });
+      this.seenAttempts.delete(id);
+      this.targets.delete(id);
+      return;
+    }
+    telemetry.failed({ deliveryId: id, attempts, error, nextAttemptAt: Date.now() + retryDelayMs(attempts) });
+  }
+}
+
+const telemetryOutbox = new TelemetryOutbox(outbox);
+
+const drainer = new DeliveryDrainer(telemetryOutbox, async (job) => {
   try {
     const decision = await route(job.event, { cfg, resolveThreadId });
+    telemetryOutbox.noteTarget(job.id, decision.target || decision.createThread?.forumChannelId || "");
+    if (ROUTING_FALLBACK_REASONS.has(decision.reason)) {
+      telemetry.routingFallback({ deliveryId: job.id, repo: job.event.repo, item: job.event.item, reason: decision.reason });
+    }
     const routed: NormalizedEvent = {
       ...job.event,
       target: decision.target,
