@@ -754,3 +754,15 @@ Worker lifecycle: the B02 worker settled with its receipt written; workspace `w5
 **(e) Post-release (C-series, 4 rows):** C01 review-event adapter, C02 revision approval, C03 cost projection, C04 availability ADR. The ledger states these do not block the MVP.
 
 Concrete values that are user-owned and still unset anywhere: the Discord guild ID and the backlink recorder's GitHub login (both required config since S19), per-repo GitHub tokens if the per-repo posture is wanted (B01), the hook token and webhook secret, and the host/DNS for the public endpoint.
+
+## S32 launch contract — independent verification of a worker's claim (wave 05)
+
+Baseline: `a2722a4`. Task checkout `/Users/justn/dev/.worktrees/stackot-s32-20260921`, branch `codex/stackot-s32-20260921`, created with `herdr worktree create --label stackot-s32 --no-focus --trust-repository`.
+
+The user asked for exactly this row: it is the only remaining ledger row that is both synthetic and not gated on runtime evidence. The other M2 rows wait on S23's frozen OpenClaw contract, and every other open row needs a host, real GitHub/Discord surfaces, or a human — the enumeration is recorded above.
+
+Owner envelope: new `verifier.ts` + test only. The ledger's trigger is "trusting the worker's string", so the verifier must reach its verdict from independent observation: the files that actually changed in the worktree versus the claim, and a test command the verifier itself runs. A claimed `testsPassed: true` with a failing command is a rejection, a claimed file that did not change is a rejection, an unclaimed change is a scope violation, a claim with no test command is unverifiable, and a timeout is never a pass.
+
+DAG deviation, recorded as with B01/B02: S32's predecessor is S30 (a runtime worktree adapter). The verifier's own content depends on no runtime evidence, so it is implemented now and its acceptance is against local oracles only. The module is deliberately **not** wired into a pipeline, because S30/S33 own that wiring at runtime; the receipt must state that rather than imply otherwise.
+
+Status: contract written; launch follows.

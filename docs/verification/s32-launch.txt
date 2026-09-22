@@ -1,0 +1,60 @@
+S32 — worker 결과 독립 검증 (owner launch contract, wave 05)
+
+Task: ONE changeset. worker가 자기 작업을 "완료됐다"고 주장할 때, 그 주장을 믿지 않고 실제 worktree와 실제 테스트 실행으로 독립 판정한다.
+
+Base: 이 worktree의 HEAD. Owner가 launch 시 정확한 SHA를 기록한다.
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 왜 (원장 S32가 요구하는 것)
+- M2의 worker 파이프라인은 worker의 보고(claim)를 받아 다음 단계로 넘긴다. 원장의 failure trigger는 "worker 문자열만 신뢰"이고, 완료 조건은 "실패 테스트 완료 주장 거부"다.
+- 즉 claim은 **증거가 아니라 주장**이며, 검증은 (a) 실제로 바뀐 파일과 (b) 검증자가 직접 실행한 테스트 결과에서 나와야 한다.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/verifier.ts (신규)
+- receiver/test/verifier.test.ts (신규)
+
+금지: server.ts, outbox.ts, delivery.ts, router.ts, mapping.ts, normalize.ts, config.ts, gateway.ts, ingress.ts, redact.ts, telemetry.ts, metrics.ts, replay.ts, backup.ts, health.ts, repo-policy.ts, github-client.ts, scheduler.ts, package.json.
+
+## 요구 동작
+1. `verifier.ts`에 순수에 가까운 검증 모듈을 만든다(파일시스템·git·자식 프로세스 접근은 주입 가능해야 한다).
+   - `export type WorkerClaim = { filesChanged?: readonly string[]; testsPassed?: boolean; testCommand?: string };`
+   - `export type VerifierReport = { verdict: "verified" | "rejected"; reasons: string[]; observed: { changedFiles: string[]; testsPassed: boolean | null; testOutputTail: string | null } };`
+   - `export async function verifyWorkerClaim(input: { worktreePath: string; baseRef?: string; claim: WorkerClaim; run?: CommandRunner; timeoutMs?: number }): Promise<VerifierReport>`
+     - `CommandRunner = (argv: readonly string[], opts: { cwd: string; timeoutMs: number }) => Promise<{ code: number; stdout: string; stderr: string }>` (기본 구현은 Bun.spawn 기반 실제 실행)
+   - 판정 규칙(모두 독립 관찰에 근거):
+     1. worktree가 없거나 git 저장소가 아니면 `rejected` + reason.
+     2. 실제 변경 파일 목록을 얻는다(예: `git status --porcelain` + `git diff --name-only <baseRef>`, baseRef 기본값은 `HEAD`). claim의 `filesChanged`와 대조해 **주장했지만 안 바뀐 파일**(ghost)과 **바뀌었지만 주장하지 않은 파일**(unclaimed change = 범위 위반)을 각각 reason으로 남긴다.
+     3. `claim.testCommand`가 있으면 **검증자가 직접 실행**하고 종료 코드를 관찰한다. `claim.testsPassed: true`인데 실제 종료 코드가 0이 아니면 `rejected`(원장의 "실패 테스트 완료 주장 거부").
+     4. `claim.testsPassed`가 있는데 `testCommand`가 없으면 검증 불가 → `rejected` + reason.
+     5. 테스트 실행이 타임아웃되면 `rejected` + reason(성공으로 간주 금지).
+     6. claim이 비어 있으면(주장 없음) 변경·테스트 관찰만 하고 `rejected` + reason("no verifiable claim").
+     7. 위 어느 것도 위반이 아니고 테스트가 실제로 통과했으면 `verified`.
+   - `reasons`는 사람이 읽을 수 있어야 하며, `observed`에는 검증자가 실제로 본 값만 담는다(claim을 그대로 복사하지 않는다).
+   - secret/토큰을 로그·reason에 남기지 않는다(출력 tail은 잘라서 담는다).
+2. 이 모듈은 아직 파이프라인에 연결되지 않는다(S30/S33 런타임 행의 몫이다). **연결되지 않았다는 사실을 receipt와 보고에서 명시**하고, 어떤 인터페이스로 연결될지 한 줄로 적는다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/verifier.test.ts`
+- `cd receiver && bun test`
+
+## 테스트 요구 (receiver/test/verifier.test.ts, 실제 네트워크 금지)
+임시 디렉터리에 **실제 git 저장소**를 만들고 커밋을 만든 뒤 worker 변경을 시뮬레이션한다. git과 테스트 명령은 실제로 실행한다(테스트 명령은 즉시 끝나는 것으로, 예: `sh -c 'exit 0'` / `sh -c 'exit 1'`).
+- 정직한 worker: 변경 파일과 claim이 일치하고 테스트가 실제 통과 → `verified`.
+- **거짓말하는 worker(핵심)**: claim은 `testsPassed: true`인데 테스트 명령이 실패 → `rejected`, reason에 테스트 실패가 담긴다. `observed.testsPassed`는 `false`여야 한다(claim을 복사하지 않았음을 증명).
+- 유령 파일: claim이 바뀌지 않은 파일을 주장 → `rejected`.
+- 미주장 변경: claim에 없는 파일이 실제로 바뀜 → `rejected`.
+- 테스트 주장만 하고 명령이 없음 → `rejected`.
+- 빈 claim → `rejected`.
+- worktree 경로가 없음 → `rejected`.
+- 타임아웃되는 테스트 명령 → `rejected`(주입한 timeoutMs를 작게).
+- `run` 러너를 주입해 호출 인자(cwd/timeoutMs)가 기대대로 전달되는지도 단언한다.
+- 어떤 reason에도 비밀정보가 없다.
+
+## 금지
+- 위 2개 파일 밖 수정, 기존 테스트 약화·삭제, 실제 네트워크, 실제 wall-clock 장시간 대기, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 완료 산출물
+1. 오라클 실행 결과 원문.
+2. `docs/verification/s32-receipt.md`: 변경 파일, 핵심 diff 요약, 판정 규칙 표, 연결되지 않았음을 명시, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개, 보고 300줄 이내.
