@@ -732,3 +732,25 @@ Owner integration: six files copied verbatim and md5-verified (six MATCH). Compl
 Residual risks: concurrent forwards mean concurrent outbox writes, which the busy timeout absorbs but which makes a contended database more likely — S15's barrier rather than B02's tests own that; the default limits are constructor defaults, not configuration, so changing them needs a rebuild; per-repo fairness is decided per pass over its candidate window, so a very long queue for one repo can still delay another repo's rows that were not visible in that window; and the telemetry decorator's per-id maps now see concurrent transitions, which its own tests cover but which is worth remembering when reading its output.
 
 Worker lifecycle: the B02 worker settled with its receipt written; workspace `w5W` (label `stackot-b02`) was closed after integration and the task worktree is retained.
+
+## M3 rows satisfied in effect — S37 and S38 recorded
+
+- **S37 (command pinning)** — ACCEPT. `receiver/package.json` scripts are `typecheck` = `tsc --noEmit`, `test` = `bun test`, `build` = `bun build src/server.ts --target=bun --outdir dist`; CI and the owner run exactly these, and `bun install --frozen-lockfile` against the committed `receiver/bun.lock` reproduces the install. Oracle met: the command sequence is reproduced with no hidden global dependency.
+- **S38 (CI on the same SHA)** — ACCEPT. `.github/workflows/ci.yml` runs frozen install, typecheck, test and build for every push and pull request with `working-directory: receiver`, and the runs for the pushed head SHAs are green — most recently `eed29c0`, `39fc797`, `ece4aad`. Its predecessors S14 (restart lifecycle) and S21 (routing) are accepted, and R37's commands are the ones the workflow invokes, so the row's oracle ("same-SHA CI run, all required checks pass") is met at the current baseline. The caveat that belongs to the release rows: this is evidence for the receiver check suite on those SHAs, not a deployed artefact.
+
+## Exactly what remains
+
+35 of the ledger's 67 rows are open. None of them is blocked on anything the receiver code is missing; they are blocked on environment, authority or a human. Grouped by what would unblock them:
+
+**(a) Runtime — needs OpenClaw and/or acpx installed (M2, 14 rows):** S23, S24, S25, S26, S27, S28, S29, S30, S31, S32*, S33, S34, S35, S36.
+\* S32 is the one exception: an independent result verifier exercised against a lying-worker fixture is synthetic and needs no runtime. Its predecessor S30 is a runtime row, so implementing it now is the same recorded DAG deviation as B01/B02.
+
+**(b) Host and deployment (M3, 5 rows):** S40 (threat model plus a live prompt-injection tool-denial probe), S44 (service supervision), S45 (HTTPS/Gateway isolation), S47 (restore drill), S48 (rollback drill). Caddy is installed locally; a host, DNS and the service account are not.
+
+**(c) Real GitHub and Discord surfaces (M4, 4 rows):** S49 (webhook → thread → backlink round trip), S50 and S51 (two full approved runs through worker and PR), S52 (failure and recovery QA). These need a repository with a webhook, a token with the right authority, a Discord guild with the bot present, and an approval click by a human.
+
+**(d) Release and operations (M5, 8 rows):** B04 (alert delivery target), B05 (status command over runtime task state), B06 (expired-approval copy, human QA), B07 (onboarding doc, human QA), B08 (token rotation drill against a live service), B09 (24h soak), B10 (GitHub settings readback), B11 (release manifest).
+
+**(e) Post-release (C-series, 4 rows):** C01 review-event adapter, C02 revision approval, C03 cost projection, C04 availability ADR. The ledger states these do not block the MVP.
+
+Concrete values that are user-owned and still unset anywhere: the Discord guild ID and the backlink recorder's GitHub login (both required config since S19), per-repo GitHub tokens if the per-repo posture is wanted (B01), the hook token and webhook secret, and the host/DNS for the public endpoint.
