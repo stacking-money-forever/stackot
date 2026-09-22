@@ -150,6 +150,29 @@ describe("verifyWorkerClaim", () => {
     expect(report.reasons.some((r) => /timed out/.test(r))).toBe(true);
   });
 
+  test("timeout kills the whole process group, not just the shell", async () => {
+    const dir = await makeRepo();
+    await workerChange(dir, "worker.ts");
+    const started = performance.now();
+    const report = await verifyWorkerClaim({
+      worktreePath: dir,
+      claim: {
+        filesChanged: ["worker.ts"],
+        testsPassed: true,
+        // The shell forks both sleeps; a background child keeps the stdout
+        // pipe open even after the shell is killed. If the runner only kills
+        // the shell, the pipe read hangs ~30s waiting for these orphans.
+        testCommand: "sh -c 'sleep 30 & sleep 30'",
+      },
+      timeoutMs: 300,
+    });
+    const elapsed = performance.now() - started;
+    expect(report.verdict).toBe("rejected");
+    expect(report.observed.testsPassed).toBe(false);
+    expect(report.reasons.some((r) => /timed out/.test(r))).toBe(true);
+    expect(elapsed).toBeLessThan(3000);
+  });
+
   test("injected runner receives expected argv, cwd and timeoutMs", async () => {
     const dir = await makeRepo();
     const { run, calls } = fakeRunner({ code: 0, stdout: "ok", stderr: "" });
