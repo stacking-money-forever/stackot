@@ -168,6 +168,13 @@ export class Outbox {
     return row ? { id: row.id, event: JSON.parse(row.event) as NormalizedEvent, attempts: row.attempts } : null;
   }
 
+  /** Batch form of due(): same due condition and ordering, up to `limit` rows. */
+  dueBatch(limit: number): { id: string; event: NormalizedEvent; attempts: number }[] {
+    const rows = this.db.query("SELECT id, event, attempts FROM outbox WHERE state = 'pending' AND next_attempt_at <= ? ORDER BY next_attempt_at LIMIT ?")
+      .all(Date.now(), Math.max(0, Math.floor(limit))) as { id: string; event: string; attempts: number }[];
+    return rows.map((row) => ({ id: row.id, event: JSON.parse(row.event) as NormalizedEvent, attempts: row.attempts }));
+  }
+
   delivered(id: string): void {
     this.write(() => this.db.query("UPDATE outbox SET state = 'delivered', delivered_at = ? WHERE id = ?").run(Date.now(), id));
   }
