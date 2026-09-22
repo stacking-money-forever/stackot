@@ -742,8 +742,7 @@ Worker lifecycle: the B02 worker settled with its receipt written; workspace `w5
 
 35 of the ledger's 67 rows are open. None of them is blocked on anything the receiver code is missing; they are blocked on environment, authority or a human. Grouped by what would unblock them:
 
-**(a) Runtime — needs OpenClaw and/or acpx installed (M2, 14 rows):** S23, S24, S25, S26, S27, S28, S29, S30, S31, S32*, S33, S34, S35, S36.
-\* S32 is the one exception: an independent result verifier exercised against a lying-worker fixture is synthetic and needs no runtime. Its predecessor S30 is a runtime row, so implementing it now is the same recorded DAG deviation as B01/B02.
+**(a) Runtime — needs OpenClaw and/or acpx installed (M2, 13 rows after S32):** S23, S24, S25, S26, S27, S28, S29, S30, S31, S33, S34, S35, S36. S32 was the one exception and is now accepted (see its decision below); its predecessor S30 is a runtime row, so it was implemented ahead of the DAG like B01/B02.
 
 **(b) Host and deployment (M3, 5 rows):** S40 (threat model plus a live prompt-injection tool-denial probe), S44 (service supervision), S45 (HTTPS/Gateway isolation), S47 (restore drill), S48 (rollback drill). Caddy is installed locally; a host, DNS and the service account are not.
 
@@ -766,3 +765,18 @@ Owner envelope: new `verifier.ts` + test only. The ledger's trigger is "trusting
 DAG deviation, recorded as with B01/B02: S32's predecessor is S30 (a runtime worktree adapter). The verifier's own content depends on no runtime evidence, so it is implemented now and its acceptance is against local oracles only. The module is deliberately **not** wired into a pipeline, because S30/S33 own that wiring at runtime; the receipt must state that rather than imply otherwise.
 
 Status: contract written; launch follows.
+
+
+## S32 decision — ACCEPT, no retry needed
+
+Baseline: `9b6dac0`. Candidate: new `verifier.ts` and `verifier.test.ts` only — no other file touched, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `verifyWorkerClaim` reaches its verdict from observation: a git probe that the worktree is a real git work tree, the actually-changed file set from `status --porcelain` plus `diff --name-only <baseRef>`, and a test command the verifier runs itself. Rejections cover a ghost file, a change outside the claimed scope (including the case where no scope is declared), a claim of passing tests whose command fails, a test claim with no command, a timeout (exit 124, never counted as a pass), an empty claim and a missing or non-git worktree. `verified` is fail-closed: empty reason list **and** independently observed passage. The runner is injectable with a real Bun.spawn default that hard-kills at the timeout, and output tails pass through a secret-redaction list before reaching a reason or the report.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, `bun test test/verifier.test.ts` 13 pass / 38 assertions, full suite **343 pass / 1197 assertions** across 31 files.
+
+Oracle discrimination check (owner, disposable copy): making the verifier trust the claim's `testsPassed` field flips the lying-worker, ghost-file and unclaimed-change tests from `rejected` to `verified`, so the suite genuinely requires independent observation rather than restating the implementation.
+
+Owner integration: both files copied verbatim and md5-verified (two MATCH). Completion-side oracles: typecheck clean, 343 pass / 1199 assertions, `bun run build` emits `dist/server.js` (38.82 KB). CI runs on the push.
+
+Residual risks, stated rather than hidden: the module is **not wired into any pipeline** — S30/S33 own that at runtime, and the file header says so; the verifier trusts the claimed `testCommand` string as the thing to run, so a worker that names a trivial command could still claim passage on work its real test suite would fail, which is why the S33 gate must fix the command rather than accept the worker's; scope comparison is path-based over the observed diff, so a worker that reformats a file it also touches is judged by the paths, not the intent; and the timeout ceiling is a parameter with a two-minute default, so a genuinely slow suite needs the caller to raise it rather than being silently accepted.
