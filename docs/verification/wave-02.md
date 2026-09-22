@@ -714,3 +714,21 @@ Owner integration: four files copied verbatim and md5-verified (four MATCH). Com
 Residual risks: the retry budget and the one-minute cap mean a rate limit lasting longer than that still fails the lookup and routes that event to the admin channel — deliberate, since a receiver cannot outwait a long limit and the delivery itself is unaffected; `Retry-After` is trusted as the authority, so a server advertising an enormous value is bounded by the cap rather than obeyed literally; and the retries consume the same AbortSignal deadline as the original request, so a very long instructed wait can still be cut short by the timeout — the interaction is bounded but worth revisiting if rate-limit windows and timeouts ever conflict in production.
 
 Worker lifecycle: the B03 worker settled with its receipt written; workspace `w5V` (label `stackot-b03`) was closed after integration and the task worktree is retained.
+
+### B02 decision — ACCEPT, no retry needed
+
+Baseline: `ece4aad`. Candidate: new `scheduler.ts` and `scheduler.test.ts`, plus `delivery.ts` (concurrent draining), an additive `Outbox.dueBatch`, and the corresponding test extensions; nothing outside the envelope, no worker commit.
+
+Owner verified by reading the delta and re-running every oracle. `selectRunnable` is pure: `maxGlobal` bounds in-flight plus selected, `maxPerRepo` bounds each repo's share, and the repo with the fewest running jobs wins each slot with ready order as the tie-break. The drainer keeps a candidate pool so repo-capped candidates survive into the next round and a single-row outbox never loses a fetched row, starts everything the scheduler admits, parks on the first in-flight completion (or on a kick from a re-entrant drain) when nothing may start, tracks in-flight ids for the whole pass so a still-pending row can never be forwarded twice, and never exits a pass with forwards still running. `dueBatch` is optional on the port, so the telemetry decorator written against the single-row interface still satisfies it.
+
+The owner specifically checked two subtleties the candidate got right: in-flight rows are still `pending` and therefore still `due`, so the batch must be fetched wide enough to see past them, and the pass must drain its own in-flight work before releasing the re-entrancy flag or the next pass would re-forward those rows.
+
+Owner oracles in the task checkout: `bun run typecheck` clean, the three focused files 34 pass / 156 assertions, full suite **330 pass / 1159 assertions** across 30 files.
+
+Oracle discrimination check (owner, disposable copy with the pre-B02 serial `delivery.ts`): three of the new delivery tests fail — the stalled-repo starvation test, the per-repo cap test (no concurrency means the cap can never be observed) and the overlapping-drain double-forward test. That is the recorded failure trigger, "기아", reproduced.
+
+Owner integration: six files copied verbatim and md5-verified (six MATCH). Completion-side oracles: typecheck clean, 330 pass / 1159 assertions, `bun run build` emits `dist/server.js` (38.82 KB). CI runs on the push.
+
+Residual risks: concurrent forwards mean concurrent outbox writes, which the busy timeout absorbs but which makes a contended database more likely — S15's barrier rather than B02's tests own that; the default limits are constructor defaults, not configuration, so changing them needs a rebuild; per-repo fairness is decided per pass over its candidate window, so a very long queue for one repo can still delay another repo's rows that were not visible in that window; and the telemetry decorator's per-id maps now see concurrent transitions, which its own tests cover but which is worth remembering when reading its output.
+
+Worker lifecycle: the B02 worker settled with its receipt written; workspace `w5W` (label `stackot-b02`) was closed after integration and the task worktree is retained.
