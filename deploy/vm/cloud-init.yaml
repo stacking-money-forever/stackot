@@ -1,0 +1,95 @@
+#cloud-config
+# Stackot runtime VM (Proxmox KVM) — Debian 12 / Ubuntu 24.04 LTS cloud-init
+#
+# Prepared artifacts only: nothing here is deployment evidence until it is run on
+# the VM and its checks pass. See README.md for the runbook and the ledger rows
+# (S44/S45/S47/S48) these files serve.
+#
+# Replace every <PLACEHOLDER> before use. Never commit a filled copy.
+
+hostname: stackot
+timezone: UTC
+package_update: true
+package_upgrade: true
+ntp:
+  enabled: true
+
+users:
+  - name: stackot
+    groups: [sudo]
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    lock_passwd: true
+    ssh_authorized_keys:
+      - <YOUR_SSH_PUBLIC_KEY>
+
+packages:
+  - curl
+  - git
+  - ca-certificates
+  - ufw
+  - unattended-upgrades
+  - jq
+  - sqlite3
+
+write_files:
+  - path: /etc/stackot/README
+    permissions: "0644"
+    content: |
+      Private stackot configuration lives here. Files must be 0600.
+      receiver.json  — receiver config (see deploy/README.md §3)
+      receiver.env   — systemd EnvironmentFile for the receiver unit
+      vm.env         — STACKOT_DOMAIN / ACME_EMAIL for Caddy
+  - path: /etc/ufw/applications.d/stackot
+    permissions: "0644"
+    content: |
+      [stackot-receiver]
+      title=Stackot receiver (behind Caddy only)
+      description=Loopback-only receiver; never expose directly
+      ports=9377/tcp
+
+runcmd:
+  # --- repository checkout -------------------------------------------------
+  - install -d -o stackot -g stackot /opt/stackot
+  - sudo -u stackot git clone --depth 1 https://github.com/stacking-money-forever/stackot /opt/stackot
+
+  # --- runtimes ------------------------------------------------------------
+  # Bun (receiver) installed system-wide so a system service can exec it.
+  - BUN_INSTALL=/usr/local bash -c 'curl -fsSL https://bun.sh/install | bash'
+  - ln -sf /usr/local/bin/bun /usr/local/bin/bunx || true
+  # Node LTS (OpenClaw gateway is a Node package). Install via NodeSource.
+  - bash -c 'curl -fsSL https://deb.nodesource.com/setup_22.x | bash -'
+  - apt-get install -y nodejs
+
+  # --- Caddy (public HTTPS terminator) -------------------------------------
+  - bash -c 'curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/gpg.key" | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg'
+  - bash -c 'curl -1sLf "https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt" > /etc/apt/sources.list.d/caddy-stable.list'
+  - apt-get update && apt-get install -y caddy
+
+  # --- Tailscale (private access to the gateway/Control UI) ---------------
+  - bash -c 'curl -fsSL https://tailscale.com/install.sh | sh'
+
+  # --- stackot units, Caddyfile, backup timer ------------------------------
+  - install -m 0644 /opt/stackot/deploy/vm/stackot-receiver.service /etc/systemd/system/stackot-receiver.service
+  - install -m 0644 /opt/stackot/deploy/vm/stackot-backup.service /etc/systemd/system/stackot-backup.service
+  - install -m 0644 /opt/stackot/deploy/vm/stackot-backup.timer /etc/systemd/system/stackot-backup.timer
+  - install -m 0755 /opt/stackot/deploy/vm/backup-outbox.sh /usr/local/bin/stackot-backup
+  - install -m 0644 /opt/stackot/deploy/vm/Caddyfile /etc/caddy/Caddyfile
+  - install -d -o stackot -g stackot /var/lib/stackot
+  - install -d -m 0700 /var/backups/stackot
+  - install -m 0600 -o root -g root /dev/null /etc/stackot/vm.env.keep
+  - systemctl daemon-reload
+
+  # --- firewall: public only 80/443; 9377 and 18789 stay loopback ----------
+  - ufw --force reset
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw allow from 100.64.0.0/10 to any port 22 proto tcp   # Tailscale CGNAT range
+  - ufw allow 41641/udp                                     # Tailscale direct
+  - ufw --force enable
+
+  # Receiver and gateway are NOT started here: they need secrets and an
+  # `openclaw` install first. The runbook in deploy/vm/README.md does that.
+  - touch /var/log/stackot-cloud-init.done

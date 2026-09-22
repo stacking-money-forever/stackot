@@ -805,3 +805,18 @@ Owner verification: `bun run typecheck` clean, `bun test test/verifier.test.ts` 
 Residual risks carried forward: the grace period is a fixed 250 ms, so a command that flushes output later than that can lose the tail of its output (the exit code, which the verdict depends on, is unaffected); the group kill assumes POSIX process groups, with the direct-child fallback covering the rest; and the verifier still trusts the claimed `testCommand` as the thing to run, so the S33 gate must fix that command rather than accept the worker's choice.
 
 Worker lifecycle: the S32 retry worker settled with its receipt; workspace `w5Y` (label `stackot-s32b`) was closed after integration and the task worktree is retained.
+
+## Wave 06 — VM deployment artifacts prepared (no deployment evidence yet)
+
+The user chose a single Proxmox KVM guest with a public domain terminated by Caddy, and asked for the artifacts. Prepared under `deploy/vm/`: `cloud-init.yaml`, `stackot-receiver.service`, `stackot-backup.service`, `stackot-backup.timer`, `backup-outbox.sh`, `Caddyfile`, `stackot.env.example`, and `README.md` (the runbook, including the drill procedures for S44, S45, S47 and S48).
+
+These are preparation, not evidence. Every row they serve stays open until the commands are run on the VM and their output is recorded; a committed unit file says nothing about a running service.
+
+Owner verification of the artifacts themselves, run locally:
+
+- `Caddyfile`: `caddy validate` reports **"Valid configuration"** (with a writable log path; the first attempt failed only because this Mac has no `/var/log/caddy`), which checks the `handle_path /stackot/webhook*` route that strips the prefix so the receiver still sees `POST /webhook` and the body reaches the HMAC check untouched. Formatted with `caddy fmt`.
+- `cloud-init.yaml`: parses as YAML with the expected keys (users/packages/write_files/runcmd), and its `runcmd` installs bun to `/usr/local/bin` for the system unit, Node LTS for the gateway, Caddy from its own repo, Tailscale, the units, and a ufw policy that opens only 80/443 publicly plus SSH from the Tailscale range — 9377 and 18789 are never opened.
+- systemd units: parsed and checked for the sections each type requires; the receiver unit hardened with `ProtectSystem=strict`, `StateDirectory=stackot`, `NoNewPrivileges`, `RestrictAddressFamilies` and an environment file, and the timer runs the backup daily at 03:30 UTC with `Persistent=true`.
+- `backup-outbox.sh`: smoke-tested against a real outbox in a scratch directory — four runs with `KEEP=2` left exactly two snapshots, the newest passed `PRAGMA integrity_check` and reported its row count, and `shellcheck` is clean. The smoke test caught a real defect: the first prune used GNU-only `find -printf`, which silently skipped pruning on BSD find. It now relies on the fact that `outbox-<ISO8601 UTC Z>.sqlite` sorts chronologically as text, which is portable.
+
+What the VM run still has to produce: S44 (kill/reboot supervision smoke), S45 (external port probe proving only 443/80 answer and the gateway stayed loopback), S47 (restore from a snapshot into an empty environment) and S48 (rollback onto the same database). The runbook names each check and the command that produces it.

@@ -1,0 +1,44 @@
+# Stackot receiver — systemd unit (see deploy/vm/README.md)
+#
+# The receiver is the ONLY public surface, and only through Caddy on 443.
+# It binds loopback (config host 127.0.0.1) and never exposes the gateway.
+
+[Unit]
+Description=Stackot GitHub webhook receiver
+Documentation=file:///opt/stackot/deploy/README.md
+After=network-online.target caddy.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=stackot
+Group=stackot
+WorkingDirectory=/opt/stackot/receiver
+EnvironmentFile=/etc/stackot/receiver.env
+ExecStart=/usr/local/bin/bun run src/server.ts
+Restart=always
+RestartSec=2
+TimeoutStopSec=15
+
+# The receiver keeps its outbox (SQLite + WAL) in StateDirectory.
+StateDirectory=stackot
+StateDirectoryMode=0700
+Environment=STACKOT_OUTBOX_PATH=/var/lib/stackot/outbox.sqlite
+Environment=STACKOT_CONFIG=/etc/stackot/receiver.json
+
+# Hardening: the receiver reads its config and writes only its state.
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+ReadWritePaths=/var/lib/stackot
+
+[Install]
+WantedBy=multi-user.target

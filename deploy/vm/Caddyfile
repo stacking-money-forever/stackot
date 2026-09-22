@@ -1,0 +1,44 @@
+# Stackot ingress — Caddy terminates public HTTPS and exposes exactly one route.
+#
+# Required environment (set in /etc/default/caddy or the unit's EnvironmentFile):
+#   STACKOT_DOMAIN = the public hostname that GitHub posts to
+#   ACME_EMAIL     = contact for Let's Encrypt
+#
+# Nothing else is public: the OpenClaw gateway (18789) and the receiver's own
+# port (9377) stay on loopback. Caddy is the only listener on 80/443.
+{
+	email {$ACME_EMAIL}
+	servers {
+		protocols h1 h2
+	}
+}
+
+{$STACKOT_DOMAIN} {
+	encode zstd gzip
+
+	log {
+		output file /var/log/caddy/stackot-access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+		format json
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# GitHub webhook: strip the /stackot prefix so the receiver sees POST /webhook.
+	# The body is passed through untouched, which the HMAC check depends on.
+	handle_path /stackot/webhook* {
+		reverse_proxy 127.0.0.1:9377
+	}
+
+	# Anything else is not a public surface.
+	handle {
+		respond "not found" 404
+	}
+}

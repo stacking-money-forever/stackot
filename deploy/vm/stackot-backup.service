@@ -1,0 +1,21 @@
+# Nightly consistent snapshot of the receiver outbox.
+# The drill that proves a restore works lives in deploy/vm/README.md (ledger S47).
+
+[Unit]
+Description=Stackot outbox backup (VACUUM INTO snapshot + integrity check)
+Documentation=file:///opt/stackot/deploy/vm/README.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/stackot-backup
+User=root
+Group=root
+Nice=10
+IOSchedulingClass=idle
+# The snapshot is taken against the live database; SQLite's snapshot read does
+# not block the receiver's writes, and the prune only touches our own directory.
+ReadWritePaths=/var/backups/stackot
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
