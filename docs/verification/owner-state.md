@@ -56,6 +56,23 @@ Still open from the findings of this wave: **outbox-failure recovery or readines
 
 S38's CI evidence exists for the current SHA; the P1 rows still untouched are B01 (per-repo permission separation), B02 (per-repo concurrency cap), B03 (GitHub 429 Retry-After), B04 (alerting), B05 (status command), and the C-series. The deployment rows S44–S48 depend on a host and on the backup artifact just built.
 
+## Wave 04 — closed local defects and P1 (S09Bb, B01, B03, B02)
+
+- S09Bb (`2ff673f`): the top open defect from S09B is fixed. `Outbox` tracks its own writability, `ready()` proves write capability with `BEGIN IMMEDIATE` + `ROLLBACK` instead of a bare `SELECT 1`, `recover()` reopens and re-probes without throwing, and `/readyz` answers 503 while unwritable before attempting one bounded self-repair. Discrimination: the pre-fix receiver answered `200 "ready"` during the induced failure.
+- B01 (`06d8c5c`): per-repo GitHub credentials. `repo-policy.ts` is the single authorization point (unconfigured repo denied before any network access, own token versus shared token recorded, grant bound to its repo), `repos[*].githubToken` is optional and validated, and repo tokens joined the redaction list. Discrimination: before the fix every request carried `Bearer shared-token`.
+- B03 (`1a61861`): `githubFetch` honours `Retry-After` (delta-seconds and HTTP-date, capped, sequential, no burst) and `fetchItem` routes item, comment and paginated requests through it, with injectable sleep/clock. Discrimination: a 429 used to collapse the lookup to `null`, losing the backlink.
+- B02 (`3d7bbf5`): `scheduler.ts` decides admission (global plus per-repo caps, least-in-flight-first with FIFO tie-break) and the drainer forwards concurrently with a candidate pool, in-flight id tracking and a pass that never exits with work running. Discrimination: three tests fail against the serial drainer, including the stalled-repo starvation case.
+
+Baseline at close-out: `39fc797`, `bun test` **330 pass / 1159 assertions** across 30 files, `bun run typecheck` clean, `bun run build` emits `dist/server.js`, CI green on the pushed SHA. The suite now takes ~50 s, dominated by the S09Bb lock-induction tests.
+
+Owner decision recorded: B01 and B02 sit behind S52 in the ledger's DAG, which is blocked on the runtime. They were implemented now because their content depends on no runtime evidence; their acceptance is against local oracles only.
+
+## Remaining local work
+
+- B04 (alerting) needs a delivery target and therefore a host; only the rule file could be authored locally, and a rule nobody can fire is not evidence.
+- B05 (status command) and the C-series depend on the runtime surfaces (OpenClaw task state, review events).
+- S38's CI evidence exists for the current SHA but should be re-stated for a release candidate once the runtime rows land.
+
 ## Blocked, with evidence
 
 - M2–M4 (S23–S52) need the real runtime: `which openclaw acpx` finds neither binary, no process listens on 9377 or 18789, and no Discord app, GitHub webhook or host/DNS authority exists in this session. Caddy is installed but nothing else.
