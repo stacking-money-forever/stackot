@@ -789,3 +789,19 @@ The push for S32 (`9d36283`) failed on the Linux runner, and both failures are r
 2. **`S21b > drain resolves the backlink and forwards to the mapped thread` saw `pending` where it demanded `delivered`.** The test waited for the gateway stub to record the forward and then sampled the row state in the same tick; the drainer writes `delivered` only after the forward returns, so a loaded runner loses that race. Owner-applied fix to the test only: wait for the delivered state before asserting it, keeping every existing assertion. The implementation was never wrong — the assertion was reading a state that had not been written yet.
 
 Owner note for future rows: this is the third platform-sensitive failure found only by CI (S09B's macOS-only induction, S09B's holder timeout, and now a shell-kill difference). Anything touching process control, filesystem semantics or timing must be pushed and watched on the runner before it is called accepted.
+
+## S32 retry — the timeout kill, found by CI and fixed on the platform that found it
+
+The first candidate passed locally but failed the CI runner on `9d36283`: the default runner spawned `sh -c "<command>"` and killed only that shell, so on Linux — where `sh` forks rather than execs — the surviving child kept the stdout/stderr pipes open and the runner hung on the pipe read until the orphan exited, blowing the test's budget. The same push also exposed a latent race in S21b's test (it sampled the row state in the same tick the gateway recorded the hit, before the drainer wrote `delivered`); that was fixed as an owner delta to the test only, with every assertion kept.
+
+Retry (`a91440f`, one narrowed retry as the ledger allows) — ACCEPT:
+
+- The default runner spawns the command detached, so it leads its own process group, and on timeout it SIGKILLs the **group** with a fallback to the direct child.
+- stdout and stderr are drained by background readers, and the runner proceeds after a short grace period with whatever output arrived, so an orphaned grandchild can never hold it open.
+- The regression test uses `sh -c 'sleep 30 & sleep 30'` — a command whose background child keeps the pipe open on every platform — and asserts both the rejection and `elapsed < 3000 ms`.
+
+Owner verification: `bun run typecheck` clean, `bun test test/verifier.test.ts` 14 pass / 42 assertions in 1.55 s (the timeout case previously burned the whole 5 s budget), full suite **344 pass / 1204 assertions**. Discrimination re-checked by the owner in a disposable copy with the previous runner: the new test fails there at the 5 s budget **on macOS too**, so it now detects the defect locally rather than only on the runner. CI run on `a91440f` is **success** — the platform where the defect appeared.
+
+Residual risks carried forward: the grace period is a fixed 250 ms, so a command that flushes output later than that can lose the tail of its output (the exit code, which the verdict depends on, is unaffected); the group kill assumes POSIX process groups, with the direct-child fallback covering the rest; and the verifier still trusts the claimed `testCommand` as the thing to run, so the S33 gate must fix that command rather than accept the worker's choice.
+
+Worker lifecycle: the S32 retry worker settled with its receipt; workspace `w5Y` (label `stackot-s32b`) was closed after integration and the task worktree is retained.

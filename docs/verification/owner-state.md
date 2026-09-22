@@ -73,6 +73,22 @@ Owner decision recorded: B01 and B02 sit behind S52 in the ledger's DAG, which i
 - B05 (status command) and the C-series depend on the runtime surfaces (OpenClaw task state, review events).
 - S38's CI evidence exists for the current SHA but should be re-stated for a release candidate once the runtime rows land.
 
+## Wave 05 — S32 accepted, and the remaining rows are all environment-gated
+
+- S32 (`19bf0e7`, retry `a91440f`): `verifier.ts` judges a worker's claim from the worktree rather than the report — observed changed files against the claimed scope, and a test command the verifier runs itself; a claimed pass with a failing command, a ghost file, an unclaimed change, a missing command, a timeout or an empty claim all reject, and `verified` requires observed passage. The module is deliberately not wired into a pipeline; the S30/S33 rows own that.
+- CI found what local runs could not, again: the runner killed only the shell, so an orphaned child held the pipes open on Linux (and the new regression test now reproduces that on macOS too), and S21b's test had a latent race between the gateway hit and the `delivered` write. Both are fixed and verified on the runner (`a91440f` success).
+
+Baseline: `a91440f`, `bun test` **344 pass / 1204 assertions** across 31 files, typecheck clean, CI green.
+
+Remaining ledger rows and what each class needs (full enumeration in the wave-02 record):
+
+- **Environment — OpenClaw/acpx (13 rows):** S23–S31 and S33–S36. S23 must freeze the real contract from the installed binaries before any adapter is written.
+- **Host and deployment (5 rows):** S40, S44, S45, S47, S48.
+- **Real GitHub and Discord surfaces plus a human approver (4 rows):** S49–S52.
+- **Release and operations (8 rows):** B04–B11.
+- **Post-release (4 rows):** C01–C04, explicitly not MVP-blocking.
+- Also unset: the Discord guild ID and the backlink recorder's GitHub login (required config since S19), per-repo tokens if that posture is wanted, the hook token and webhook secret, and the host/DNS for the public endpoint.
+
 ## Blocked, with evidence
 
 - M2–M4 (S23–S52) need the real runtime: `which openclaw acpx` finds neither binary, no process listens on 9377 or 18789, and no Discord app, GitHub webhook or host/DNS authority exists in this session. Caddy is installed but nothing else.
