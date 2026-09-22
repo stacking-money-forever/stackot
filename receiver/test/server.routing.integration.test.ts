@@ -233,6 +233,11 @@ describe("S21b persist-then-resolve", () => {
     expect(ghSeen.some((p) => p.startsWith("/repos/owner/repo/issues/7/comments"))).toBe(true);
 
     // Routing is never persisted: the stored event stays in its unrouted form.
+    // The row flips to delivered only after the forward returns, so wait for that
+    // state instead of sampling it in the same tick the gateway recorded the hit
+    // (a loaded runner lost that race on CI).
+    const delivered = await waitFor(() => readRow("s21b-followup-1")?.state === "delivered");
+    expect(delivered).toBe(true);
     const row = readRow("s21b-followup-1");
     expect(row?.state).toBe("delivered");
     const ev = JSON.parse(row!.event) as NormalizedEvent;
