@@ -293,6 +293,19 @@ describe("loadConfig", () => {
     expect(cfg.adminChannelId).toBe("<a><b>");
   });
 
+  test("rejects agentId placeholder and blank values", async () => {
+    for (const agentId of ["<stackot-agent>", "  <AGENT_ID>  ", "   "]) {
+      const path = await writeConfig({ ...base, agentId });
+      await expect(loadConfigWith(path)).rejects.toThrow("agentId");
+    }
+  });
+
+  test("accepts agentId with brackets that is not a single placeholder", async () => {
+    const path = await writeConfig({ ...base, agentId: "<a><b>" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.agentId).toBe("<a><b>");
+  });
+
   test("preserves boundary ports 1 and 65535", async () => {
     for (const port of [1, 65535]) {
       const path = await writeConfig({ ...base, port });

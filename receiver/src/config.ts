@@ -85,6 +85,12 @@ export async function loadConfig(): Promise<ReceiverConfig> {
   if (typeof cfg.adminChannelId === "string" && /^<[^<>]*>$/.test(cfg.adminChannelId.trim())) {
     throw new Error("config adminChannelId must be a real channel ID, not a <...> placeholder");
   }
+  if (typeof cfg.agentId !== "string" || cfg.agentId.trim() === "") {
+    throw new Error("config missing: agentId (non-empty OpenClaw agent ID required)");
+  }
+  if (/^<[^<>]*>$/.test(cfg.agentId.trim())) {
+    throw new Error("config agentId must be a real OpenClaw agent ID, not a <...> placeholder");
+  }
   if (typeof cfg.discordGuildId !== "string" || cfg.discordGuildId.trim() === "") {
     throw new Error("config missing: discordGuildId (non-empty numeric string required)");
   }

@@ -820,3 +820,18 @@ Owner verification of the artifacts themselves, run locally:
 - `backup-outbox.sh`: smoke-tested against a real outbox in a scratch directory — four runs with `KEEP=2` left exactly two snapshots, the newest passed `PRAGMA integrity_check` and reported its row count, and `shellcheck` is clean. The smoke test caught a real defect: the first prune used GNU-only `find -printf`, which silently skipped pruning on BSD find. It now relies on the fact that `outbox-<ISO8601 UTC Z>.sqlite` sorts chronologically as text, which is portable.
 
 What the VM run still has to produce: S44 (kill/reboot supervision smoke), S45 (external port probe proving only 443/80 answer and the gateway stayed loopback), S47 (restore from a snapshot into an empty environment) and S48 (rollback onto the same database). The runbook names each check and the command that produces it.
+
+## Correction — S03C4 was four rows, and one of them was still open
+
+Auditing the ledger against this session's records corrected two of my own bookkeeping errors, both recorded here rather than silently fixed:
+
+1. **The ledger has 81 rows, not 67.** Its ID list is S01–S52 (66 rows once the `S03C4A–D`, `S04A–D`, `S05A/B`, `S08A/B`, `S09A/B` splits are counted), B01–B11 and C01–C04. The "67 unique task IDs" figure came from the previous session's wave-01 DAG check and is stale; every completeness number in earlier records that used it is superseded by the numbers below.
+2. **S03C4 is a family of four rows and one was never implemented.** The retro table recorded "S03C4" as a single NOT-DONE entry covering the repo forum channel IDs and marked it done after that work, but `agentId` (`S03C4C`) was only ever checked for truthiness. The owner found this while producing the completeness accounting: `config.ts` rejected `<...>` placeholders for the webhook secret, hook token, GitHub token, ci-alerts channel, admin channel, guild ID, recorder login and repo channel IDs — but not for `agentId`, and a whitespace-only `agentId` passed the truthiness check too.
+
+S03C4C — ACCEPT (owner-applied, three lines of validation plus two tests):
+
+- `agentId` must now be a non-empty string after trim, and a whole-token `<...>` placeholder is rejected; `<a><b>` stays valid, consistent with the other placeholder rules.
+- Owner oracles: `bun run typecheck` clean, `bun test test/config.test.ts` 116 pass / 138 assertions, full suite **346 pass / 1206 assertions** across 31 files.
+- Discrimination: the new test fails against the previous `config.ts` in a disposable copy (the placeholder was accepted and startup proceeded), so it detects the gap rather than restating the code.
+
+Milestone arithmetic, corrected: M1 has 36 rows (35 accepted before this fix, now 36), M2 has 14 (1 accepted: S32), M3 has 12 (7 accepted: S37, S38, S39, S41, S42, S43, S46), M4 has 4 (0), M5 has 11 (3: B01, B02, B03), C has 4 (0). Total accepted after this fix: 47 of 81; remaining: 34.
