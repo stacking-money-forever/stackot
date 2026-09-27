@@ -228,6 +228,71 @@ describe("fetchItem", () => {
   });
 });
 
+describe("fetchItem rate limit (B03)", () => {
+  /** Injectable sleep that records instructed waits; no real clock involved. */
+  function fakeSleep() {
+    const sleeps: number[] = [];
+    return { sleeps, sleep: async (ms: number) => void sleeps.push(ms) };
+  }
+
+  test("a 429 + Retry-After on the comments request is waited out and retried", async () => {
+    let commentsHits = 0;
+    const gh = stubGitHub({
+      "/repos/example/app/issues/9": { body: "issue body" },
+      [COMMENTS]: () => {
+        commentsHits++;
+        if (commentsHits === 1) {
+          return new Response("limited", { status: 429, headers: { "Retry-After": "5" } });
+        }
+        return Response.json([
+          { body: "스레드: https://discord.com/channels/111/888", user: { login: "GitHubBot" } },
+        ]);
+      },
+    });
+    const { sleeps, sleep } = fakeSleep();
+    try {
+      const item = await fetchItem(cfg, "example/app", "issues", 9, {
+        apiBase: gh.apiBase,
+        githubFetchOpts: { sleep },
+      });
+      expect(findThreadId(item, cfg)).toBe("888");
+      expect(commentsHits).toBe(2);
+      expect(sleeps).toEqual([5000]);
+      const commentsReqs = gh.seen.filter((s) => s.pathname === COMMENTS);
+      expect(commentsReqs.length).toBe(2);
+    } finally {
+      gh.stop();
+    }
+  });
+
+  test("a persistent 429 still fails the lookup after retries are exhausted", async () => {
+    const gh = stubGitHub({
+      "/repos/example/app/issues/9": () =>
+        new Response("limited", { status: 429, headers: { "Retry-After": "2" } }),
+      [COMMENTS]: [],
+    });
+    const { sleeps, sleep } = fakeSleep();
+    try {
+      const err = await fetchItem(cfg, "example/app", "issues", 9, {
+        apiBase: gh.apiBase,
+        githubFetchOpts: { sleep },
+      }).then(
+        () => null,
+        (e: unknown) => e,
+      );
+      expect(err).toBeInstanceOf(Error);
+      expect((err as Error).message).toBe("github api 429 for example/app issues #9");
+      expect((err as Error).message).not.toContain("test-token");
+      // 1 initial + 2 retries, each preceded by one instructed wait — no burst.
+      expect(sleeps).toEqual([2000, 2000]);
+      const itemReqs = gh.seen.filter((s) => s.pathname === "/repos/example/app/issues/9");
+      expect(itemReqs.length).toBe(3);
+    } finally {
+      gh.stop();
+    }
+  });
+});
+
 describe("fetchItem timeout (S21b)", () => {
   test("GITHUB_TIMEOUT_MS defaults the lookup budget to 10 seconds", () => {
     expect(GITHUB_TIMEOUT_MS).toBe(10_000);

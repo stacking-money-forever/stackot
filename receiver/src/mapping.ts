@@ -6,6 +6,7 @@
  * body and comments for a Discord thread URL the bot recorded earlier.
  */
 import type { ReceiverConfig } from "./config.ts";
+import { githubFetch, type GithubFetchOptions } from "./github-client.ts";
 
 /** Trust inputs for the reverse-link check — the two ReceiverConfig keys. */
 export type BacklinkTrust = Pick<ReceiverConfig, "discordGuildId" | "githubBacklinkLogin">;
@@ -74,13 +75,22 @@ function nextPageUrl(link: string | null): string | null {
  * (`/issues/{n}/comments`); `/pulls/{n}/comments` is the inline review-comment
  * surface, where the bot never records thread URLs. The item body itself comes
  * from the surface that actually provides it (`/pulls/{n}` for PRs).
+ *
+ * Every request goes through `githubFetch`, so a 429/`Retry-After` response is
+ * waited out and retried instead of collapsing the lookup into a failure.
  */
 export async function fetchItem(
   cfg: ReceiverConfig,
   repo: string,
   kind: "issues" | "pulls",
   number: number,
-  opts: { apiBase?: string; maxCommentPages?: number; timeoutMs?: number; token?: string } = {},
+  opts: {
+    apiBase?: string;
+    maxCommentPages?: number;
+    timeoutMs?: number;
+    token?: string;
+    githubFetchOpts?: GithubFetchOptions;
+  } = {},
 ): Promise<GitHubItem> {
   const base = `${opts.apiBase ?? "https://api.github.com"}/repos/${repo}`;
   const commentsKind = kind === "pulls" ? "issues" : kind;
@@ -90,9 +100,10 @@ export async function fetchItem(
     Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
   };
+  const ghOpts = opts.githubFetchOpts;
   const [itemRes, commentsRes] = await Promise.all([
-    fetch(`${base}/${kind}/${number}`, { headers, signal }),
-    fetch(`${base}/${commentsKind}/${number}/comments?per_page=20`, { headers, signal }),
+    githubFetch(`${base}/${kind}/${number}`, { headers, signal }, ghOpts),
+    githubFetch(`${base}/${commentsKind}/${number}/comments?per_page=20`, { headers, signal }, ghOpts),
   ]);
   if (!itemRes.ok) throw new Error(`github api ${itemRes.status} for ${repo} ${kind} #${number}`);
   type ApiUser = { login?: string | null } | null;
@@ -110,7 +121,7 @@ export async function fetchItem(
   const maxPages = opts.maxCommentPages ?? MAX_COMMENT_PAGES;
   let next = commentsRes.ok ? nextPageUrl(commentsRes.headers.get("link")) : null;
   for (let pages = 1; next && pages < maxPages && !findThreadId(result, cfg); pages++) {
-    const pageRes = await fetch(next, { headers, signal });
+    const pageRes = await githubFetch(next, { headers, signal }, ghOpts);
     if (!pageRes.ok) break;
     result.comments.push(...((await pageRes.json()) as ApiComment[]).map(toComment));
     next = nextPageUrl(pageRes.headers.get("link"));
