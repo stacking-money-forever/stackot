@@ -3,7 +3,7 @@ import { Database } from "bun:sqlite";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { MAX_DELIVERY_ATTEMPTS, Outbox } from "../src/outbox.ts";
+import { BUSY_TIMEOUT_MS, MAX_DELIVERY_ATTEMPTS, Outbox } from "../src/outbox.ts";
 import { DeliveryDrainer } from "../src/delivery.ts";
 
 test("failed delivery survives restart and retains dedupe after success", () => {
@@ -196,5 +196,91 @@ test("requeue moves only a dead_letter row back to pending", () => {
     expect(outbox.due()?.id).toBe("retry-me");
     expect(outbox.requeue("retry-me")).toBe(false);
     outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("two connections racing the same delivery id produce exactly one row", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-race-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+  try {
+    const a = new Outbox(path);
+    const b = new Outbox(path);
+    const results = await Promise.all([a.enqueue("race-1", event), b.enqueue("race-1", event)]);
+    expect([...results].sort()).toEqual([false, true]);
+    const db = new Database(path, { readonly: true });
+    const row = db.query("SELECT COUNT(*) AS n FROM outbox WHERE id = ?").get("race-1") as { n: number };
+    expect(row.n).toBe(1);
+    db.close();
+    a.close();
+    b.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("enqueue waits out a briefly held write lock instead of throwing SQLITE_BUSY", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-busy-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+  expect(Number.isFinite(BUSY_TIMEOUT_MS)).toBe(true);
+  expect(BUSY_TIMEOUT_MS).toBeGreaterThan(0);
+  const outbox = new Outbox(path);
+  // A separate process holds BEGIN IMMEDIATE for ~100ms so the write lock is
+  // really contended while the test connection tries to enqueue.
+  const holder = Bun.spawn([process.execPath, "-e",
+    `import { Database } from "bun:sqlite";
+     const db = new Database(${JSON.stringify(path)});
+     db.run("PRAGMA busy_timeout = ${BUSY_TIMEOUT_MS}");
+     db.run("BEGIN IMMEDIATE");
+     console.log("locked");
+     setTimeout(() => { db.run("COMMIT"); db.close(); }, 100);`,
+  ], { stdout: "pipe", stderr: "inherit" });
+  try {
+    const reader = holder.stdout.getReader();
+    const decoder = new TextDecoder();
+    let handshake = "";
+    while (!handshake.includes("locked")) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      handshake += decoder.decode(value);
+    }
+    reader.releaseLock();
+    expect(handshake).toContain("locked");
+    const start = Date.now();
+    expect(outbox.enqueue("contended-1", event)).toBe(true);
+    const waited = Date.now() - start;
+    expect(waited).toBeGreaterThan(0);
+    expect(waited).toBeLessThan(BUSY_TIMEOUT_MS);
+    await holder.exited;
+    const db = new Database(path, { readonly: true });
+    const row = db.query("SELECT COUNT(*) AS n FROM outbox WHERE id = ?").get("contended-1") as { n: number };
+    expect(row.n).toBe(1);
+    db.close();
+  } finally {
+    outbox.close();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a pending row is still due after close and reopen", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-durable-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+  try {
+    const first = new Outbox(path);
+    expect(first.enqueue("durable-1", event)).toBe(true);
+    first.close();
+
+    const reopened = new Outbox(path);
+    const due = reopened.due();
+    expect(due?.id).toBe("durable-1");
+    expect(due?.event).toEqual(event);
+    reopened.delivered("durable-1");
+    reopened.close();
+
+    const again = new Outbox(path);
+    expect(again.has("durable-1")).toBe(true);
+    expect(again.due()).toBeNull();
+    expect(again.enqueue("durable-1", event)).toBe(false);
+    again.close();
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
