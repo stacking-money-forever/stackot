@@ -22,31 +22,48 @@ import { normalize, type NormalizedEvent } from "./normalize.ts";
 import { findThreadId, fetchItem } from "./mapping.ts";
 import { route } from "./router.ts";
 import { forwardToGateway } from "./gateway.ts";
+import { describeError, redactSecrets } from "./redact.ts";
 
 const cfg: ReceiverConfig = await loadConfig();
+const secrets = redactSecrets(cfg);
 const githubApiBase = process.env.STACKOT_GITHUB_API_BASE ?? "https://api.github.com";
 const outbox = new Outbox(process.env.STACKOT_OUTBOX_PATH ?? new URL("../var/outbox.sqlite", import.meta.url).pathname);
 
 /** GitHub reverse-link lookup, injected into the router so routing stays pure. */
 async function resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; number: number }): Promise<string | null> {
-  const item = await fetchItem(cfg, input.repo, input.kind, input.number, { apiBase: githubApiBase });
-  return findThreadId(item, cfg);
+  try {
+    const item = await fetchItem(cfg, input.repo, input.kind, input.number, { apiBase: githubApiBase });
+    return findThreadId(item, cfg);
+  } catch (error) {
+    // router.ts logs the caught error verbatim — hand it a masked message so a
+    // credential-bearing fetch URL cannot reach stderr.
+    throw new Error(describeError(error, secrets));
+  }
 }
 
 const drainer = new DeliveryDrainer(outbox, async (job) => {
-  const decision = await route(job.event, { cfg, resolveThreadId });
-  const routed: NormalizedEvent = {
-    ...job.event,
-    target: decision.target,
-    targetKind: decision.targetKind,
-    createThread: decision.createThread,
-    noticeChannelId: decision.noticeChannelId,
-  };
-  return forwardToGateway(cfg, routed, job.id);
+  try {
+    const decision = await route(job.event, { cfg, resolveThreadId });
+    const routed: NormalizedEvent = {
+      ...job.event,
+      target: decision.target,
+      targetKind: decision.targetKind,
+      createThread: decision.createThread,
+      noticeChannelId: decision.noticeChannelId,
+    };
+    return await forwardToGateway(cfg, routed, job.id);
+  } catch (error) {
+    // The drainer persists the thrown message as `last_error`, so both stderr
+    // and the DB must get the masked text — never the raw fetch error whose
+    // `path` property can carry credentials embedded in the request URL.
+    const detail = describeError(error, secrets);
+    console.error(`delivery ${job.id} forward failed:`, detail);
+    throw new Error(detail);
+  }
 });
 /** A drain failure (e.g. outbox I/O error) must not become an unhandled rejection. */
 function logDrainError(error: unknown): void {
-  console.error("delivery drain failed:", error);
+  console.error("delivery drain failed:", describeError(error, secrets));
 }
 const retryTimer = setInterval(() => { void drainer.drain().catch(logDrainError); }, 1000);
 void drainer.drain().catch(logDrainError);
@@ -108,7 +125,7 @@ Bun.serve({
     try {
       seen = outbox.has(deliveryId);
     } catch (error) {
-      console.error(`outbox dedupe check failed for delivery ${deliveryId}:`, error);
+      console.error(`outbox dedupe check failed for delivery ${deliveryId}:`, describeError(error, secrets));
       return new Response("outbox unavailable", { status: 503 });
     }
     if (seen) return new Response("duplicate", { status: 200 });
@@ -120,7 +137,7 @@ Bun.serve({
     try {
       enqueued = outbox.enqueue(deliveryId, ev);
     } catch (error) {
-      console.error(`outbox enqueue failed for delivery ${deliveryId}:`, error);
+      console.error(`outbox enqueue failed for delivery ${deliveryId}:`, describeError(error, secrets));
       return new Response("outbox unavailable", { status: 503 });
     }
     if (!enqueued) return new Response("duplicate", { status: 200 });
