@@ -5,12 +5,13 @@
  *   1. HMAC verify (X-Hub-Signature-256)        → 401 on mismatch
  *   2. Delivery dedupe (X-GitHub-Delivery)      → 200 no-op on duplicate
  *   3. Normalize event                          → 200 no-op on uninteresting
- *   4. Route to a Discord target (router.ts)
+ *   4. Persist the unrouted event               → 200 accepted once committed
+ *   5. Route at drain time (router.ts)          — never on the request path
  *      - issue/PR opened → createThread in #issues/#pull-requests
  *      - comment/review  → thread ID from GitHub reverse link
  *      - CI failure      → linked PR thread + #ci-alerts notice, else #ci-alerts
- *      - unresolved      → 200 no-op + admin notice (spec: never guess)
- *   5. Forward to Gateway /hooks/agent
+ *      - unresolved      → admin notice (spec: never guess)
+ *   6. Forward to Gateway /hooks/agent
  */
 import { loadConfig, type ReceiverConfig } from "./config.ts";
 import { verifySignature } from "./verify.ts";
@@ -23,20 +24,32 @@ import { route } from "./router.ts";
 import { forwardToGateway } from "./gateway.ts";
 
 const cfg: ReceiverConfig = await loadConfig();
+const githubApiBase = process.env.STACKOT_GITHUB_API_BASE ?? "https://api.github.com";
 const outbox = new Outbox(process.env.STACKOT_OUTBOX_PATH ?? new URL("../var/outbox.sqlite", import.meta.url).pathname);
-const drainer = new DeliveryDrainer(outbox, async (job) => forwardToGateway(cfg, job.event, job.id));
+
+/** GitHub reverse-link lookup, injected into the router so routing stays pure. */
+async function resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; number: number }): Promise<string | null> {
+  const item = await fetchItem(cfg, input.repo, input.kind, input.number, { apiBase: githubApiBase });
+  return findThreadId(item, cfg);
+}
+
+const drainer = new DeliveryDrainer(outbox, async (job) => {
+  const decision = await route(job.event, { cfg, resolveThreadId });
+  const routed: NormalizedEvent = {
+    ...job.event,
+    target: decision.target,
+    targetKind: decision.targetKind,
+    createThread: decision.createThread,
+    noticeChannelId: decision.noticeChannelId,
+  };
+  return forwardToGateway(cfg, routed, job.id);
+});
 /** A drain failure (e.g. outbox I/O error) must not become an unhandled rejection. */
 function logDrainError(error: unknown): void {
   console.error("delivery drain failed:", error);
 }
 const retryTimer = setInterval(() => { void drainer.drain().catch(logDrainError); }, 1000);
 void drainer.drain().catch(logDrainError);
-
-/** GitHub reverse-link lookup, injected into the router so routing stays pure. */
-async function resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; number: number }): Promise<string | null> {
-  const item = await fetchItem(cfg, input.repo, input.kind, input.number);
-  return findThreadId(item, cfg);
-}
 
 Bun.serve({
   hostname: cfg.host,
@@ -103,17 +116,9 @@ Bun.serve({
     const ev = normalize(event, { full_name: repo.full_name }, (payload as { action?: unknown }).action, payload);
     if (!ev) return new Response("ignored", { status: 200 });
 
-    const decision = await route(ev, { cfg, resolveThreadId });
-    const routed: NormalizedEvent = {
-      ...ev,
-      target: decision.target,
-      targetKind: decision.targetKind,
-      createThread: decision.createThread,
-      noticeChannelId: decision.noticeChannelId,
-    };
     let enqueued: boolean;
     try {
-      enqueued = outbox.enqueue(deliveryId, routed);
+      enqueued = outbox.enqueue(deliveryId, ev);
     } catch (error) {
       console.error(`outbox enqueue failed for delivery ${deliveryId}:`, error);
       return new Response("outbox unavailable", { status: 503 });

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { fetchItem, findThreadId } from "../src/mapping.ts";
+import { fetchItem, findThreadId, GITHUB_TIMEOUT_MS } from "../src/mapping.ts";
 import type { ReceiverConfig } from "../src/config.ts";
 
 const cfg = {
@@ -224,6 +224,29 @@ describe("fetchItem", () => {
       expect(findThreadId(item, cfg)).toBe("888");
     } finally {
       gh.stop();
+    }
+  });
+});
+
+describe("fetchItem timeout (S21b)", () => {
+  test("GITHUB_TIMEOUT_MS defaults the lookup budget to 10 seconds", () => {
+    expect(GITHUB_TIMEOUT_MS).toBe(10_000);
+  });
+
+  test("rejects promptly against a server that never responds", async () => {
+    const hung = Bun.serve({
+      hostname: "127.0.0.1",
+      port: 0,
+      fetch: () => new Promise<Response>(() => {}),
+    });
+    try {
+      const started = Date.now();
+      await expect(
+        fetchItem(cfg, "example/app", "issues", 9, { apiBase: `http://127.0.0.1:${hung.port}`, timeoutMs: 50 }),
+      ).rejects.toThrow();
+      expect(Date.now() - started).toBeLessThan(2000);
+    } finally {
+      hung.stop(true);
     }
   });
 });
