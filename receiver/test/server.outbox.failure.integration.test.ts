@@ -125,10 +125,44 @@ describe("S09B outbox write failure", () => {
 
       // The process survives a failed commit.
       expect((await fetch(`http://127.0.0.1:${port}/healthz`)).status).toBe(200);
+
+      // S09Bb: readiness is now honest. The tracked write failure turns
+      // /readyz 503 (this answered 200 "ready" before, because ready() was a
+      // bare SELECT 1), and /status reports the outbox unhealthy with a
+      // masked lastError. This readiness handler also fires the bounded
+      // self-repair attempt, which fails while the lock is still held.
+      const readyz = await fetch(`http://127.0.0.1:${port}/readyz`);
+      expect(readyz.status).toBe(503);
+
+      const statusRes = await fetch(`http://127.0.0.1:${port}/status`);
+      expect(statusRes.status).toBe(200);
+      const status = (await statusRes.json()) as {
+        status: string;
+        outboxReady: boolean;
+        outbox: { ok: boolean; lastError: string | null };
+      };
+      expect(status.status).toBe("degraded");
+      expect(status.outboxReady).toBe(false);
+      expect(status.outbox.ok).toBe(false);
+      expect(status.outbox.lastError).toBeTruthy();
+      expect(status.outbox.lastError).not.toContain(secret);
     } finally {
       holder.run("ROLLBACK");
       holder.close();
     }
+
+    // Self-repair: with the lock released, the readiness path's recover()
+    // reconnects and re-probes — poll until /readyz flips back to 200.
+    const deadline = Date.now() + 15_000;
+    let readyzStatus = 0;
+    while (Date.now() < deadline) {
+      readyzStatus = (await fetch(`http://127.0.0.1:${port}/readyz`)).status;
+      if (readyzStatus === 200) break;
+      await Bun.sleep(200);
+    }
+    expect(readyzStatus).toBe(200);
+    const readyzBody = await fetch(`http://127.0.0.1:${port}/readyz`);
+    expect(await readyzBody.text()).toBe("ready");
 
     // Recovery: once the lock is gone the receiver persists again, and the
     // delivery id that failed was never recorded, so GitHub's redelivery of it
@@ -142,5 +176,5 @@ describe("S09B outbox write failure", () => {
     expect(fresh.status).toBe(200);
     expect(await fresh.text()).toBe("accepted");
     expect((await fetch(`http://127.0.0.1:${port}/healthz`)).status).toBe(200);
-  }, 30_000);
+  }, 60_000);
 });

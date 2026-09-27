@@ -30,17 +30,40 @@ import { collectMetrics, METRICS_INTERVAL_MS, toLogLine, type QueueMetrics } fro
 const cfg: ReceiverConfig = await loadConfig();
 const secrets = redactSecrets(cfg);
 const githubApiBase = process.env.STACKOT_GITHUB_API_BASE ?? "https://api.github.com";
-const outbox = new Outbox(process.env.STACKOT_OUTBOX_PATH ?? new URL("../var/outbox.sqlite", import.meta.url).pathname);
+const outbox = new Outbox(process.env.STACKOT_OUTBOX_PATH ?? new URL("../var/outbox.sqlite", import.meta.url).pathname, secrets);
 /** Process-local Gateway reachability for /status — never persisted. */
 const gatewayHealth = createGatewayHealth(secrets);
 
-/** /readyz and /status share one probe; a throw means the outbox is not ready. */
+/**
+ * /readyz probes the outbox for real (BEGIN IMMEDIATE + ROLLBACK); /status
+ * and /healthz read the tracked health instead so they never take the write
+ * lock — a contended probe waits out busy_timeout and would stall them.
+ */
 function isOutboxReady(): boolean {
   try {
-    outbox.ready();
-    return true;
+    return outbox.ready();
   } catch {
     return false;
+  }
+}
+
+/**
+ * Bound on self-repair attempts: an unhealthy outbox gets at most one
+ * recover() per interval so a down database cannot turn /readyz traffic
+ * into a reconnect storm. recover() itself never throws.
+ */
+const RECOVERY_INTERVAL_MS = 1000;
+let lastRecoveryAt = 0;
+function attemptRecovery(): void {
+  const now = Date.now();
+  if (now - lastRecoveryAt < RECOVERY_INTERVAL_MS) return;
+  lastRecoveryAt = now;
+  try {
+    if (!outbox.recover()) {
+      console.error("outbox recovery failed:", outbox.health().lastError);
+    }
+  } catch (error) {
+    console.error("outbox recovery threw:", describeError(error, secrets));
   }
 }
 
@@ -179,17 +202,25 @@ Bun.serve({
     const url = new URL(req.url);
 
     if (req.method === "GET" && url.pathname === "/healthz") {
-      const res = liveness(isOutboxReady(), gatewayHealth);
+      const res = liveness(outbox.health().ok, gatewayHealth);
       return new Response(res.body, { status: res.status });
     }
 
     if (req.method === "GET" && url.pathname === "/readyz") {
-      const res = readiness(isOutboxReady(), gatewayHealth);
+      let ready = isOutboxReady();
+      if (!ready) {
+        // Self-repair: bounded by RECOVERY_INTERVAL_MS, then re-probed so a
+        // healed outbox answers 200 within the same request.
+        attemptRecovery();
+        ready = isOutboxReady();
+      }
+      const res = readiness(ready, gatewayHealth);
       return new Response(res.body, { status: res.status });
     }
 
     if (req.method === "GET" && url.pathname === "/status") {
-      return Response.json(statusReport(isOutboxReady(), gatewayHealth, queueMetrics()));
+      const health = outbox.health();
+      return Response.json(statusReport(health.ok, gatewayHealth, queueMetrics(), health));
     }
 
     if (req.method !== "POST" || url.pathname !== "/webhook") {
