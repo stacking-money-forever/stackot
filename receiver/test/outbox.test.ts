@@ -353,3 +353,47 @@ test("a pending row is still due after close and reopen", () => {
     again.close();
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+test("dueBatch returns up to limit due rows in the same order as due()", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-batch-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+  try {
+    const outbox = new Outbox(path);
+    for (const id of ["batch-1", "batch-2", "batch-3"]) expect(outbox.enqueue(id, event)).toBe(true);
+    // Distinct due times make the ORDER BY next_attempt_at deterministic.
+    const db = new Database(path);
+    const now = Date.now();
+    db.query("UPDATE outbox SET next_attempt_at = ? WHERE id = ?").run(now - 3000, "batch-2");
+    db.query("UPDATE outbox SET next_attempt_at = ? WHERE id = ?").run(now - 2000, "batch-3");
+    db.query("UPDATE outbox SET next_attempt_at = ? WHERE id = ?").run(now - 1000, "batch-1");
+    db.close();
+
+    expect(outbox.dueBatch(2).map((row) => row.id)).toEqual(["batch-2", "batch-3"]);
+    expect(outbox.dueBatch(10).map((row) => row.id)).toEqual(["batch-2", "batch-3", "batch-1"]);
+    // Same due condition and head-of-queue as due(): a row that is not yet due
+    // is excluded, and dueBatch(1) agrees with due().
+    const db2 = new Database(path);
+    db2.query("UPDATE outbox SET next_attempt_at = ? WHERE id = ?").run(now + 60_000, "batch-3");
+    db2.close();
+    expect(outbox.dueBatch(10).map((row) => row.id)).toEqual(["batch-2", "batch-1"]);
+    expect(outbox.dueBatch(1)[0]?.id).toBe(outbox.due()?.id);
+    outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("dueBatch returns an empty array for limit 0 and when nothing is pending", () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-outbox-batch-empty-"));
+  const path = join(dir, "outbox.sqlite");
+  const event = { repo: "example/app", item: "issue #1", target: "1", targetKind: "channel" as const, summary: "x", url: "https://example.test" };
+  try {
+    const outbox = new Outbox(path);
+    expect(outbox.dueBatch(5)).toEqual([]);
+    expect(outbox.enqueue("only-1", event)).toBe(true);
+    expect(outbox.dueBatch(0)).toEqual([]);
+    expect(outbox.dueBatch(5).map((row) => row.id)).toEqual(["only-1"]);
+    outbox.delivered("only-1");
+    expect(outbox.dueBatch(5)).toEqual([]);
+    outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});

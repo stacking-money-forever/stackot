@@ -81,3 +81,142 @@ test("outbox.retry schedules exponential backoff capped at one minute", () => {
     outbox.close();
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+/** Bounded poll so assertions can wait on real async drain progress without long wall-clock sleeps. */
+async function eventually(cond: () => boolean, timeoutMs = 2_000): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (!cond()) {
+    if (Date.now() > deadline) throw new Error("condition not met before deadline");
+    await new Promise((resolve) => setTimeout(resolve, 5));
+  }
+}
+
+test("a stalled repo does not starve another repo's deliveries", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-drain-fair-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const outbox = new Outbox(path);
+    const evA = { ...event, repo: "repo/a" };
+    const evB = { ...event, repo: "repo/b" };
+    expect(outbox.enqueue("a-1", evA)).toBe(true);
+    expect(outbox.enqueue("b-1", evB)).toBe(true);
+    expect(outbox.enqueue("b-2", evB)).toBe(true);
+    expect(outbox.enqueue("b-3", evB)).toBe(true);
+
+    let releaseA!: () => void;
+    const gateA = new Promise<void>((resolve) => { releaseA = resolve; });
+    const forwarded: string[] = [];
+    const drainer = new DeliveryDrainer(outbox, async (job) => {
+      forwarded.push(job.id);
+      if (job.event.repo === "repo/a") await gateA;
+      return { ok: true };
+    });
+
+    const drainPromise = drainer.drain();
+    // a-1 starts and is held open; b-* must still run to completion behind it.
+    await eventually(() => forwarded.includes("a-1"));
+    await eventually(() => outbox.stats().delivered === 3);
+    const db = new Database(path, { readonly: true });
+    const pending = db.query("SELECT id, state FROM outbox WHERE state = 'pending'").all() as { id: string; state: string }[];
+    expect(pending).toEqual([{ id: "a-1", state: "pending" }]);
+    db.close();
+
+    releaseA();
+    await drainPromise;
+    expect(outbox.stats().delivered).toBe(4);
+    expect(outbox.due()).toBeNull();
+    expect(new Set(forwarded).size).toBe(forwarded.length);
+    outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("concurrent forwards never exceed maxPerRepo for any repo", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-drain-cap-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const outbox = new Outbox(path);
+    const evA = { ...event, repo: "repo/a" };
+    const evB = { ...event, repo: "repo/b" };
+    for (const id of ["a-1", "a-2", "a-3", "a-4"]) outbox.enqueue(id, evA);
+    for (const id of ["b-1", "b-2", "b-3", "b-4"]) outbox.enqueue(id, evB);
+
+    const active = new Map<string, number>();
+    const peak = new Map<string, number>();
+    let started = 0;
+    let releaseAll!: () => void;
+    const gate = new Promise<void>((resolve) => { releaseAll = resolve; });
+    const drainer = new DeliveryDrainer(outbox, async (job) => {
+      const repo = job.event.repo;
+      const now = (active.get(repo) ?? 0) + 1;
+      active.set(repo, now);
+      peak.set(repo, Math.max(peak.get(repo) ?? 0, now));
+      started += 1;
+      if (started === 4) releaseAll(); // both repos at cap 2 — the first full wave
+      await gate;
+      active.set(repo, (active.get(repo) ?? 1) - 1);
+      return { ok: true };
+    }, { maxGlobal: 8, maxPerRepo: 2 });
+
+    await drainer.drain();
+    expect(started).toBe(8);
+    expect(peak.get("repo/a")).toBeLessThanOrEqual(2);
+    expect(peak.get("repo/b")).toBeLessThanOrEqual(2);
+    expect(outbox.stats().delivered).toBe(8);
+    outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("overlapping drain calls never forward the same delivery twice", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-drain-dupe-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const outbox = new Outbox(path);
+    for (const repo of ["repo/c", "repo/d", "repo/e"]) {
+      expect(outbox.enqueue(`dup-${repo}`, { ...event, repo })).toBe(true);
+    }
+    const forwarded: string[] = [];
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const drainer = new DeliveryDrainer(outbox, async (job) => {
+      forwarded.push(job.id);
+      await gate;
+      return { ok: true };
+    });
+
+    const first = drainer.drain();
+    const second = drainer.drain(); // re-entrant: must not start a second pass
+    const third = drainer.drain();
+    await eventually(() => forwarded.length === 3);
+    release();
+    await Promise.all([first, second, third]);
+    expect(new Set(forwarded).size).toBe(3);
+    expect(outbox.stats().delivered).toBe(3);
+    outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
+
+test("one repo's forward failure does not stop another repo's delivery", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "stackot-drain-iso-"));
+  const path = join(dir, "outbox.sqlite");
+  try {
+    const outbox = new Outbox(path);
+    expect(outbox.enqueue("iso-a", { ...event, repo: "repo/a" })).toBe(true);
+    expect(outbox.enqueue("iso-b", { ...event, repo: "repo/b" })).toBe(true);
+    const drainer = new DeliveryDrainer(outbox, async (job) => {
+      if (job.event.repo === "repo/a") throw new Error("gateway timeout");
+      return { ok: true };
+    });
+    await drainer.drain();
+
+    const db = new Database(path, { readonly: true });
+    const a = db.query("SELECT state, attempts, next_attempt_at FROM outbox WHERE id = ?").get("iso-a") as { state: string; attempts: number; next_attempt_at: number };
+    const b = db.query("SELECT state FROM outbox WHERE id = ?").get("iso-b") as { state: string };
+    expect(b.state).toBe("delivered");
+    expect(a.state).toBe("pending");
+    expect(a.attempts).toBe(1);
+    expect(a.next_attempt_at).toBeGreaterThan(Date.now()); // backoff scheduled
+    db.close();
+    expect(outbox.due()).toBeNull(); // a is not due again until the backoff elapses
+    outbox.close();
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+});
