@@ -105,7 +105,9 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
 
 ## 6. 운영 메모
 
-- Receiver dedupe DB: `receiver/var/dedupe.sqlite` (7일 TTL, 자동 정리).
+- Receiver outbox/중복 방지 DB: `receiver/var/outbox.sqlite`. Gateway 전달이 실패하면
+  같은 delivery ID로 재시도하고, Receiver 재시작 후에도 미전달 항목을 다시 처리한다.
+  전달 완료 ID는 7일간 보관한다. 이 파일을 백업 대상에 포함한다.
 - 로그: Gateway는 `openclaw logs --follow`, Receiver는 stdout.
 - 재시도: `openclaw tasks list` / `openclaw tasks retry <id>`.
 - Worktree 보존: 중단된 작업의 worktree는 자동 삭제되지 않는다

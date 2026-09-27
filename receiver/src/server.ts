@@ -3,23 +3,25 @@
  *
  * Pipeline per POST /webhook:
  *   1. HMAC verify (X-Hub-Signature-256)        → 401 on mismatch
- *   2. Delivery dedupe (X-GitHub-Delivery)      → 200 no-op on duplicate
+ *   2. Durable delivery lookup                  → 200 no-op on duplicate
  *   3. Normalize event                          → 200 no-op on uninteresting
  *   4. Resolve Discord target
  *      - issue/PR opened → createThread in #issues/#pull-requests
  *      - comment/review  → thread ID from GitHub reverse link
  *      - CI failure      → #ci-alerts
  *      - unresolved      → 200 no-op + admin notice (spec: never guess)
- *   5. Forward to Gateway /hooks/agent
+ *   5. Persist in SQLite outbox, then acknowledge GitHub
+ *   6. Retry Gateway /hooks/agent until admission succeeds
  */
 import { loadConfig, type ReceiverConfig } from "./config.ts";
-import { verifySignature, Dedupe } from "./verify.ts";
+import { verifySignature } from "./verify.ts";
+import { Outbox } from "./outbox.ts";
 import { normalize, type NormalizedEvent } from "./normalize.ts";
 import { findThreadId, fetchItem } from "./mapping.ts";
 import { forwardToGateway } from "./gateway.ts";
 
 const cfg: ReceiverConfig = await loadConfig();
-const dedupe = new Dedupe(new URL("../var/dedupe.sqlite", import.meta.url).pathname);
+const outbox = new Outbox(process.env.STACKOT_OUTBOX_PATH ?? new URL("../var/outbox.sqlite", import.meta.url).pathname);
 
 async function resolveTarget(ev: NormalizedEvent): Promise<NormalizedEvent> {
   const repoCfg = cfg.repos[ev.repo];
@@ -59,7 +61,29 @@ function titleFrom(ev: NormalizedEvent): string {
   return `[${ev.repo}#${number}] ${subject}`.slice(0, 100);
 }
 
-let processing = 0;
+let forwarding = false;
+async function drain(): Promise<void> {
+  if (forwarding) return;
+  forwarding = true;
+  try {
+    let job;
+    while ((job = outbox.due())) {
+      try {
+        const result = await forwardToGateway(cfg, job.event, job.id);
+        if (!result.ok) throw new Error(`gateway status ${result.status}`);
+        outbox.delivered(job.id);
+        console.log(`forwarded delivery ${job.id}`);
+      } catch (err) {
+        outbox.retry(job.id, job.attempts + 1);
+        console.error(`gateway forward failed for delivery ${job.id}:`, err);
+      }
+    }
+  } finally {
+    forwarding = false;
+  }
+}
+const retryTimer = setInterval(() => { void drain(); }, 1000);
+void drain();
 
 Bun.serve({
   hostname: cfg.host,
@@ -81,8 +105,8 @@ Bun.serve({
       return new Response("invalid signature", { status: 401 });
     }
 
-    const deliveryId = req.headers.get("X-GitHub-Delivery") ?? "";
-    if (!dedupe.first(deliveryId)) {
+    const deliveryId = req.headers.get("X-GitHub-Delivery") || crypto.randomUUID();
+    if (outbox.has(deliveryId)) {
       return new Response("duplicate", { status: 200 });
     }
 
@@ -100,15 +124,9 @@ Bun.serve({
     if (!ev) return new Response("ignored", { status: 200 });
 
     const routed = await resolveTarget(ev);
-    processing++;
-    // Fire-and-forget: GitHub gets 200 now; admission is async by design.
-    forwardToGateway(cfg, routed, deliveryId)
-      .then((r) => {
-        if (!r.ok) console.error(`gateway forward failed (${r.status}):`, r.body);
-        else console.log(`forwarded ${routed.repo} ${routed.item} → ${routed.target || routed.createThread?.forumChannelId}`);
-      })
-      .catch((err) => console.error("gateway forward error:", err))
-      .finally(() => processing--);
+    // Acknowledge GitHub only after the event is durable. Startup and timer replay failures.
+    if (!outbox.enqueue(deliveryId, routed)) return new Response("duplicate", { status: 200 });
+    void drain();
 
     return new Response("accepted", { status: 200 });
   },
@@ -117,10 +135,12 @@ Bun.serve({
 console.log(`stackot receiver listening on ${cfg.host}:${cfg.port}`);
 
 process.on("SIGTERM", () => {
-  dedupe.close();
+  clearInterval(retryTimer);
+  outbox.close();
   process.exit(0);
 });
 process.on("SIGINT", () => {
-  dedupe.close();
+  clearInterval(retryTimer);
+  outbox.close();
   process.exit(0);
 });

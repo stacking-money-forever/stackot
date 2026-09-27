@@ -3,8 +3,8 @@
  *
  * Posts normalized events to POST /hooks/agent. Admission (HTTP 200) means the
  * run was accepted — delivery to Discord happens inside the Gateway session.
- * Failures are logged, never thrown into the webhook path: GitHub redelivers
- * on 5xx only, and replaying an accepted event is worse than a lost notice.
+ * The Receiver persists the event before acknowledging GitHub and retries
+ * failed admission from its durable outbox.
  */
 import type { ReceiverConfig } from "./config.ts";
 import type { NormalizedEvent } from "./normalize.ts";
@@ -19,6 +19,7 @@ export async function forwardToGateway(cfg: ReceiverConfig, ev: NormalizedEvent,
   ].join("\n");
 
   const res = await fetch(`${cfg.openclawHooksUrl}/agent`, {
+    signal: AbortSignal.timeout(10_000),
     method: "POST",
     headers: {
       Authorization: `Bearer ${cfg.openclawHookToken}`,
