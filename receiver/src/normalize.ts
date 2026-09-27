@@ -21,6 +21,8 @@ export type NormalizedEvent = {
   summary: string;
   /** GitHub URL of the item. */
   url: string;
+  /** PR numbers linked to this event, when the payload reports them (e.g. check_run). */
+  prNumbers?: number[];
 };
 
 type Repo = { full_name: string };
@@ -49,7 +51,13 @@ type ReviewPayload = {
 
 type CheckRunPayload = {
   action: string;
-  check_run: { name: string; status: string; conclusion: string | null; html_url: string | null };
+  check_run: {
+    name: string;
+    status: string;
+    conclusion: string | null;
+    html_url: string | null;
+    pull_requests?: { number?: unknown }[];
+  };
 };
 
 function clamp(text: string, max = 600): string {
@@ -137,11 +145,19 @@ export function normalize(event: string, repo: Repo, action: unknown, payload: u
       const { check_run: cr } = p as CheckRunPayload;
       if (a !== "completed") return null;
       if (!cr.conclusion || cr.conclusion === "success" || cr.conclusion === "skipped" || cr.conclusion === "neutral") return null;
+      const prNums: number[] = [];
+      for (const pr of cr.pull_requests ?? []) {
+        const n = pr?.number;
+        if (typeof n === "number" && Number.isInteger(n) && n > 0 && !prNums.includes(n)) prNums.push(n);
+      }
       const lines = [
         `GitHub 이벤트: ${full} CI 체크 실패 — ${cr.name} (${cr.conclusion})`,
         cr.html_url ? `URL: ${cr.html_url}` : "",
+        prNums.length ? `연결 PR: ${prNums.map((n) => `PR #${n}`).join(", ")}` : "",
       ].filter(Boolean);
-      return { target: "", targetKind: "channel", repo: full, item: `CI ${cr.name}`, summary: lines.join("\n"), url: cr.html_url ?? "" };
+      const ev: NormalizedEvent = { target: "", targetKind: "channel", repo: full, item: `CI ${cr.name}`, summary: lines.join("\n"), url: cr.html_url ?? "" };
+      if (prNums.length) ev.prNumbers = prNums;
+      return ev;
     }
 
     default:
