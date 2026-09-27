@@ -69,6 +69,66 @@ describe("loadConfig", () => {
     await expect(loadConfigWith(path)).rejects.toThrow("owner/name");
   });
 
+  const invalidForumChannelIds: Record<string, unknown> = {
+    missing: undefined,
+    "empty string": "",
+    "whitespace-only string": " \t\n ",
+    number: 1234567890,
+    boolean: true,
+    null: null,
+    object: { channel: "1" },
+    array: ["1"],
+    "single placeholder": "<FORUM_CHANNEL_ID>",
+    "padded placeholder": "  <forum-id>  ",
+  };
+  for (const [label, value] of Object.entries(invalidForumChannelIds)) {
+    test(`rejects repos issuesForumChannelId: ${label}`, async () => {
+      const path = await writeConfig({
+        ...base,
+        repos: { "owner/x": { issuesForumChannelId: value, prsForumChannelId: "202" } },
+      });
+      await expect(loadConfigWith(path)).rejects.toThrow('repos["owner/x"].issuesForumChannelId');
+    });
+    test(`rejects repos prsForumChannelId: ${label}`, async () => {
+      const path = await writeConfig({
+        ...base,
+        repos: { "owner/x": { issuesForumChannelId: "201", prsForumChannelId: value } },
+      });
+      await expect(loadConfigWith(path)).rejects.toThrow('repos["owner/x"].prsForumChannelId');
+    });
+  }
+
+  test("rejects repo entry where both forum channel IDs are placeholders", async () => {
+    const path = await writeConfig({
+      ...base,
+      repos: { "owner/x": { issuesForumChannelId: "<ISSUES_FORUM>", prsForumChannelId: "<PRS_FORUM>" } },
+    });
+    await expect(loadConfigWith(path)).rejects.toThrow('repos["owner/x"].issuesForumChannelId');
+  });
+
+  test("error names the offending repo and key among multiple repos", async () => {
+    const path = await writeConfig({
+      ...base,
+      repos: {
+        "owner/one": { issuesForumChannelId: "101", prsForumChannelId: "102" },
+        "owner/two": { issuesForumChannelId: "201", prsForumChannelId: "<PRS_FORUM>" },
+      },
+    });
+    await expect(loadConfigWith(path)).rejects.toThrow('repos["owner/two"].prsForumChannelId');
+  });
+
+  test("accepts real-looking forum channel IDs and non-single-placeholder brackets", async () => {
+    for (const value of ["1234567890", "<a><b>", "123<456>"]) {
+      const path = await writeConfig({
+        ...base,
+        repos: { "owner/x": { issuesForumChannelId: value, prsForumChannelId: value } },
+      });
+      const cfg = await loadConfigWith(path);
+      expect(cfg.repos["owner/x"]!.issuesForumChannelId).toBe(value);
+      expect(cfg.repos["owner/x"]!.prsForumChannelId).toBe(value);
+    }
+  });
+
   test("rejects missing shared fields", async () => {
     const { agentId: _drop, ...rest } = base;
     const path = await writeConfig(rest);
