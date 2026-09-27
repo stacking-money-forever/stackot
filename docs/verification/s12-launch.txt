@@ -1,0 +1,42 @@
+S12 — dead-letter 확정 저장 (owner launch contract, wave 02)
+
+Task: ONE changeset. receiver가 전달 한도에 도달한 이벤트를 dead_letter로 확정 저장하고 last_error를 남긴다.
+
+Base: /Users/justn/dev/.worktrees/stackot-s12-20260921 (branch codex/stackot-s12-20260921 @ db95b2a)
+Owner: 현재 Codex/Astra 스레드. 너는 후보(candidate)만 만든다. 커밋·푸시·머지·배포·릴리스 금지.
+
+## 편집 허용 범위 (그 외 파일 수정 금지)
+- receiver/src/delivery.ts
+- receiver/test/delivery.test.ts
+- receiver/src/outbox.ts
+- receiver/test/outbox.test.ts
+
+## 현재 결함 (오너가 소스로 확인함)
+- delivery.ts의 DeliveryDrainer는 실패 시 outbox.retry만 호출한다. DeliveryOutbox 포트에 fail이 아예 없다.
+- outbox.ts의 fail()은 dead_letter와 last_error를 기록하는 유일한 함수지만 호출자가 없다. 그래서 MAX_DELIVERY_ATTEMPTS(5)와 last_error 컬럼이 죽은 코드이고, 영구 실패 job이 60초 간격으로 무한 재시도된다.
+
+## 요구 동작
+1. DeliveryOutbox 포트에 `fail(id: string, attempts: number, error: string): void`를 추가한다.
+2. DeliveryDrainer.drain()의 실패 경로에서 `this.outbox.fail(job.id, job.attempts + 1, message)`를 호출한다. message는 throw된 Error의 message, 또는 forward 결과가 `{ ok: false }`일 때 상태코드를 포함한 문장(예: `gateway rejected delivery (status 502)`)이다. DeliveryForwarder 반환 타입은 `{ ok: boolean; status?: number }`로 최소 확장해도 된다.
+3. Outbox.fail의 현재 의미를 유지한다: attempts >= MAX_DELIVERY_ATTEMPTS면 state='dead_letter' + last_error 저장, 미만이면 retry.
+4. dead_letter 행은 due()가 계속 반환하지 않아야 한다.
+
+## 오라클 (그대로 실행하고 출력을 receipt에 붙인다)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/delivery.test.ts test/outbox.test.ts`
+- `cd receiver && bun test`
+
+## 필수로 추가할 테스트
+- delivery.test.ts: 한도 직전(attempts = MAX_DELIVERY_ATTEMPTS - 1) 실패는 fail(attempts=MAX, error 문자열)을 호출하고, 한도 미만 실패는 retry를 호출한다.
+- outbox.test.ts: 실제 Outbox와 DeliveryDrainer를 영구 실패 forwarder로 구동하면 행이 dead_letter가 되고 last_error가 비어 있지 않으며 이후 due()가 null이다.
+
+## 금지
+- 위 4개 파일 밖의 수정, server.ts 변경, 테이블/컬럼 추가, 외부 네트워크 호출, commit/push/merge/deploy, subagent 생성, formatter·linter 전체 실행.
+- 기존 테스트를 약화·삭제하거나 구현 세부에 재핀하지 말 것.
+
+## 완료 산출물
+1. 위 오라클 실행 결과 원문.
+2. `docs/verification/s12-receipt.md`: 변경 파일 목록, 핵심 diff 요약, 실행한 명령과 결과, 남은 리스크.
+3. Todo는 최대 2개. 최종 보고는 300줄 이내.
+
+도구 안내: worker 셸 PATH에 apply_patch가 없다. 필요하면 절대경로 `/Users/justn/.codex/tmp/arg0/codex-arg0tkLyXI/apply_patch`를 사용한다.
