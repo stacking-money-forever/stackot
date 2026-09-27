@@ -44,6 +44,11 @@ const OUTPUT_TAIL_MAX = 1_000;
 // Mirrors timeout(1): the default runner returns this code when it had to
 // kill the process, so the verifier can tell a timeout from a normal failure.
 const TIMEOUT_EXIT_CODE = 124;
+// After the direct child exits, orphaned grandchildren can still hold the
+// stdout/stderr pipes open (e.g. `sh -c 'sleep 30 & sleep 30'`). Give the
+// drains a short grace period to flush, then return with partial output
+// rather than hanging on a pipe that may never close.
+const PIPE_DRAIN_GRACE_MS = 250;
 
 const SECRET_PATTERNS: readonly [RegExp, string][] = [
   [/gh[pousr]_[A-Za-z0-9]{8,}/g, "[REDACTED]"],
@@ -67,25 +72,58 @@ function tail(text: string, max = OUTPUT_TAIL_MAX): string {
   return `…${trimmed.slice(-max)}`;
 }
 
+/** Reads a stream to EOF in the background; text() returns what arrived so far. */
+function drain(stream: ReadableStream<Uint8Array>): { done: Promise<void>; text: () => string } {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  const done = (async () => {
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+      }
+      buf += decoder.decode();
+    } catch {
+      // stream errored or was torn down; keep whatever arrived
+    }
+  })();
+  return { done, text: () => buf };
+}
+
 const bunRun: CommandRunner = async (argv, opts) => {
   let proc;
   try {
-    proc = Bun.spawn([...argv], { cwd: opts.cwd, stdout: "pipe", stderr: "pipe" });
+    // detached: the child leads its own process group (setsid on POSIX), so a
+    // timeout can SIGKILL the whole group. Without this, Linux `sh` forks the
+    // real command and killing only the shell orphans a child that still
+    // holds our stdout/stderr pipes open.
+    proc = Bun.spawn([...argv], { cwd: opts.cwd, stdout: "pipe", stderr: "pipe", detached: true });
   } catch (err) {
     return { code: 127, stdout: "", stderr: `spawn failed: ${err instanceof Error ? err.message : String(err)}` };
   }
+  const stdout = drain(proc.stdout);
+  const stderr = drain(proc.stderr);
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
-    proc.kill("SIGKILL");
+    try {
+      process.kill(-proc.pid, "SIGKILL");
+    } catch {
+      // Not a group leader (non-POSIX, or the child already exited);
+      // fall back to killing just the direct child.
+      try {
+        proc.kill("SIGKILL");
+      } catch {
+        // already gone
+      }
+    }
   }, opts.timeoutMs);
   try {
-    const [stdout, stderr, code] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-      proc.exited,
-    ]);
-    return { code: timedOut ? TIMEOUT_EXIT_CODE : code, stdout, stderr };
+    const code = await proc.exited;
+    await Promise.race([Promise.all([stdout.done, stderr.done]), Bun.sleep(PIPE_DRAIN_GRACE_MS)]);
+    return { code: timedOut ? TIMEOUT_EXIT_CODE : code, stdout: stdout.text(), stderr: stderr.text() };
   } finally {
     clearTimeout(timer);
   }

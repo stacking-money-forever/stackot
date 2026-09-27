@@ -1,0 +1,39 @@
+S32 retry (1/1) — 타임아웃 kill이 셸만 죽여서 hang (CI 실패)
+
+너는 이 worktree에서 S32(worker 결과 독립 검증)의 후속 수정만 한다. 이전 후보는 이미 통합됐고, CI(Linux)에서 결함 하나가 드러났다.
+
+## 관측된 결함 (CI 근거)
+- 테스트 `verifyWorkerClaim > test command that exceeds timeoutMs -> rejected as timeout, not passed`가 **5001ms에서 테스트 예산 초과로 실패**했다.
+- 원인: `verifier.ts`의 기본 러너가 `sh -c "<command>"`를 띄우고 타임아웃 시 **셸 프로세스만** SIGKILL한다. 명령의 자식(`sleep 30`)이 stdout/stderr 파이프를 상속해 살아 있으면, 셸이 죽어도 `new Response(proc.stdout).text()`가 끝나지 않아 러너가 자식 종료까지(30초) 매달린다.
+- macOS에서는 통과했다: macOS `sh`는 단순 명령을 exec로 대체해 셸=자식이라 셸을 죽이면 같이 죽는다. Linux `sh`는 fork하므로 자식이 살아남는다.
+
+## 요구 수정 (receiver/src/verifier.ts)
+1. 기본 러너가 명령을 **자기 프로세스 그룹**에서 실행하게 한다(Bun.spawn의 detached 계열 옵션 사용). 타임아웃 시 **그룹 전체**에 SIGKILL을 보낸다(예: `process.kill(-pid, "SIGKILL")`, 실패 시 `proc.kill` 폴백).
+2. 파이프 읽기가 자식 때문에 무한 대기하지 않게 한다: 타임아웃/킬 이후의 읽기는 **유한 시간 안에** 끝나야 한다. 남은 출력은 버려도 된다(부분 출력 허용).
+3. 기존 계약 유지: 타임아웃은 `TIMEOUT_EXIT_CODE`(124)로 보고되어 `observed.testsPassed=false` + reason에 `timed out`이 담긴다. 정상 명령의 종료 코드/출력은 그대로다. 시그니처·타입·주입 러너 인터페이스는 바꾸지 않는다.
+4. 시크릿 redaction·tail 규칙과 나머지 판정 규칙(ghost/미주장 변경/거짓 통과/빈 claim/비-git worktree)은 절대 약화하지 말 것.
+
+## 요구 테스트 (receiver/test/verifier.test.ts)
+- **셸만 죽여서는 안 되는 명령**으로 회귀 테스트를 추가/강화한다. 예: `sh -c 'sleep 30 & sleep 30'`(백그라운드 자식이 파이프를 계속 잡음). 작은 `timeoutMs`(예: 300)로 실행해:
+  - `verdict === "rejected"`, `observed.testsPassed === false`, reason에 `timed out` 포함,
+  - **경과 시간이 유한**(예: 3000ms 미만)임을 단언한다. 이 단언이 이번 결함을 잡는 부분이다.
+- 이 테스트가 수정 전 코드에서 실제로 실패하는지 확인한다: 수정을 임시로 되돌려(그룹 kill 없이 셸만 kill) 테스트가 실패/타임아웃하는 것을 보고, 되돌린 뒤 원복한다. 그 사실을 receipt에 적는다.
+- 기존 13개 테스트는 그대로 통과해야 한다(약화 금지).
+
+## 편집 허용 범위
+- receiver/src/verifier.ts
+- receiver/test/verifier.test.ts
+그 외 파일 수정 금지.
+
+## 오라클 (그대로 실행하고 출력 원문 첨부)
+- `cd receiver && bun run typecheck`
+- `cd receiver && bun test test/verifier.test.ts`
+- `cd receiver && bun test`
+
+## 금지
+- 위 2개 파일 밖 수정, 기존 테스트 약화·삭제, 실제 네트워크, commit/push/merge/deploy, subagent, formatter 전체 실행. node_modules가 없으면 `bun install --frozen-lockfile` 1회 허용.
+
+## 산출물
+1. 오라클 원문.
+2. `docs/verification/s32b-retry-receipt.md`: 수정 전/후 러너 동작, 되돌림 실험 결과, 경과 시간 측정값, 남은 리스크.
+3. Todo 최대 2개, 보고 300줄 이내.
