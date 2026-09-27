@@ -23,11 +23,24 @@ import { findThreadId, fetchItem } from "./mapping.ts";
 import { route } from "./router.ts";
 import { forwardToGateway } from "./gateway.ts";
 import { describeError, redactSecrets } from "./redact.ts";
+import { createGatewayHealth, liveness, readiness, statusReport } from "./health.ts";
 
 const cfg: ReceiverConfig = await loadConfig();
 const secrets = redactSecrets(cfg);
 const githubApiBase = process.env.STACKOT_GITHUB_API_BASE ?? "https://api.github.com";
 const outbox = new Outbox(process.env.STACKOT_OUTBOX_PATH ?? new URL("../var/outbox.sqlite", import.meta.url).pathname);
+/** Process-local Gateway reachability for /status — never persisted. */
+const gatewayHealth = createGatewayHealth(secrets);
+
+/** /readyz and /status share one probe; a throw means the outbox is not ready. */
+function isOutboxReady(): boolean {
+  try {
+    outbox.ready();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /** GitHub reverse-link lookup, injected into the router so routing stays pure. */
 async function resolveThreadId(input: { repo: string; kind: "issues" | "pulls"; number: number }): Promise<string | null> {
@@ -51,12 +64,20 @@ const drainer = new DeliveryDrainer(outbox, async (job) => {
       createThread: decision.createThread,
       noticeChannelId: decision.noticeChannelId,
     };
-    return await forwardToGateway(cfg, routed, job.id);
+    const result = await forwardToGateway(cfg, routed, job.id);
+    if (result.ok) {
+      gatewayHealth.recordSuccess();
+    } else {
+      gatewayHealth.recordFailure(`gateway rejected delivery (status ${result.status})`);
+    }
+    return result;
   } catch (error) {
     // The drainer persists the thrown message as `last_error`, so both stderr
     // and the DB must get the masked text — never the raw fetch error whose
-    // `path` property can carry credentials embedded in the request URL.
+    // `path` property can carry credentials embedded in the request URL. The
+    // same masked text is what /status reports as the Gateway failure.
     const detail = describeError(error, secrets);
+    gatewayHealth.recordFailure(detail);
     console.error(`delivery ${job.id} forward failed:`, detail);
     throw new Error(detail);
   }
@@ -75,16 +96,17 @@ Bun.serve({
     const url = new URL(req.url);
 
     if (req.method === "GET" && url.pathname === "/healthz") {
-      return new Response("ok");
+      const res = liveness(isOutboxReady(), gatewayHealth);
+      return new Response(res.body, { status: res.status });
     }
 
     if (req.method === "GET" && url.pathname === "/readyz") {
-      try {
-        outbox.ready();
-        return new Response("ready");
-      } catch {
-        return new Response("outbox unavailable", { status: 503 });
-      }
+      const res = readiness(isOutboxReady(), gatewayHealth);
+      return new Response(res.body, { status: res.status });
+    }
+
+    if (req.method === "GET" && url.pathname === "/status") {
+      return Response.json(statusReport(isOutboxReady(), gatewayHealth));
     }
 
     if (req.method !== "POST" || url.pathname !== "/webhook") {
