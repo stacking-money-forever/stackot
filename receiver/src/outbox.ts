@@ -5,6 +5,11 @@ import type { NormalizedEvent } from "./normalize.ts";
 
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const MAX_DELIVERY_ATTEMPTS = 5;
+
+/** Single owner of the retry backoff schedule: delay after `attempts` failures, capped at one minute. */
+export function retryDelayMs(attempts: number): number {
+  return Math.min(60_000, 1000 * 2 ** Math.min(attempts, 6));
+}
 // Concurrency policy: a writer waits up to this long for the SQLite write lock
 // before SQLITE_BUSY surfaces. Finite so a stuck peer can never block forever;
 // nonzero so short WAL write-lock overlap (e.g. two deliveries arriving
@@ -73,7 +78,7 @@ export class Outbox {
   }
 
   retry(id: string, attempts: number): void {
-    const delay = Math.min(60_000, 1000 * 2 ** Math.min(attempts, 6));
+    const delay = retryDelayMs(attempts);
     this.db.query("UPDATE outbox SET attempts = ?, next_attempt_at = ? WHERE id = ?")
       .run(attempts, Date.now() + delay, id);
   }
