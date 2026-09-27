@@ -5,6 +5,8 @@
   "openclawHooksUrl": "http://127.0.0.1:18789/hooks",
   "openclawHookToken": "<.env의 STACKOT_HOOK_TOKEN과 동일>",
   "githubToken": "<.env의 STACKOT_GITHUB_TOKEN과 동일>",
+  "discordGuildId": "<Stackot Discord 길드(서버) ID — 역링크로 신뢰하는 유일한 길드>",
+  "githubBacklinkLogin": "<스레드 URL 역링크를 기록하는 GitHub 로그인>",
   "repos": {
     "stacking-money-forever/bungae-frontend": {
       "issuesForumChannelId": "<이 저장소용 #issues 포럼 채널 ID>",

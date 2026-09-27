@@ -2,7 +2,11 @@ import { describe, expect, test } from "bun:test";
 import { fetchItem, findThreadId } from "../src/mapping.ts";
 import type { ReceiverConfig } from "../src/config.ts";
 
-const cfg = { githubToken: "test-token" } as ReceiverConfig;
+const cfg = {
+  githubToken: "test-token",
+  discordGuildId: "111",
+  githubBacklinkLogin: "GitHubBot",
+} as ReceiverConfig;
 
 type SeenRequest = { pathname: string; search: string; authorization: string | null };
 
@@ -52,13 +56,15 @@ describe("fetchItem", () => {
     const gh = stubGitHub({
       "/repos/example/app/pulls/7": { body: "pr body" },
       "/repos/example/app/issues/7/comments": [
-        { body: "스레드: https://discord.com/channels/111/555" },
+        { body: "스레드: https://discord.com/channels/111/555", user: { login: "GitHubBot" } },
       ],
     });
     try {
       const item = await fetchItem(cfg, "example/app", "pulls", 7, { apiBase: gh.apiBase });
       expect(item.body).toBe("pr body");
-      expect(findThreadId(item)).toBe("555");
+      expect(item.author).toBeNull();
+      expect(item.comments[0]?.author).toBe("GitHubBot");
+      expect(findThreadId(item, cfg)).toBe("555");
     } finally {
       gh.stop();
     }
@@ -68,7 +74,7 @@ describe("fetchItem", () => {
     const gh = stubGitHub({
       "/repos/example/app/issues/42": { body: null },
       "/repos/example/app/issues/42/comments": [
-        { body: "https://discord.com/channels/111/333" },
+        { body: "https://discord.com/channels/111/333", user: { login: "GitHubBot" } },
       ],
     });
     try {
@@ -77,7 +83,7 @@ describe("fetchItem", () => {
       expect(paths).toContain("/repos/example/app/issues/42");
       expect(paths).toContain("/repos/example/app/issues/42/comments");
       expect(gh.seen.length).toBe(2);
-      expect(findThreadId(item)).toBe("333");
+      expect(findThreadId(item, cfg)).toBe("333");
     } finally {
       gh.stop();
     }
@@ -89,16 +95,19 @@ describe("fetchItem", () => {
       [COMMENTS]: (url: URL) => {
         if (!url.searchParams.has("cursor")) {
           const next = `${url.origin}${COMMENTS}?per_page=20&cursor=opaque-page-2`;
-          return Response.json([{ body: "first page, no link here" }], {
-            headers: { Link: `<${next}>; rel="next", <${url.origin}${COMMENTS}?per_page=20&cursor=opaque-end>; rel="last"` },
-          });
+          return Response.json(
+            [{ body: "forged https://discord.com/channels/999/111", user: { login: "mallory" } }],
+            {
+              headers: { Link: `<${next}>; rel="next", <${url.origin}${COMMENTS}?per_page=20&cursor=opaque-end>; rel="last"` },
+            },
+          );
         }
-        return Response.json([{ body: "스레드: https://discord.com/channels/111/777" }]);
+        return Response.json([{ body: "스레드: https://discord.com/channels/111/777", user: { login: "GitHubBot" } }]);
       },
     });
     try {
       const item = await fetchItem(cfg, "example/app", "issues", 9, { apiBase: gh.apiBase });
-      expect(findThreadId(item)).toBe("777");
+      expect(findThreadId(item, cfg)).toBe("777");
       const commentsReqs = gh.seen.filter((s) => s.pathname === COMMENTS);
       expect(commentsReqs.length).toBe(2);
       expect(commentsReqs[0]?.search).toBe("?per_page=20");
@@ -115,13 +124,13 @@ describe("fetchItem", () => {
     const gh = stubGitHub({
       "/repos/example/app/issues/9": { body: null },
       [COMMENTS]: (url: URL) =>
-        Response.json([{ body: "https://discord.com/channels/111/888" }], {
+        Response.json([{ body: "https://discord.com/channels/111/888", user: { login: "GitHubBot" } }], {
           headers: { Link: `<${url.origin}${COMMENTS}?per_page=20&page=2>; rel="next"` },
         }),
     });
     try {
       const item = await fetchItem(cfg, "example/app", "issues", 9, { apiBase: gh.apiBase });
-      expect(findThreadId(item)).toBe("888");
+      expect(findThreadId(item, cfg)).toBe("888");
       const commentsReqs = gh.seen.filter((s) => s.pathname === COMMENTS);
       expect(commentsReqs.length).toBe(1);
     } finally {
@@ -145,7 +154,7 @@ describe("fetchItem", () => {
       const commentsReqs = gh.seen.filter((s) => s.pathname === COMMENTS);
       expect(commentsReqs.length).toBe(3);
       expect(item.comments.length).toBe(3);
-      expect(findThreadId(item)).toBeNull();
+      expect(findThreadId(item, cfg)).toBeNull();
     } finally {
       gh.stop();
     }
@@ -180,5 +189,131 @@ describe("fetchItem", () => {
     } finally {
       gh.stop();
     }
+  });
+
+  test("thread URL in a recorder-authored item body resolves to the thread id", async () => {
+    const gh = stubGitHub({
+      "/repos/example/app/issues/5": {
+        body: "스레드: https://discord.com/channels/111/666",
+        user: { login: "GitHubBot" },
+      },
+      "/repos/example/app/issues/5/comments": [],
+    });
+    try {
+      const item = await fetchItem(cfg, "example/app", "issues", 5, { apiBase: gh.apiBase });
+      expect(item.author).toBe("GitHubBot");
+      expect(findThreadId(item, cfg)).toBe("666");
+    } finally {
+      gh.stop();
+    }
+  });
+
+  test("a forged body link is skipped and a later recorder comment link is adopted", async () => {
+    const gh = stubGitHub({
+      "/repos/example/app/issues/6": {
+        body: "https://discord.com/channels/111/777",
+        user: { login: "mallory" },
+      },
+      "/repos/example/app/issues/6/comments": [
+        { body: "https://discord.com/channels/111/888", user: { login: "GitHubBot" } },
+      ],
+    });
+    try {
+      const item = await fetchItem(cfg, "example/app", "issues", 6, { apiBase: gh.apiBase });
+      expect(item.author).toBe("mallory");
+      expect(findThreadId(item, cfg)).toBe("888");
+    } finally {
+      gh.stop();
+    }
+  });
+});
+
+describe("findThreadId backlink trust", () => {
+  const trust = { discordGuildId: "111", githubBacklinkLogin: "GitHubBot" };
+
+  test("accepts a recorder-authored comment link in the configured guild", () => {
+    const item = {
+      body: null,
+      comments: [{ body: "https://discord.com/channels/111/555", author: "GitHubBot" }],
+    };
+    expect(findThreadId(item, trust)).toBe("555");
+  });
+
+  test("accepts a recorder-authored body link in the configured guild", () => {
+    const item = {
+      body: "스레드: https://discord.com/channels/111/222",
+      author: "GitHubBot",
+      comments: [],
+    };
+    expect(findThreadId(item, trust)).toBe("222");
+  });
+
+  test("ignores a link to the same thread id under a different guild", () => {
+    const item = {
+      body: null,
+      comments: [
+        { body: "https://discord.com/channels/999/555", author: "GitHubBot" },
+        { body: "https://discord.com/channels/1111/555", author: "GitHubBot" },
+      ],
+    };
+    expect(findThreadId(item, trust)).toBeNull();
+  });
+
+  test("ignores a non-recorder comment link in the configured guild", () => {
+    const item = {
+      body: null,
+      comments: [{ body: "https://discord.com/channels/111/555", author: "mallory" }],
+    };
+    expect(findThreadId(item, trust)).toBeNull();
+  });
+
+  test("ignores a non-recorder comment link in another guild", () => {
+    const item = {
+      body: null,
+      comments: [{ body: "https://discord.com/channels/999/555", author: "mallory" }],
+    };
+    expect(findThreadId(item, trust)).toBeNull();
+  });
+
+  test("ignores a recorder-authored link under a different guild", () => {
+    const item = {
+      body: "https://discord.com/channels/999/222",
+      author: "GitHubBot",
+      comments: [{ body: "https://discord.com/channels/999/333", author: "GitHubBot" }],
+    };
+    expect(findThreadId(item, trust)).toBeNull();
+  });
+
+  test("adopts a later valid link when a forged link comes first", () => {
+    const item = {
+      body: "forged body https://discord.com/channels/111/001",
+      author: "mallory",
+      comments: [
+        { body: "forged comment https://discord.com/channels/111/002", author: "mallory" },
+        { body: "real https://discord.com/channels/111/888", author: "GitHubBot" },
+      ],
+    };
+    expect(findThreadId(item, trust)).toBe("888");
+  });
+
+  test("matches the recorder login case-insensitively", () => {
+    const item = {
+      body: "https://discord.com/channels/111/444",
+      author: "githubbot",
+      comments: [{ body: "https://discord.com/channels/111/445", author: "GITHUBBOT" }],
+    };
+    expect(findThreadId(item, trust)).toBe("444");
+  });
+
+  test("ignores texts whose author is unknown", () => {
+    expect(
+      findThreadId({ body: "https://discord.com/channels/111/222", comments: [] }, trust),
+    ).toBeNull();
+    expect(
+      findThreadId(
+        { body: null, comments: [{ body: "https://discord.com/channels/111/222" }] },
+        trust,
+      ),
+    ).toBeNull();
   });
 });

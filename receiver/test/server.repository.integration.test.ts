@@ -33,7 +33,7 @@ describe("POST /webhook repository shape", () => {
     port = reservation.port;
     base = `http://127.0.0.1:${port}`;
     reservation.stop(true);
-    await Bun.write(cfgPath, JSON.stringify({ host: "127.0.0.1", port, githubWebhookSecret: secret, openclawHooksUrl: "http://127.0.0.1:1/hooks", openclawHookToken: "t", githubToken: "g", repos: { "owner/repo": { issuesForumChannelId: "101", prsForumChannelId: "102" } }, ciAlertsChannelId: "103", adminChannelId: "104", agentId: "stackot" }));
+    await Bun.write(cfgPath, JSON.stringify({ host: "127.0.0.1", port, githubWebhookSecret: secret, openclawHooksUrl: "http://127.0.0.1:1/hooks", openclawHookToken: "t", githubToken: "g", repos: { "owner/repo": { issuesForumChannelId: "101", prsForumChannelId: "102" } }, ciAlertsChannelId: "103", adminChannelId: "104", agentId: "stackot", discordGuildId: "111", githubBacklinkLogin: "stackot-bot" }));
     const proc = Bun.spawn([process.execPath, "src/server.ts"], { cwd: join(import.meta.dir, ".."), env: { ...process.env, STACKOT_CONFIG: cfgPath, STACKOT_OUTBOX_PATH: dbPath }, stdout: "pipe", stderr: "pipe" });
     try {
       await waitReady(proc);

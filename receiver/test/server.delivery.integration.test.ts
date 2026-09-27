@@ -46,6 +46,8 @@ beforeAll(async () => {
       ciAlertsChannelId: "3",
       adminChannelId: "4",
       agentId: "stackot",
+      discordGuildId: "111",
+      githubBacklinkLogin: "stackot-bot",
     }),
   );
 

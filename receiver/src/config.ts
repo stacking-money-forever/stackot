@@ -28,6 +28,16 @@ export type ReceiverConfig = {
   /** GitHub token with repo read scope — used for reverse-link mapping lookups. */
   githubToken: string;
   /**
+   * Discord guild (server) ID — a Discord thread URL counts as a backlink only
+   * when its guild segment equals this value exactly.
+   */
+  discordGuildId: string;
+  /**
+   * GitHub login of the recorder account that writes backlink thread URLs —
+   * the only author whose links are trusted (matched case-insensitively).
+   */
+  githubBacklinkLogin: string;
+  /**
    * Per-repo Discord routing. Key is "owner/name" exactly as GitHub sends it
    * in repository.full_name. Events from unlisted repos are dropped (404-equivalent).
    */
@@ -68,6 +78,24 @@ export async function loadConfig(): Promise<ReceiverConfig> {
   }
   if (typeof cfg.adminChannelId === "string" && /^<[^<>]*>$/.test(cfg.adminChannelId.trim())) {
     throw new Error("config adminChannelId must be a real channel ID, not a <...> placeholder");
+  }
+  if (typeof cfg.discordGuildId !== "string" || cfg.discordGuildId.trim() === "") {
+    throw new Error("config missing: discordGuildId (non-empty numeric string required)");
+  }
+  if (/^<[^<>]*>$/.test(cfg.discordGuildId.trim())) {
+    throw new Error("config invalid: discordGuildId is an angle-bracket placeholder; set the real guild ID");
+  }
+  if (!/^\d+$/.test(cfg.discordGuildId)) {
+    throw new Error(`config discordGuildId must be a numeric guild ID, got: ${JSON.stringify(cfg.discordGuildId)}`);
+  }
+  if (typeof cfg.githubBacklinkLogin !== "string" || cfg.githubBacklinkLogin.trim() === "") {
+    throw new Error("config missing: githubBacklinkLogin (non-empty GitHub login required)");
+  }
+  if (/^<[^<>]*>$/.test(cfg.githubBacklinkLogin.trim())) {
+    throw new Error("config invalid: githubBacklinkLogin is an angle-bracket placeholder; set the recorder account login");
+  }
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,38}(\[bot\])?$/.test(cfg.githubBacklinkLogin)) {
+    throw new Error(`config githubBacklinkLogin must be a GitHub login (alphanumeric/hyphen/underscore, optional [bot] suffix), got: ${JSON.stringify(cfg.githubBacklinkLogin)}`);
   }
   if (typeof cfg.openclawHooksUrl !== "string" || cfg.openclawHooksUrl.trim() === "") {
     throw new Error("config openclawHooksUrl must be a non-blank absolute http(s) URL");

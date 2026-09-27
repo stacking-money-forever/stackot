@@ -23,7 +23,7 @@ describe("Receiver restart recovery", () => {
     const receiverPort = reservation.port;
     reservation.stop(true);
     const cfgPath = join(dir, "config.json");
-    await Bun.write(cfgPath, JSON.stringify({ host: "127.0.0.1", port: receiverPort, githubWebhookSecret: secret, openclawHooksUrl: `http://127.0.0.1:${gateway.port}/hooks`, openclawHookToken: "tok", githubToken: "g", repos: { "owner/repo": { issuesForumChannelId: "1", prsForumChannelId: "2" } }, ciAlertsChannelId: "3", adminChannelId: "4", agentId: "stackot" }));
+    await Bun.write(cfgPath, JSON.stringify({ host: "127.0.0.1", port: receiverPort, githubWebhookSecret: secret, openclawHooksUrl: `http://127.0.0.1:${gateway.port}/hooks`, openclawHookToken: "tok", githubToken: "g", repos: { "owner/repo": { issuesForumChannelId: "1", prsForumChannelId: "2" } }, ciAlertsChannelId: "3", adminChannelId: "4", agentId: "stackot", discordGuildId: "111", githubBacklinkLogin: "stackot-bot" }));
     let proc: ReturnType<typeof Bun.spawn> | undefined;
     const start = async () => { proc = Bun.spawn([process.execPath, "src/server.ts"], { cwd: join(import.meta.dir, ".."), env: { ...process.env, STACKOT_CONFIG: cfgPath, STACKOT_OUTBOX_PATH: outboxPath }, stdout: "pipe", stderr: "pipe" }); await waitFor(async () => { try { return (await fetch(`http://127.0.0.1:${receiverPort}/healthz`)).ok; } catch { return false; } }); };
     const stop = async () => { proc?.kill(); if (proc) await proc.exited; proc = undefined; };

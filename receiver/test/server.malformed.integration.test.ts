@@ -48,6 +48,7 @@ describe("POST /webhook malformed JSON", () => {
       openclawHooksUrl: "http://127.0.0.1:1/hooks", openclawHookToken: "t", githubToken: "g",
       repos: { "owner/repo": { issuesForumChannelId: "101", prsForumChannelId: "102" } },
       ciAlertsChannelId: "103", adminChannelId: "104", agentId: "stackot",
+      discordGuildId: "111", githubBacklinkLogin: "stackot-bot",
     }));
     const reservation = Bun.serve({ port: 0, fetch: () => new Response("reserved") });
     if (reservation.port === undefined) throw new Error("ephemeral port was not assigned");

@@ -25,6 +25,8 @@ const base = {
   ciAlertsChannelId: "103",
   adminChannelId: "104",
   agentId: "stackot",
+  discordGuildId: "999888777666",
+  githubBacklinkLogin: "stackot-bot",
   ...validRepos,
 };
 
@@ -230,6 +232,61 @@ describe("loadConfig", () => {
       const path = await writeConfig({ ...base, openclawHooksUrl: url });
       const cfg = await loadConfigWith(path);
       expect(cfg.openclawHooksUrl).toBe(url);
+    }
+  });
+
+  const invalidGuildIds: Record<string, unknown> = {
+    missing: undefined,
+    null: null,
+    "empty string": "",
+    "whitespace-only string": " \t\n ",
+    placeholder: "<DISCORD_GUILD_ID>",
+    "padded placeholder": "  <guild-id>  ",
+    "non-numeric": "guild-123",
+    "mixed alphanumeric": "123abc",
+    "decimal string": "123.45",
+    "padded digits": " 123456789 ",
+    number: 123456789,
+    boolean: true,
+  };
+  for (const [label, discordGuildId] of Object.entries(invalidGuildIds)) {
+    test(`rejects discordGuildId: ${label}`, async () => {
+      const path = await writeConfig({ ...base, discordGuildId });
+      await expect(loadConfigWith(path)).rejects.toThrow("discordGuildId");
+    });
+  }
+
+  test("accepts a long numeric discordGuildId verbatim", async () => {
+    const path = await writeConfig({ ...base, discordGuildId: "1234567890123456789" });
+    const cfg = await loadConfigWith(path);
+    expect(cfg.discordGuildId).toBe("1234567890123456789");
+  });
+
+  const invalidBacklinkLogins: Record<string, unknown> = {
+    missing: undefined,
+    null: null,
+    "empty string": "",
+    "whitespace-only string": " \t\n ",
+    placeholder: "<BACKLINK_LOGIN>",
+    "padded placeholder": "  <bot-login>  ",
+    "with space": "stackot bot",
+    "with @": "@stackot-bot",
+    "with slash": "org/bot",
+    number: 42,
+    boolean: false,
+  };
+  for (const [label, githubBacklinkLogin] of Object.entries(invalidBacklinkLogins)) {
+    test(`rejects githubBacklinkLogin: ${label}`, async () => {
+      const path = await writeConfig({ ...base, githubBacklinkLogin });
+      await expect(loadConfigWith(path)).rejects.toThrow("githubBacklinkLogin");
+    });
+  }
+
+  test("accepts regular and app-style githubBacklinkLogin values", async () => {
+    for (const githubBacklinkLogin of ["stackot-bot", "StackotBot", "stackot-app[bot]"]) {
+      const path = await writeConfig({ ...base, githubBacklinkLogin });
+      const cfg = await loadConfigWith(path);
+      expect(cfg.githubBacklinkLogin).toBe(githubBacklinkLogin);
     }
   });
 });
