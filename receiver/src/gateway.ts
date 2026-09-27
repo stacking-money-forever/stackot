@@ -10,7 +10,9 @@ import type { ReceiverConfig } from "./config.ts";
 import type { NormalizedEvent } from "./normalize.ts";
 import { threadTitle } from "./mapping.ts";
 
-export async function forwardToGateway(cfg: ReceiverConfig, ev: NormalizedEvent, deliveryId: string): Promise<{ ok: boolean; status: number; body: string }> {
+export const GATEWAY_TIMEOUT_MS = 10_000;
+
+export async function forwardToGateway(cfg: ReceiverConfig, ev: NormalizedEvent, deliveryId: string, opts: { timeoutMs?: number } = {}): Promise<{ ok: boolean; status: number; body: string }> {
   const forumChannelId = ev.createThread?.forumChannelId;
   const message = [
     ev.createThread ? `새 포럼 스레드 필요: 채널 ${forumChannelId}, 제목 "${ev.createThread.title}"` : `대상 스레드: ${ev.target}`,
@@ -20,7 +22,7 @@ export async function forwardToGateway(cfg: ReceiverConfig, ev: NormalizedEvent,
   ].join("\n");
 
   const res = await fetch(`${cfg.openclawHooksUrl}/agent`, {
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(opts.timeoutMs ?? GATEWAY_TIMEOUT_MS),
     method: "POST",
     headers: {
       Authorization: `Bearer ${cfg.openclawHookToken}`,
