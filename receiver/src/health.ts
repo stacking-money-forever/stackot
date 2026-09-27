@@ -15,6 +15,7 @@
  * State lives in process memory only; a restart resets it to "no attempt yet".
  */
 import { redact } from "./redact.ts";
+import type { QueueMetrics } from "./metrics.ts";
 
 export type GatewayHealth = {
   /** false after a forward attempt fails; true again after the next success. */
@@ -69,10 +70,12 @@ export type StatusReport = {
   status: "ok" | "degraded";
   outboxReady: boolean;
   gateway: GatewayHealth;
+  /** S43 backlog snapshot; null when the stats probe itself failed. */
+  queue: QueueMetrics | null;
 };
 
 /** Operator report: degraded when intake or forwarding is impaired. */
-export function statusReport(outboxReady: boolean, gateway: GatewayHealth): StatusReport {
+export function statusReport(outboxReady: boolean, gateway: GatewayHealth, queue?: QueueMetrics | null): StatusReport {
   return {
     status: outboxReady && gateway.reachable ? "ok" : "degraded",
     outboxReady,
@@ -81,5 +84,6 @@ export function statusReport(outboxReady: boolean, gateway: GatewayHealth): Stat
       lastError: gateway.lastError,
       lastSuccessAt: gateway.lastSuccessAt,
     },
+    queue: queue ?? null,
   };
 }

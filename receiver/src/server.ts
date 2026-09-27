@@ -25,6 +25,7 @@ import { forwardToGateway } from "./gateway.ts";
 import { describeError, redactSecrets } from "./redact.ts";
 import { createGatewayHealth, liveness, readiness, statusReport } from "./health.ts";
 import { createTelemetry } from "./telemetry.ts";
+import { collectMetrics, METRICS_INTERVAL_MS, toLogLine, type QueueMetrics } from "./metrics.ts";
 
 const cfg: ReceiverConfig = await loadConfig();
 const secrets = redactSecrets(cfg);
@@ -40,6 +41,20 @@ function isOutboxReady(): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+/**
+ * S43 backlog snapshot for /status and the periodic line. A failed probe
+ * must not kill the process or the /status handler — the error is logged
+ * through describeError (redacted) and the caller gets null.
+ */
+function queueMetrics(): QueueMetrics | null {
+  try {
+    return collectMetrics(outbox.stats());
+  } catch (error) {
+    console.error("queue metrics collection failed:", describeError(error, secrets));
+    return null;
   }
 }
 
@@ -149,6 +164,14 @@ function logDrainError(error: unknown): void {
 const retryTimer = setInterval(() => { void drainer.drain().catch(logDrainError); }, 1000);
 void drainer.drain().catch(logDrainError);
 
+/** One queue.metrics line per interval, plus one at startup so a backlog left by a previous run is visible immediately. */
+function emitQueueMetrics(): void {
+  const metrics = queueMetrics();
+  if (metrics) console.log(toLogLine(metrics));
+}
+const metricsTimer = setInterval(emitQueueMetrics, METRICS_INTERVAL_MS);
+emitQueueMetrics();
+
 Bun.serve({
   hostname: cfg.host,
   port: cfg.port,
@@ -166,7 +189,7 @@ Bun.serve({
     }
 
     if (req.method === "GET" && url.pathname === "/status") {
-      return Response.json(statusReport(isOutboxReady(), gatewayHealth));
+      return Response.json(statusReport(isOutboxReady(), gatewayHealth, queueMetrics()));
     }
 
     if (req.method !== "POST" || url.pathname !== "/webhook") {
@@ -233,11 +256,13 @@ console.log(`stackot receiver listening on ${cfg.host}:${cfg.port}`);
 
 process.on("SIGTERM", () => {
   clearInterval(retryTimer);
+  clearInterval(metricsTimer);
   outbox.close();
   process.exit(0);
 });
 process.on("SIGINT", () => {
   clearInterval(retryTimer);
+  clearInterval(metricsTimer);
   outbox.close();
   process.exit(0);
 });
