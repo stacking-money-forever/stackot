@@ -169,6 +169,10 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
   (dirty/unpushed 보존 정책). `openclaw worktrees list`로 확인.
 # Selected host (2026-09-28)
 
+Expired approval copy preparation and outstanding native/re-request/human QA
+are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).
+This copy does not renew approvals or enable worker/push/PR actions.
+
 Optional protected per-forward hook credentials, the procedure and actual B08
 Mac drill are described in [token-rotation.md](token-rotation.md); static legacy
 credentials remain mandatory. Controlled drill evidence does not activate
