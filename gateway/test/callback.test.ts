@@ -121,3 +121,21 @@ test("storage exception sharing expiry text cannot classify an unexpired approva
   expect(f.replies[0]?.text).not.toContain("만료");expect(f.store.revision).toBe(1);
   expect((await f.repo.get(input.requestId))?.status).toBe("pending");
 });
+
+test("retry controller is called only after native auth, exact binding and requester validation",async()=>{
+  for(const delta of [{senderId:"234567890123456789"},{auth:{isAuthorizedSender:false}},{guildId:"222"}]){
+    const f=await fixture();let calls=0;f.binding.decision="retry";f.binding.renew=async()=>{calls++;return {kind:"published"};};
+    await f.registration.handler({...f.ctx,...delta});expect(calls).toBe(0);expect(f.store.revision).toBe(1);
+  }
+  const f=await fixture();let actor:string|undefined;f.binding.decision="retry";
+  f.binding.renew=async value=>{actor=value;return {kind:"published"};};
+  await f.registration.handler(f.ctx);expect(actor).toBe(input.requesterId);
+  expect(f.replies[0]?.text).toContain("새 승인 요청을 발행했습니다");
+  expect(f.store.revision).toBe(1);expect((await f.repo.get(input.requestId))?.status).toBe("pending");
+});
+
+test("expiry points to retry only when the server-resolved card has that control",async()=>{
+  const f=await fixture();f.setClock(1100);f.binding.retryAvailable=true;
+  await f.registration.handler(f.ctx);expect(f.replies[0]?.text).toContain("승인 재요청");
+  expect(f.store.revision).toBe(1);
+});

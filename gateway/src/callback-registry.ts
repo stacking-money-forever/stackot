@@ -2,7 +2,7 @@ import {randomUUID} from "node:crypto";
 import {ApprovalRepository} from "./approval.ts";
 import type {CallbackBinding,CallbackRegistry} from "./callback.ts";
 import type {Json,State,StateStore} from "./state/flow-store.ts";
-type BindingData=Omit<CallbackBinding,"repository">;
+type BindingData=Omit<CallbackBinding,"repository"|"renew"|"retryAvailable">;
 type BindingInput=Omit<BindingData,"token">;
 const snowflake=(v:unknown):v is string=>typeof v==="string"&&/^[1-9][0-9]{0,19}$/.test(v)&&
   BigInt(v)<=18_446_744_073_709_551_615n;
@@ -16,7 +16,7 @@ function valid(data:BindingData){
   if(!uuid(data.token)||typeof data.accountId!=="string"||!data.accountId||
     !snowflake(data.guildId)||!snowflake(data.parentConversationId)||!snowflake(data.messageId)||
     typeof data.conversationId!=="string"||!data.conversationId.startsWith("channel:")||
-    !snowflake(data.conversationId.slice(8))||!["approve","deny"].includes(data.decision)||
+    !snowflake(data.conversationId.slice(8))||!["approve","deny","retry"].includes(data.decision)||
     !data.request||typeof data.request!=="object")throw new Error("CALLBACK_BINDING_INVALID");
 }
 function stored(raw:Json|undefined):BindingData {
@@ -60,6 +60,10 @@ export class FlowCallbackRegistry implements CallbackRegistry {
     if(snapshot.state.approvalCallbacks===undefined)return undefined;
     const entries=object(snapshot.state.approvalCallbacks);if(!Object.hasOwn(entries,token))return undefined;
     const data=stored(entries[token]);if(data.token!==token)throw new Error("CALLBACK_REGISTRY_INVALID");
-    return {...structuredClone(data),repository:this.repository};
+    const retryAvailable=Object.values(entries).some(raw=>{
+      const candidate=stored(raw);
+      return candidate.decision==="retry"&&candidate.messageId===data.messageId&&candidate.request.requestId===data.request.requestId;
+    });
+    return {...structuredClone(data),repository:this.repository,retryAvailable};
   }
 }

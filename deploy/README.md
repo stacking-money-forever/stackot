@@ -172,6 +172,9 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
 Expired approval copy preparation and outstanding native/re-request/human QA
 are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).
 This copy does not renew approvals or enable worker/push/PR actions.
+New-card retry preparation issues a distinct pending approval through native
+requester checks; publication/receipt recovery is durable. Existing cards are
+preserved and do not gain controls by silently resetting their intent.
 
 Optional protected per-forward hook credentials, the procedure and actual B08
 Mac drill are described in [token-rotation.md](token-rotation.md); static legacy

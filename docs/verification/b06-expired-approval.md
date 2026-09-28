@@ -43,3 +43,24 @@ could select misleading copy. Only the locally generated expiry error class is
 now classified; a plain storage Error with the same message remains generic.
 Native auth/binding gates still precede classification. The error type is not
 authentication. Existing error messages and S27 denial predicates are unchanged.
+
+## Retry-control source preparation
+
+Fresh card intents now bind a third `승인 재요청` token to the same trusted
+requester/route/message. Legacy intents without this token retain their original
+cards. Native bootstrap attaches the server issuer; no RPC accepts an alleged
+actor. Handler checks precede renewal and its audit says requested, not approved.
+
+Issuer requires an expired pending original, matching requester and active
+planned/waiting task; rechecks at every read/CAS/publication. It stores one durable
+new request ID per original and uses the current full plan/hash/version. Original
+approval/expiry stay unchanged; new approval is pending with normal24h TTL.
+Replay/concurrency/restart use the same ID and existing plan/card publication
+intents; uncertain send acknowledgements never blind-resend. Cancellation,
+running tasks, decided originals and changed prepared intents fail closed.
+
+Owner84tests/504assertions/typecheck/build pass. Six renewal fixtures cover
+distinct immutable issuance, negative gates, concurrency, current-plan binding,
+state races and unknown acknowledgement. Callback tests ensure wrong native
+auth/requester never reach issuer. A random renewal-ID mutation fails the replay
+oracle. These tests are S; new native button/renewal behavior and H are pending.
