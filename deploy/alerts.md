@@ -23,6 +23,13 @@ nonzero exit plus private structured log; provider outage can still prevent any
 Discord notification. This availability boundary is explicit.
 
 Stage via `macos/install-alerts.py --root <private runtime root>`. Validate plist,
+then use the immutable versioned script/target files staged by that installer.
+A durable pending install fingerprint permits retry after an interrupted plist
+write without modifying the active program. An exact known legacy script/config
+can be migrated without an old install record; unknown or edited files stop
+before runtime mutation. Reduced target configs contain no GitHub credentials.
+
+Validate the staged plist,
 then bootstrap owned `me.justn.stackot.alerts` as a login job. Scheduled jobs emit
 an outcome per invocation; a stopped/failed monitor must be observed via launchd
 and its logs. System migration of the original four services does not migrate
