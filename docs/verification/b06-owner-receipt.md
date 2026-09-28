@@ -46,3 +46,12 @@ public controller-ID export. Fresh `bun test test/qa.test.ts` now2pass/25asserti
 the same isolated invocation fails on the pre-fixbe19bf6 source. CI now runs this
 fresh QA-first oracle independently. Full76tests/455assertions, typecheck/build
 remain clean. Previously staged packages/config remain inactive.
+
+Final sourceb52524c6852a71795004c384505901556cb89097: independent review against
+29f31aa found no actionable regression; targeted callback and QA tests pass.
+Exact Linux CI36414714953 still live (receiver/ingress-contract passed;
+runtime-config pending). Latest private package releases/stackot-gateway-b52524c
+has10hashed files, staged only. Activation plan selects new fixture
+b15ef5f0-3b39-43fc-b52e-02ba7d4dcae4 with actual10000ms TTL in the previously
+approved QA thread; no old approvals reset. Config/package remain inactive until
+exact CI and source/hash verification. No new message/native/H result yet.
