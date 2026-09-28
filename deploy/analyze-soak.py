@@ -47,14 +47,18 @@ def analyze(rows):
             terminal_wall_gap=number(terminal['wallTime'])-wall[-1]
         if 'elapsedSeconds' in terminal:
             terminal_mono_gap=number(terminal['elapsedSeconds'])-mono[-1]
-    through_last=bool(samples) and all(0<=g<=threshold for g in wall_gaps)
-    through_terminal=None if terminal_wall_gap is None else through_last and 0<=terminal_wall_gap<=threshold
+    through_last=bool(samples) and all(0<=g<=threshold for g in wall_gaps+mono_gaps)
+    through_terminal=None if terminal_wall_gap is None or terminal_mono_gap is None else (
+        through_last and 0<=terminal_wall_gap<=threshold and 0<=terminal_mono_gap<=threshold)
+    if terminal_wall_gap is not None and terminal_mono_gap is not None and abs(terminal_wall_gap-terminal_mono_gap)>threshold:
+        diverged.append(len(wall_gaps))
+    all_gaps=wall_gaps+mono_gaps+[g for g in (terminal_wall_gap,terminal_mono_gap) if g is not None]
     return {'samples':len(samples), 'terminalReceiptRecorded':ended,
             'wallElapsedThroughLastSampleSeconds':wall[-1]-started,
             'monotonicElapsedThroughLastSampleSeconds':mono[-1],
             'largestWallGapSeconds':max(wall_gaps,default=0),
             'largestMonotonicGapSeconds':max(mono_gaps,default=0),
-            'clockWentBackward':any(x<0 for x in wall_gaps+mono_gaps),
+            'clockWentBackward':any(x<0 for x in all_gaps),
             'clockDivergenceIntervals':len(diverged),
             'wallCoverageContinuousThroughLastSample':through_last,
             'wallCoverageContinuousThroughTerminal':through_terminal,
