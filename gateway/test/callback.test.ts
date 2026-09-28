@@ -114,3 +114,10 @@ test("late decision acknowledgement expiry and failed reconciliation do not inve
   expect(failed.replies[0]?.text).not.toContain("만료");
   expect(failed.replies[0]?.text).not.toContain("sensitive-reconciliation-error");expect(failed.store.revision).toBe(1);
 });
+
+test("storage exception sharing expiry text cannot classify an unexpired approval as expired",async()=>{
+  const f=await fixture();f.store.compareAndSwap=async()=>{throw new Error("APPROVAL_EXPIRED");};
+  await f.registration.handler(f.ctx);
+  expect(f.replies[0]?.text).not.toContain("만료");expect(f.store.revision).toBe(1);
+  expect((await f.repo.get(input.requestId))?.status).toBe("pending");
+});

@@ -1,4 +1,5 @@
 import type {ApprovalInput,ApprovalRepository} from "./approval.ts";
+import {ApprovalExpiredError} from "./approval.ts";
 
 export type CallbackBinding={token:string;accountId:string;guildId:string;conversationId:string;
   parentConversationId:string;messageId:string;request:ApprovalInput;decision:"approve"|"deny";
@@ -55,7 +56,7 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
       outcome=binding.decision==="approve"?"approved":"rejected";
     }catch(error){
       // No grant metadata or provider/storage exception is exposed in the reply.
-      if(verifiedBinding&&error instanceof Error&&error.message==="APPROVAL_EXPIRED"){
+      if(verifiedBinding&&error instanceof ApprovalExpiredError){
         // decide() can commit and then report expiry at the acknowledgement
         // boundary. Reconcile instead of calling that stored decision pending.
         try{

@@ -6,12 +6,12 @@ Candidate copy:
 
 The private native callback must pass authorization, account/guild/conversation/
 parent/message binding and exact stored requester checks first. Only then can
-the trusted ApprovalRepository's exact APPROVAL_EXPIRED error choose this text.
+the trusted ApprovalRepository's local ApprovalExpiredError choose this text.
 All other failures retain the generic denial. A lookup throwing that same error
 before requester verification does not reveal expiry. No IDs/hashes/tokens/raw
 provider errors enter replies. No approval is renewed, consumed or dispatched.
 
-Owner fixture oracle:9callback tests, full gateway75tests/452assertions,
+Owner fixture oracle:10callback tests, full gateway76tests/455assertions,
 typecheck/build passed after frozen install. Same new test against original
 callback at29f31aa fails on expired requester guidance, distinguishing the fix.
 These are S fixtures, not native authentication/Discord response or human QA.
@@ -37,3 +37,9 @@ reporting expiry. Guidance now re-reads the exact matched request and selects
 the new-approval text only while it remains pending. Stored decisions or failed
 reconciliation retain the generic reply; no new eligibility is returned. The
 targeted late-ack fixture fails against the pre-reconciliationf5fe9d4 callback.
+
+Follow-up review found an unexpired storage error sharing the expiry message
+could select misleading copy. Only the locally generated expiry error class is
+now classified; a plain storage Error with the same message remains generic.
+Native auth/binding gates still precede classification. The error type is not
+authentication. Existing error messages and S27 denial predicates are unchanged.

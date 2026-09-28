@@ -10,14 +10,14 @@ Transient initial result lookup reported missing task; exact re-poll showed the
 same terminal task. No worker restart occurred.
 
 Owner callback is specific only after real native auth and all route/message/
-requester checks and exact trusted APPROVAL_EXPIRED. Wrong actors, mismatched
+requester checks and the trusted repository's local ApprovalExpiredError. Wrong actors, mismatched
 bindings and a resolver throwing that string before actor verification remain
 generic. Reply includes no grant metadata; pending expiry and revision unchanged.
 Copy requires a new plan/approval without claiming a retry control exists.
 
 Server QA TTL supports new real-time expiry fixtures; default900000 preserves
 existing fingerprint. Invalid TTL denied, explicit TTL cannot reuse old fixture.
-No RPC actor/time parameters added. Gateway75tests/452assertions, typecheck/build
+No RPC actor/time parameters added. Gateway76tests/455assertions, typecheck/build
 passed after frozen install. New expiry-copy test against baseline29f31aa fails,
 proving the user-visible behavior distinguishes old code. S-only fixture evidence.
 
@@ -30,3 +30,11 @@ read-only exact-binding/pending reconciliation before specific guidance. New
 late-ack fixture preserves stored approved state and returns generic text;
 failed reconciliation exposes no error and leaves state unchanged. Staged
 privatef5fe9d4 package is inactive and retained; do not activate that old candidate.
+
+Follow-up reviewc6862dc found storage errors sharing the expiry message could
+misclassify an unexpired pending approval. Added a local expiry error class at
+the two repository expiry boundaries and callback type classification after
+native gates; plain storage Error with the same message stays generic. Targeted
+oracle fails on the pre-classificationc6862dc callback. Privatec6862dc package and
+prepared configuration are also inactive/retained; replace the activation plan
+with the corrected source before any live update.

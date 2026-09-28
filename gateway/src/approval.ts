@@ -1,5 +1,10 @@
 import type { Json, State, StateStore } from "./state/flow-store.ts";
 
+// Error classification only; never a substitute for native actor authorization.
+export class ApprovalExpiredError extends Error {
+  constructor(){super("APPROVAL_EXPIRED");this.name="ApprovalExpiredError";}
+}
+
 export type Action = "start" | "push" | "pr";
 type ApprovalFields = {
   schemaVersion: 1;
@@ -146,7 +151,7 @@ export class ApprovalRepository {
       const now=this.now();
       if(!Number.isSafeInteger(now)||now<entry.requestedAt||
           (entry.status!=="pending"&&now<entry.decidedAt))throw new Error("CLOCK_INVALID");
-      if(now>=entry.expiresAt)throw new Error("APPROVAL_EXPIRED");
+      if(now>=entry.expiresAt)throw new ApprovalExpiredError();
       if(entry.status!==from)throw new Error(from==="pending"?"APPROVAL_ALREADY_DECIDED":"APPROVAL_NOT_APPROVED");
       const updated=next(entry,now);
       if(await this.store.compareAndSwap(snapshot.revision,{...snapshot.state,
@@ -155,7 +160,7 @@ export class ApprovalRepository {
         // The committed marker remains for trusted controller reconciliation.
         const committedAt=this.now();
         if(!Number.isSafeInteger(committedAt)||committedAt<now)throw new Error("CLOCK_INVALID");
-        if(committedAt>=entry.expiresAt)throw new Error("APPROVAL_EXPIRED");
+        if(committedAt>=entry.expiresAt)throw new ApprovalExpiredError();
         return structuredClone(updated);
       }
     }
