@@ -411,3 +411,28 @@ those conditions and exact-SHA publication evidence. See s28-receipt.md for limi
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 
 Existing secrets are not copied into a worker checkout or recorded here. The missing runtime is being prepared in repository scope instead of being treated as a user-only prerequisite.
+# Mac deployment / real requester continuation — 2026-09-28
+
+User selected local Mac and stackot.justn.me; no VM provisioned. Source/task
+branches and receipts retained. Actual configured Discord forums/ops channels,
+Cloudflare HTTPS and loopback-only receiver/Caddy/Gateway are deployed. Four
+owned SIGKILL recoveries pass; public unsigned401, other paths404. Exact source
+4915f5b CI36381808394 four jobs success, including independent edge/public-origin
+port snapshot. Origin qualification is dated/owner-readback-bound; future CI
+does not probe a hardcoded potentially stale address. Real GitHub inactive-hook
+ping reaches HMAC receiver200/ignored; no issue/thread/worker receipt claim.
+
+Serial codex review found Host routing (owner oracle also caught it), stale-origin
+future probe, and root migration stranding a stopped service. Corrections and
+pre-fix discrimination are in macos-deployment.md. Root rollback fixture passes
+for third-bootstrap partial-registration failure and successful migration; this
+is S-only and awaits privileged runtime. Current GUI jobs are running; sudo-n
+fails for missing administrator authentication. No reboot performed.
+
+S28 actual requester approved via authorized serial Aside. Native audit records
+sender1112741808162734110/auth=true/exact route and stored approved revision10.
+Immediate and post-restart callbacks deny replay; native registration/state survive.
+Agent-operated personal-session actions are R, not human QA. Genuine wrong actor
+534692447561842698 is still missing and cannot be fabricated; future fresh fixture
+must exercise wrong-actor-first while pending. S28/S44/S45 NOT ACCEPT, count54/81.
+All supporting receipts are retained; full worker/controller and H gates remain.

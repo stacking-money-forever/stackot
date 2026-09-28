@@ -1,5 +1,28 @@
 # Owner continuation state
 
+Current user direction: deploy here on this Mac, domain stackot.justn.me.
+Dedicated macOS task artifacts and live receipts integrated; deployed receiver
+source4915f5b, dedicated Cloudflare tunnel and four login launchd jobs running.
+Unsigned public POST401/other paths404, four owned SIGKILL recoveries, actual
+GitHub inactive-hook ping200/ignored, external runner HTTPS and dated origin
+private-port negative receipts verified. CI4915f5b/36381808394 and follow-on
+1973e8f/36382885560 succeeded; root-installer rollback fixdf24b7f CI pending.
+Independent reviews found/corrected public Host mismatch, future stale-origin
+probe and system-bootstrap failure recovery. Full S44/S45 remain NOT ACCEPT:
+root installation needs local administrator authentication (sudo-n requires
+password), real reboot untested; current jobs require user login. No root
+write/reboot, no full-controller activation; GitHub hook inactive, hooks disabled.
+
+S28 actual native SDK card1554001810652536853 in thread1554001284066189343 is
+published. User instructed Aside to click requester1112741808162734110: native
+authorized=true/approved/decidedBy confirmed; immediate and post-Gateway-restart
+real UI replays denied, approved revision10 persisted. This is non-isolated
+agent-operated R, not H. Second account534692447561842698's genuine pending-grant
+event remains missing; need a fresh fixture later (current grant already approved).
+S28 NOT ACCEPT; full accepted count54/81. No worker/push/PR action from QA.
+Details: macos-deployment.md and s28-live-owner-receipt.md. Prior continuation
+below is retained history and is superseded where it conflicts.
+
 Latest ingress steering: user instructed Aside to fix claw-control access and
 completed actual Discord login. Owner serial Aside UI added only 스태콧 role
 ViewChannel allow1024. Bot GET now HTTP200; everyone deny1024 preserved and UI
