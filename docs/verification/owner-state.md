@@ -1,5 +1,29 @@
 # Owner continuation state
 
+B06 source preparation in stackot-b06-20260928/rootw8Z:p1, launch29f31aa,
+latestb52524c6852a71795004c384505901556cb89097. Native auth/binding/requester
+checks precede local typed expiry classification; exact pending reconciliation
+handles committed-late-ack state. Same-text storage errors and unknown reads
+remain generic. Server-configured QA TTL(1..900seconds) enables real-time expiry
+without RPC clock/actor parameters; old default fingerprints remain compatible.
+Shared controller constant removes independently reproduced QA-first import cycle.
+Owner76tests/455assertions+typecheck/build pass; fresh QA-first2tests/25assertions
+pass. Each corrected defect fails its pre-fix oracle. Brgr4ff4ef4f advice rejected
+twice (oversize/false source claim), no further worker. Exact Linux CI36414714953
+and final b06-b52524c-review.log are live/pending. No source integration yet.
+Private package releases/stackot-gateway-b52524c and10second new fixture config
+are staged only, NOT activated. state/b06-native-plan.json points at latest
+source; priorf5fe9d4/c6862dc/be19bf6 artifacts retained inactive. After exact CI/
+review, verify package hashes, activate only QA plugin/config, publish a fresh
+no-op expiry card in approved thread and observe actual-time/native requester
+response; preserve old S28 grants. B06/H/re-request path remain NOT ACCEPT.
+
+B09 collector sourcebc3abd9 CI36411778117 all3green; integrationa4024ae
+CI36412340009 all3green, owner6Python tests pass. Actual PID54300/session61836
+baseline remains live at state/b09-baseline-fixed-20260928.jsonl, latest check
+26samples/~1503seconds, ready/observed/bundle unchanged. Not24h beta workload;
+B09 NOT ACCEPT and total57/81 unchanged. Earlier pending-CI entries below stale.
+
 B08 ACCEPT: task26703cf CI36410587906 all3green, exact-commit review clean;
 integrationdf9c1f3 CI36411296403 all3green,17files byte-identical, owner351tests/
 1247assertions+typecheck/build. Selected-host native same-PID token rotation and
