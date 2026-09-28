@@ -23,6 +23,6 @@
     "Actual bot GET /channels/1544593083587493898 now HTTP200; everyone deny1024 preserved, 스태콧 role allow1024 only",
     "Two genuine human client interactions; no forged-context RPC or bot impersonation"
   ],
-  "forumDeployment": "Not proven by text-thread actor test. Guild currently has no Community feature/forums; bot lacks ManageChannels. Forum setup remains separate.",
+  "forumDeployment": "Separate Mac deployment enabled Community and created actual Stackot issue/PR forums. This text-thread actor probe alone is not S49/forum E2E proof.",
   "secrets": "Use owner-only existing credential input; never copy to worker or repository"
 }

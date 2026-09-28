@@ -1,0 +1,14 @@
+{
+  "agentId": "stackot",
+  "sessionKey": "agent:stackot:discord:channel:1554001284066189343",
+  "route": {
+    "accountId": "default",
+    "guildId": "1544592589666127953",
+    "conversationId": "channel:1554001284066189343",
+    "parentConversationId": "1544593083587493898"
+  },
+  "requesterId": "1112741808162734110",
+  "secondUserId": "534692447561842698",
+  "fixtureId": "6f028276-12ad-4d80-9418-614ecf8b9e50",
+  "syntheticPlan": true
+}

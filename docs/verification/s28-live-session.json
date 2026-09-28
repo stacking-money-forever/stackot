@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "key": "agent:stackot:discord:channel:1554001284066189343",
+  "sessionId": "270f72bb-36e8-43d2-a91c-d32e0ebf6917",
+  "entry": {
+    "sessionId": "270f72bb-36e8-43d2-a91c-d32e0ebf6917",
+    "lifecycleRevision": "87838fc4-7118-4d6a-bf11-0a84abf5be82",
+    "updatedAt": 1790573286907,
+    "sessionRoot": "/Users/justn/Library/Application Support/Stackot/state/workspace",
+    "label": "s28-actor-qa",
+    "delivery": {
+      "kind": "none"
+    },
+    "createdVia": "operator",
+    "createdAt": 1790573286907,
+    "spawnDepth": 0,
+    "modelOverrideSource": "default",
+    "parentSessionKey": "agent:stackot:main"
+  },
+  "runStarted": false,
+  "resolved": {
+    "modelProvider": "openai-codex",
+    "model": "gpt-5.6-sol"
+  }
+}
