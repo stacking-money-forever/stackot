@@ -169,6 +169,10 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
   (dirty/unpushed 보존 정책). `openclaw worktrees list`로 확인.
 # Selected host (2026-09-28)
 
+Optional protected per-forward hook credentials and unfinished B08 rotation
+drill are described in [token-rotation.md](token-rotation.md); static legacy
+credentials remain mandatory. Preparation does not establish live rotation.
+
 Real pending restore/native Gateway admission drill is recorded in
 [`docs/verification/restore.md`](../docs/verification/restore.md). Its evidence
 stops at Gateway run admission; it does not establish Discord/worker completion.
