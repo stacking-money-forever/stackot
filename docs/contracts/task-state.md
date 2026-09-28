@@ -31,6 +31,12 @@ than mistaking generic component registry entries for grants.
 
 ## Stored product shape and transitions
 
+S28 facade exposes native `cancelRequestedAt` beside snapshot revision/stateJson.
+It is native metadata, not a model-controlled task JSON flag. Callback eligibility
+checks it before reads/CAS, including after binding discovery. Receipt stores retain
+their existing policy. Cancellation predicate tests are synthetic; actual native
+cancel/worker lifecycle remains a runtime gate.
+
 The controller will own versioned stateJson containing task identity/repository,
 canonical requester ID, current plan/hash/version, allowed action, grant expiry,
 decision/consumption state, worktree lineage and observed run/receipt references.

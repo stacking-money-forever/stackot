@@ -48,3 +48,6 @@ jobs:
       # S35: fake external marker + real native inflight/receipt across restart.
       - run: python3 gateway/scripts/build-thread-probe.py
       - run: python3 docs/verification/s25-probe/run.py --plugin gateway/node_modules/s35-native-plugin --method s35probe.state --expect-thread --output "$RUNNER_TEMP/s35-restart.json"
+      # S28 bootstrap only: actual private plugin, no actor/Discord/model call.
+      - run: python3 gateway/scripts/build-plugin.py
+      - run: python3 docs/verification/s25-probe/run.py --plugin gateway/node_modules/stackot-plugin --plugin-agent stackot --method stackotgateway.health --expect-bootstrap --output "$RUNNER_TEMP/s28-bootstrap.json"

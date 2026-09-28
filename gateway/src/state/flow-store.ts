@@ -1,6 +1,6 @@
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 export type State = { [key: string]: Json };
-export type Snapshot = { revision: number; state: State };
+export type Snapshot = { revision: number; state: State; cancelRequestedAt?: number };
 
 export interface StateStore {
   read(): Promise<Snapshot>;
@@ -14,6 +14,7 @@ export interface NativeFlow {
   syncMode: string;
   status: string;
   revision: number;
+  cancelRequestedAt?: number;
   stateJson?: Json;
 }
 export interface ManagedFlows {
@@ -38,7 +39,8 @@ export class FlowStateStore implements StateStore {
     if (!Number.isSafeInteger(flow.revision) || flow.revision < 0 ||
         !flow.stateJson || typeof flow.stateJson !== "object" || Array.isArray(flow.stateJson))
       throw new Error("FLOW_STATE_INVALID");
-    return { revision: flow.revision, state: structuredClone(flow.stateJson) };
+    return { revision: flow.revision, state: structuredClone(flow.stateJson),
+      cancelRequestedAt: flow.cancelRequestedAt };
   }
 
   async compareAndSwap(revision: number, state: State): Promise<boolean> {

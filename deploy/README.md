@@ -73,8 +73,14 @@ callback payload의 actor 값을 그대로 전달하면 안 된다. 소비 성�
 실행 receipt가 아니므로, actual dispatch/응답 유실 대조 없이 작업 성공으로 표시하지 않는다.
 
 S28 helper/FlowCallbackRegistry는 native 호출의 actor 및 고정 route/message
-binding을 S27에 연결하는 준비 모듈이다. 별도 production plugin bootstrap과
-서버 route/flow discovery, 실제 승인 component producer는 아직 미완이다.
+binding을 S27에 연결한다. `python3 gateway/scripts/build-plugin.py`가 dev tools를
+제외한 native artifact를 `gateway/node_modules/stackot-plugin`에 만든다.
+설치 뒤 `plugins.entries.stackot-gateway.config.agentId`를 설정하고 plugin을
+명시적으로 enable해야 한다. 설정 없이 최초 설치하면 disabled일 수 있으므로
+`stackotgateway.health`의 실제 응답까지 확인한다. 이 readonly operator.admin
+RPC는 parameter를 받지 않으며 actor/context injection 경로가 아니다.
+native bootstrap은 실제 기동·재기동으로 확인했고 route/flow 선택은 합성 검증했다.
+실제 승인 component producer 및 두 사용자 검증은 아직 미완이다.
 이 빌드를 VM에 복사하거나 합성 context를 호출해도 Discord 실승인 검증이 되지 않는다.
 
 S35 thread receipt 저장 모듈도 `gateway/`에서 함께 검증한다. 저장소 루트에서

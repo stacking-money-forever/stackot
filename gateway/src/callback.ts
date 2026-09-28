@@ -5,7 +5,8 @@ export type CallbackBinding={token:string;accountId:string;guildId:string;conver
   repository:ApprovalRepository};
 // Resolver is server-owned and must recover bindings/native ownership durably.
 // This interface alone is not production registry or actor-authentication proof.
-export interface CallbackRegistry {resolve(token:string):Promise<CallbackBinding|undefined>}
+export type CallbackRoute={accountId:string;guildId:string;conversationId:string;parentConversationId:string};
+export interface CallbackRegistry {resolve(token:string,route?:CallbackRoute):Promise<CallbackBinding|undefined>}
 export interface InteractiveApi {registerInteractiveHandler(input:{channel:"discord";namespace:string;
   handler:(context:unknown)=>Promise<{handled:true}>}):void}
 type Context={channel:string;accountId:string;guildId:string;conversationId:string;
@@ -33,7 +34,8 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
           !snowflake(ctx.interaction.messageId)||ctx.interaction.namespace!==namespace||
           typeof ctx.interaction.data!=="string"||!token(ctx.interaction.payload))
         throw new Error("CALLBACK_CONTEXT_DENIED");
-      const binding=await registry.resolve(ctx.interaction.payload);
+      const binding=await registry.resolve(ctx.interaction.payload,{accountId:ctx.accountId,
+        guildId:ctx.guildId,conversationId:ctx.conversationId,parentConversationId:ctx.parentConversationId});
       if(!binding||binding.token!==ctx.interaction.payload||binding.accountId!==ctx.accountId||
           binding.guildId!==ctx.guildId||binding.conversationId!==ctx.conversationId||
           binding.parentConversationId!==ctx.parentConversationId||binding.messageId!==ctx.interaction.messageId)
