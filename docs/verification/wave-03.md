@@ -203,8 +203,6 @@ S26 pending-record restart. Owner independently ran task/target oracles and hash
 S26 ACCEPT is pending storage only; count **51/81**, M2 **5/14**. Actual actor,
 expiry eligibility/decision/consumption, worker and deployment remain open.
 
-## Corrected prerequisite audit (current access facts)
-
 ## S27 owner candidate — guard matrix and publication
 
 Task `9e2f11b3-8a0e-47d8-a613-642035ad1464`, healthy local.devin configured SWE-2
@@ -228,7 +226,19 @@ matrix fails against actual S26 module and labelled actor/replay/expiry mutants.
 Evidence S only for actor/guard behavior; actual Discord S28, execution S29+ and
 deployment/human gates remain. Publication/exact-SHA Linux CI before S27 ACCEPT.
 
-## Corrected prerequisite audit (continued)
+### S35 — ACCEPT after exact-SHA Linux restart success
+
+Retained task evidence commit `aa10a47`; integration
+`738b7649a9a128f0a9a3bd05fead2da5dec94706`. Exact-SHA CI
+[36370864421](https://github.com/stacking-money-forever/stackot/actions/runs/36370864421)
+completed success, Receiver and runtime-config including all three restart oracles,
+Gateway typecheck/22 tests/build. Owner actual native restart, synthetic post-create
+failure/reconciliation, source hashes and safety mutations are recorded above.
+S35 ACCEPT at row's synthetic external-dependency class, with bounded R native
+storage only. Live Discord auth/idempotency/deployment remain unproved. Count
+**52/81**, M2 **6/14**. S36 is dependency-ready; S27 has its separate CI gate.
+
+## Corrected prerequisite audit (current access facts)
 
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 
