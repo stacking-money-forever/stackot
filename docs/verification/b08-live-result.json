@@ -1,0 +1,87 @@
+{
+  "privateRoot": "/Users/justn/Library/Application Support/Stackot/state/b08-5a0808536d41",
+  "fakeProvider": false,
+  "trafficSource": "owner-controlled signed probes, not genuine GitHub-origin event",
+  "productionGatewayChanged": false,
+  "workerDispatched": false,
+  "outboundDelivery": false,
+  "gatewayProcessPid": 36766,
+  "receiverBundleSha256": "fd1f8e310333716a615fa2703c705034e8f5aa1f3529d168750a29d15ea89319",
+  "receiverProcessPid": 38385,
+  "passed": true,
+  "oldTokenAfterReload": 401,
+  "newTokenAfterReload": 200,
+  "newNativeRunId": "e0b8bfbb-f160-4068-a0a9-9caa50a77103",
+  "continuousIntakeSamples": [
+    {
+      "atMs": 1790583818635,
+      "status": 200
+    },
+    {
+      "atMs": 1790583818948,
+      "status": 200
+    },
+    {
+      "atMs": 1790583819157,
+      "status": 200
+    },
+    {
+      "atMs": 1790583819367,
+      "status": 200
+    },
+    {
+      "atMs": 1790583819570,
+      "status": 200
+    },
+    {
+      "atMs": 1790583819921,
+      "status": 200
+    },
+    {
+      "atMs": 1790583820124,
+      "status": 200
+    },
+    {
+      "atMs": 1790583820419,
+      "status": 200
+    },
+    {
+      "atMs": 1790583820689,
+      "status": 200
+    },
+    {
+      "atMs": 1790583821039,
+      "status": 200
+    },
+    {
+      "atMs": 1790583821386,
+      "status": 200
+    },
+    {
+      "atMs": 1790583821720,
+      "status": 200
+    },
+    {
+      "atMs": 1790583822069,
+      "status": 200
+    },
+    {
+      "atMs": 1790583822408,
+      "status": 200
+    },
+    {
+      "atMs": 1790583822755,
+      "status": 200
+    },
+    {
+      "atMs": 1790583823095,
+      "status": 200
+    }
+  ],
+  "receiverRestarted": false,
+  "gatewayRestarted": false,
+  "bufferedDeliveryId": "b08-control-74f5dbb1ded7ace3d7cbcb05",
+  "bufferedState": "delivered",
+  "oldAndNewValuesAbsentFromLogs": true,
+  "ownedListenersClosed": true
+}

@@ -27,6 +27,9 @@ jobs:
       - run: python3 deploy/macos/verify-migration.py
       - run: python3 -m unittest discover -s deploy -p test_alerts.py -v
       - run: python3 -m py_compile docs/verification/s47-probe.py
+      # Native B08 credentials/model auth stay host-owned. Linux receiver
+      # rotation/retry/filesystem oracle runs in receiver's S-only fake test.
+      - run: python3 -m py_compile docs/verification/b08-probe.py
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.4.0

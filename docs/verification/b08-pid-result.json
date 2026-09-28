@@ -1,0 +1,91 @@
+{
+  "privateRoot": "/Users/justn/Library/Application Support/Stackot/state/b08-c2ceb8d4ae55",
+  "fakeProvider": false,
+  "trafficSource": "owner-controlled signed probes, not genuine GitHub-origin event",
+  "productionGatewayChanged": false,
+  "workerDispatched": false,
+  "outboundDelivery": false,
+  "gatewayProcessPid": 42163,
+  "receiverBundleSha256": "fd1f8e310333716a615fa2703c705034e8f5aa1f3529d168750a29d15ea89319",
+  "receiverProcessPid": 42915,
+  "passed": true,
+  "oldTokenAfterReload": 401,
+  "newTokenAfterReload": 200,
+  "newNativeRunId": "5114d19b-c6e1-48ca-b53b-30feababb27d",
+  "continuousIntakeSamples": [
+    {
+      "atMs": 1790584036591,
+      "status": 200
+    },
+    {
+      "atMs": 1790584036839,
+      "status": 200
+    },
+    {
+      "atMs": 1790584037187,
+      "status": 200
+    },
+    {
+      "atMs": 1790584037501,
+      "status": 200
+    },
+    {
+      "atMs": 1790584037833,
+      "status": 200
+    },
+    {
+      "atMs": 1790584038079,
+      "status": 200
+    },
+    {
+      "atMs": 1790584038384,
+      "status": 200
+    },
+    {
+      "atMs": 1790584038587,
+      "status": 200
+    },
+    {
+      "atMs": 1790584038906,
+      "status": 200
+    },
+    {
+      "atMs": 1790584039140,
+      "status": 200
+    },
+    {
+      "atMs": 1790584039341,
+      "status": 200
+    },
+    {
+      "atMs": 1790584039688,
+      "status": 200
+    },
+    {
+      "atMs": 1790584040036,
+      "status": 200
+    },
+    {
+      "atMs": 1790584040237,
+      "status": 200
+    },
+    {
+      "atMs": 1790584040579,
+      "status": 200
+    },
+    {
+      "atMs": 1790584040914,
+      "status": 200
+    }
+  ],
+  "receiverRestarted": false,
+  "gatewayRestarted": false,
+  "actualGatewayPid": 42163,
+  "actualReceiverPid": 42915,
+  "listenerPidsUnchanged": true,
+  "bufferedDeliveryId": "b08-control-151183781c8de536461f12d9",
+  "bufferedState": "delivered",
+  "oldAndNewValuesAbsentFromLogs": true,
+  "oldAndNewValuesAbsentFromDatabaseErrors": true,
+  "ownedListenersClosed": true
+}

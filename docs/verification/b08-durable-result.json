@@ -1,0 +1,15 @@
+{
+  "privateRoot": "/Users/justn/Library/Application Support/Stackot/state/b08-2f36b0618ea3",
+  "fakeProvider": false,
+  "trafficSource": "owner-controlled signed probes, not genuine GitHub-origin event",
+  "productionGatewayChanged": false,
+  "workerDispatched": false,
+  "outboundDelivery": false,
+  "gatewayProcessPid": 49922,
+  "receiverBundleSha256": "fd1f8e310333716a615fa2703c705034e8f5aa1f3529d168750a29d15ea89319",
+  "receiverProcessPid": 50302,
+  "passed": false,
+  "errorType": "RuntimeError",
+  "error": "No persisted retired-token401 attempt before credential swap",
+  "ownedListenersClosed": true
+}
