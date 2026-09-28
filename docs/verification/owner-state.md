@@ -1,5 +1,29 @@
 # Owner continuation state
 
+B06 retry control now implemented in retained b06 checkout, source9876474/fa06592
+(fa065921921466778e861a863c7ec66f45cf4b81). New card intents have approve/deny/
+승인 재요청; old bound intents preserved. Native sender/route/message/requester
+gates precede private server issuer. Guarded reads/CAS verify expired pending
+parent, no cancellation/running/closed task, current full plan/hash/version.
+One durable request identity per generation; old approval/expiry unchanged,
+fresh pending normal24h TTL. Concurrent/replayed calls share identity/publication;
+unknown ack does not resend. Review987 found expired renewed-card success;
+fixed durable lineage traversal and pre/post-publication expiry recheck.
+Owner85tests/510assertions/typecheck/build pass; random identity mutation fails
+replay oracle. Exact CI36500405859 and final b06-renewal-fixed-review.log live.
+Not integrated/activated; live Gateway still priorb52524c expiry-copy package.
+Native retry action and H remain NOT ACCEPT; count57/81 unchanged.
+
+B09 gap analyzer branch now7f78e03/6a3188a/9918f0e/bd01c12. Latest
+bd01c12dbcfbe8269c1038b685200e3819c12ce8 requires BOTH sample clocks to show
+coverage and includes terminal clock anomaly intervals; legacy terminal wall
+missing stays unknown. Ready/status failures separate. Future collector emits
+terminal wall timestamp, old active collector untouched. Owner12Python tests
+pass; actual2sec new-collector smoke+analyzer sees known terminal coverage,
+betaAcceptance=false. Exact9918 CI36499198637 allgreen; latest CI36500470123
+live. Final review remains to run after current B06 review finishes (serial).
+Actual legacy baseline's large wall gaps preserved; no continuous beta claim.
+
 2026-09-29 B06 actual R expiry response verified. Sourceb52524c CI36414714953
 all3green, final review clean. QA plugin10file hashes verified/activated with
 new fixtureb15ef5f0, actual10000ms TTL, toolsdeny*/hooksfalse. Initial launchctl
