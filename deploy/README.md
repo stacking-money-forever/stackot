@@ -72,6 +72,11 @@ context는 향후 신뢰된 서버 callback adapter가 만들어야 하며 메�
 callback payload의 actor 값을 그대로 전달하면 안 된다. 소비 성공의 operation ID는
 실행 receipt가 아니므로, actual dispatch/응답 유실 대조 없이 작업 성공으로 표시하지 않는다.
 
+S28 helper/FlowCallbackRegistry는 native 호출의 actor 및 고정 route/message
+binding을 S27에 연결하는 준비 모듈이다. 별도 production plugin bootstrap과
+서버 route/flow discovery, 실제 승인 component producer는 아직 미완이다.
+이 빌드를 VM에 복사하거나 합성 context를 호출해도 Discord 실승인 검증이 되지 않는다.
+
 S35 thread receipt 저장 모듈도 `gateway/`에서 함께 검증한다. 저장소 루트에서
 `python3 gateway/scripts/build-thread-probe.py` 뒤 같은 restart runner에
 `--plugin gateway/node_modules/s35-native-plugin --method s35probe.state --expect-thread`를

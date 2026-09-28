@@ -1,0 +1,52 @@
+{
+  "artifacts": [
+    {
+      "reference": {
+        "bytes": 1378,
+        "digest": "sha256:bc3a7bbafd69d0b2f002ee98dfe88f063eb1f74b5c295a9b045ed6dba2529435",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/bc/3a7bbafd69d0b2f002ee98dfe88f063eb1f74b5c295a9b045ed6dba2529435"
+      },
+      "text": "**Corrected predicate note (S28)**\n\n`interaction.data` and `payload` are **strings**, not objects — `interaction.data.action` does not exist. The action is resolved by parsing/looking up the token in the trusted server-side token registry, never from claimed callback fields.\n\n**Invocation-origin boundary:** a valid token plus a claimed sender or auth-shaped object does **not** authenticate the origin. Trusted origin requires the private plugin handler registered through the native API, invoked via real native ingress. No public HTTP/RPC method may accept caller-supplied context objects and treat them as native. Object shape, TS branding, or an opaque token alone is not proof of authentication.\n\n**Approval predicate (unchanged actor checks):**\n- `auth.isAuthorizedSender === true`\n- native `senderId` strictly equals the S27-stored requester\n- real native `account`/`guild`/`conversation`/`parent`/`message` identifiers match the registry entry for the resolved token\n- expiry, plan, and replay predicates exactly as specified in S27\n\nBoth independent actor checks must hold; neither substitutes for the other.\n\nThe actual two-user runtime gate remains open: it can only be satisfied by a genuine second user's native interaction. Synthetic injection — fabricated context objects, branded payloads, or replayed tokens through public surfaces — cannot satisfy it.\n"
+    },
+    {
+      "reference": {
+        "bytes": 1378,
+        "digest": "sha256:bc3a7bbafd69d0b2f002ee98dfe88f063eb1f74b5c295a9b045ed6dba2529435",
+        "media_type": "text/x-brgr-stdout",
+        "store_relative_path": "artifacts/sha256/bc/3a7bbafd69d0b2f002ee98dfe88f063eb1f74b5c295a9b045ed6dba2529435"
+      },
+      "text": "**Corrected predicate note (S28)**\n\n`interaction.data` and `payload` are **strings**, not objects — `interaction.data.action` does not exist. The action is resolved by parsing/looking up the token in the trusted server-side token registry, never from claimed callback fields.\n\n**Invocation-origin boundary:** a valid token plus a claimed sender or auth-shaped object does **not** authenticate the origin. Trusted origin requires the private plugin handler registered through the native API, invoked via real native ingress. No public HTTP/RPC method may accept caller-supplied context objects and treat them as native. Object shape, TS branding, or an opaque token alone is not proof of authentication.\n\n**Approval predicate (unchanged actor checks):**\n- `auth.isAuthorizedSender === true`\n- native `senderId` strictly equals the S27-stored requester\n- real native `account`/`guild`/`conversation`/`parent`/`message` identifiers match the registry entry for the resolved token\n- expiry, plan, and replay predicates exactly as specified in S27\n\nBoth independent actor checks must hold; neither substitutes for the other.\n\nThe actual two-user runtime gate remains open: it can only be satisfied by a genuine second user's native interaction. Synthetic injection — fabricated context objects, branded payloads, or replayed tokens through public surfaces — cannot satisfy it.\n"
+    }
+  ],
+  "result": {
+    "artifacts": [
+      {
+        "bytes": 1378,
+        "digest": "sha256:bc3a7bbafd69d0b2f002ee98dfe88f063eb1f74b5c295a9b045ed6dba2529435",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/bc/3a7bbafd69d0b2f002ee98dfe88f063eb1f74b5c295a9b045ed6dba2529435"
+      },
+      {
+        "bytes": 1378,
+        "digest": "sha256:bc3a7bbafd69d0b2f002ee98dfe88f063eb1f74b5c295a9b045ed6dba2529435",
+        "media_type": "text/x-brgr-stdout",
+        "store_relative_path": "artifacts/sha256/bc/3a7bbafd69d0b2f002ee98dfe88f063eb1f74b5c295a9b045ed6dba2529435"
+      }
+    ],
+    "attempt_id": "924407c1-a912-41ae-9c2c-24cf1a2bfe29",
+    "error": null,
+    "outcome": "candidate",
+    "result_id": "6831a796-4cf2-4e53-bc62-1e11654a3ff6",
+    "revision": 2,
+    "schema": "brgr/v1",
+    "task_id": "2e5131a6-2e91-42a8-8dc0-db404d806b75",
+    "unresolved_effects": []
+  },
+  "route_observation": {
+    "effort": null,
+    "effort_source": "unavailable",
+    "model": null,
+    "model_source": "unavailable"
+  }
+}

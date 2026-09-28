@@ -1,0 +1,44 @@
+{
+  "state": "terminal",
+  "task": {
+    "acceptance_criteria": [
+      "Correct string payload/action source and native-call-origin boundary; preserves two independent actor checks and actual two-user gate; <=200 words, no tools or invented SDK fields."
+    ],
+    "artifact_contract": {
+      "max_bytes": 8388608,
+      "media_type": "text/plain"
+    },
+    "budget": {
+      "deadline_seconds": 180,
+      "max_attempts": 2
+    },
+    "create_request_id": "revise-2e5131a6-2e91-42a8-8dc0-db404d806b75-2",
+    "evidence": {
+      "capture_diff": false,
+      "capture_logs": true,
+      "files": []
+    },
+    "instructions": {
+      "forward_criteria": true,
+      "role": [],
+      "scope": [
+        "stdout-only supplied-facts S28 review, no tools or mutation"
+      ]
+    },
+    "objective": "No tools. Correct only two points, <=200 words: native interaction.data and payload are STRINGS, not objects, so interaction.data.action is nonexistent; action is resolved from trusted server token registry, not claimed callback fields. Token plus claimed sender/auth-shaped object does NOT authenticate invocation origin. Trusted origin is the private plugin handler registered through native API and real native ingress; no public HTTP/RPC method may accept caller-supplied context objects as native. Shape/TS branding/opaque token alone are not proof of authentication. Retain auth.isAuthorizedSender===true AND native senderId equals S27 stored requester; compare real native account/guild/conversation/parent/message to registry; exact expiry/plan/replay predicates remain S27. Actual two-user runtime gate stays open; synthetic injection cannot satisfy it. Return corrected predicate note only, no architecture/new APIs/schema or execution/source claims.",
+    "owner_id": "codex:01a0e54a-250b-7882-b1c7-143cfc556e1d",
+    "required_capabilities": [
+      "completion"
+    ],
+    "revision": 2,
+    "route": {
+      "harness_id": "local.devin",
+      "requested_effort": null,
+      "requested_model": null
+    },
+    "schema": "brgr/v1",
+    "task_id": "2e5131a6-2e91-42a8-8dc0-db404d806b75",
+    "workspace": "/Users/justn/Library/Application Support/brgr/worktrees/stackot/2e5131a6-r2/"
+  },
+  "workspace_present": true
+}
