@@ -1,5 +1,18 @@
 # Owner continuation state
 
+S47 current: real final restore/drain passed on actual host/pinned versions,
+actual native HTTP200+runId correlation, receiver restart delivered exclusion,
+replay rejection and owned listener closure. Final receipt s47-final-result.json;
+code260bb3b reviewed with no actionable regression. Observer fake mutation fails;
+portable lifecycle fixture executes real receiver/SQLite/process/restart/cleanup
+but explicitly S/fakeProvider=true, separate from live D. Target owner replayed
+both fixtures and integrated source ea597ea. Task CI36392488347 and integration
+CI36392824869 are authoritative in_progress on last live read; exact outcomes
+must be inspected before S47 acceptance. No worker/Discord/model-completion or
+cross-restart native-cache exactly-once claim. Count remains55/81. Brgr advice
+f210ff20 rejected twice; no active worker wait. Native-owned probe processes are
+stopped; task worktree/private snapshots and states retained.
+
 Next independent row S47 is launched: retained checkout stackot-s47-20260928,
 base1e5559b, branchcodex/stackot-s47-20260928, rootw8Q:p1. Launch contract8ff8781
 committed/pushed. Brgrf210ff20-b80b-466b-a056-efffc1f0d786 local.devin no-tool
