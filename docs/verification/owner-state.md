@@ -13,7 +13,9 @@ in logs/errors, owned cleanup passed. Source895cfbe exact CI36396368749 green.
 Added fake-Gateway S-only regression passes on current code and fails against
 pre-fix1a4bd38. Full suite351pass/1247assertions; typecheck/build clean.
 Evidence/procedure/test26703cf pushed; exact Linux CI36410587906 in progress.
-Final independent review b08-built-review.log still in progress. No integration
+Final independent exact-commit review b08-26703cf-review.log in progress;
+prior uncommitted review saw the work committed during its run and is not the
+final gate. No integration
 or product acceptance/count increment before those gates. Count remains56/81.
 
 B10 refreshed concrete app-bound main3checks/admin enforcement/scanning plan
