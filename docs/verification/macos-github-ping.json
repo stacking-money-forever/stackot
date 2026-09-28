@@ -1,0 +1,12 @@
+{
+  "deliveryId": 3845228667043053568,
+  "guid": "57fa5622-baff-11f1-84d1-6110540e837a",
+  "statusCode": 200,
+  "responsePayload": "ignored",
+  "event": "ping",
+  "source": "actual GitHub Hookshot",
+  "hmacRequired": true,
+  "workerDispatched": false,
+  "hookActive": false,
+  "deployedReceiverSHA": "4915f5b108aca7b05297009c6bc6675ca8491ca5"
+}

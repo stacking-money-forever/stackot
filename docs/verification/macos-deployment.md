@@ -72,3 +72,20 @@ System launchd migration is fully prepared/dry-run validated for four owned
 labels, executing as justn. `sudo -n true` returned "a password is required";
 root installation needs user-local administrator authentication. No privileged
 write or reboot occurred. Current GUI jobs remain running and login-dependent.
+
+Actual GitHub repository hook686936824 is registered inactive with only the six
+receiver-supported events. Explicit ping204 produced actual Hookshot delivery
+57fa5622-baff-11f1-84d1-6110540e837a: HTTP200, bodyignored, through the public HMAC
+receiver. Safe hook/delivery receipts are macos-github-{hook,deliveries,ping}.json.
+This proves real GitHub→HTTPS→signature intake only; ping deliberately does not
+create a thread or worker and does not establish S49. The hook remains inactive
+until the unfinished guarded controller pipeline is ready.
+
+Second independent review found system bootstrap failure could strand stopped
+login jobs. Owner added reverse-order rollback, native system-job discovery
+(even after partial registration), preserved failed plists and login restoration.
+Portable S fixture simulates the third bootstrap failing after registration:
+old f9c5aa7 fails with three GUI jobs absent; corrected script restores all four,
+has no competing system supervisor and removes retry collisions while retaining
+three failure plists. Success fixture has four system jobs and four preserved
+disabled login plists. This is S-only; actual privileged installation remains open.
