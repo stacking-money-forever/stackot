@@ -23,6 +23,6 @@
     "Owner may allow ViewChannel for 스태콧 in claw-control while retaining everyone denial; bot cannot edit ACL itself",
     "Two genuine human client interactions; no forged-context RPC or bot impersonation"
   ],
-  "forumDeployment": "Not proven by text-thread actor test. Guild currently has no Community feature/forums; bot lacks ManageChannels. Forum setup remains separate.",
+  "forumDeployment": "Separate Mac deployment enabled Community and created actual Stackot issue/PR forums. This text-thread actor probe alone is not S49/forum E2E proof.",
   "secrets": "Use owner-only existing credential input; never copy to worker or repository"
 }
