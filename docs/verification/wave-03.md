@@ -1,5 +1,16 @@
 # Wave 03 — resume real runtime verification (2026-09-28)
 
+2026-09-28 permission continuation: user explicitly asked Aside to fix the exact
+claw-control ACL and completed their personal Discord login. Owner used serial
+Aside UI channel-settings permission selection to add 스태콧 role access. Live
+bot read changed HTTP403/code50001 to HTTP200. Actual overwrite after saving:
+everyone allow0/deny1024 unchanged; role1544615847639646303 allow1024/deny0 added.
+Channel remains private, unsynchronized only for this role exception; no category
+or other channel change. This is non-isolated account-settings evidence, not a
+synthetic/real actor approval. Existing QA thread/card creation consent remains.
+Publisher SHA c9972189a8670d0d834a213860ba242844a07e11 / CI36378905062 success.
+No S28 acceptance/count change; next perform actual native actor probe.
+
 Understood as: resume Stackot completion, resolve routine compatibility and implementation choices autonomously, and preserve row-level owner verification plus L/S/R/D/H evidence boundaries.
 
 Baseline: `fd5ff804a26931adb338b11a9a2e96e451772cb9`. Accepted count remains 47/81 until a new row has met its oracle and owner acceptance requirements.

@@ -1,5 +1,13 @@
 # Owner continuation state
 
+Latest ingress steering: user instructed Aside to fix claw-control access and
+completed actual Discord login. Owner serial Aside UI added only 스태콧 role
+ViewChannel allow1024. Bot GET now HTTP200; everyone deny1024 preserved and UI
+still private. Access blocker resolved; named QA thread/card approval persists.
+Next actual thread/card publication and two-user native event oracle. No actor
+event/QA acceptance from permission change. c9972189a8670d0d834a213860ba242844a07e11
+CI36378905062 succeeded. S28/full goal still open; accepted count remains54/81.
+
 Last updated 2026-09-28. The latest continuation is the section below; historical wave sections are retained as evidence.
 
 ## Current continuation — wave 03

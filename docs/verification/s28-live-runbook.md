@@ -1,5 +1,14 @@
 # S28 real-actor probe
 
+Latest access result (supersedes blocker history below): user explicitly requested
+Aside to change the permission and completed the personal Discord login. Owner
+used one serial, non-isolated Aside UI flow to add the 스태콧 role to claw-control.
+Bot API now returns HTTP200; the only added role overwrite is allow1024/deny0,
+while everyone deny1024 remains. Channel remains private; category/other channels
+were not changed. This is permission readback, not an actual approval-actor probe.
+Proceed with the already-authorized named QA thread/card; no repeat permission
+request. Recheck channel-specific send/thread access before creation as needed.
+
 This is a native callback actor test with a synthetic no-op plan. It is not
 coding, push, PR, deployed, or whole-forum-workflow evidence. The retained JSON
 plan names the exact existing guild/channel and two real members observed via

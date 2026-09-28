@@ -1,6 +1,6 @@
 {
   "scope": "S28 actual two-user native callback probe; no coding/push/PR/deploy",
-  "approvalState": "user-approved-thread-and-message; blocked-on-bot-channel-access",
+  "approvalState": "user-approved-thread-and-message; bot-channel-access-fixed-via-Aside",
   "guildId": "1544592589666127953",
   "parentChannelId": "1544593083587493898",
   "parentChannelName": "claw-control",
@@ -19,8 +19,8 @@
   ],
   "remainingPrerequisites": [
     "Creation/publication authorized by user 2026-09-28; no repeat confirmation required",
-    "Actual GET /channels/1544593083587493898 returns 403/code50001 Missing Access; category/channel deny ViewChannel to everyone, bot role 스태콧 has no allow override",
-    "Owner may allow ViewChannel for 스태콧 in claw-control while retaining everyone denial; bot cannot edit ACL itself",
+    "User requested Aside permission fix, completed personal Discord login; channel-specific role allow1024 saved through UI",
+    "Actual bot GET /channels/1544593083587493898 now HTTP200; everyone deny1024 preserved, 스태콧 role allow1024 only",
     "Two genuine human client interactions; no forged-context RPC or bot impersonation"
   ],
   "forumDeployment": "Not proven by text-thread actor test. Guild currently has no Community feature/forums; bot lacks ManageChannels. Forum setup remains separate.",
