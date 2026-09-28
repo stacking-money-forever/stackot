@@ -20,7 +20,7 @@ def render(root, tunnel_id, credential, bun, caddy, cloudflared):
     admin off
     auto_https off
 }
-http://127.0.0.1:9378 {
+http://:9378 {
     bind 127.0.0.1
     @webhook path /stackot/webhook
     handle @webhook {

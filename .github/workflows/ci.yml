@@ -5,6 +5,27 @@ on:
   pull_request:
 
 jobs:
+  deployment-edge:
+    # Bounded live evidence only on the explicitly authorized deployment branch.
+    if: github.ref == 'refs/heads/codex/stackot-local-deploy-20260928'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Address freshly observed from this dedicated tunnel on 2026-09-28.
+      - run: python3 deploy/macos/verify-public.py --origin-ip 210.180.194.253 --output "$RUNNER_TEMP/stackot-edge.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stackot-deployment-edge
+          path: ${{ runner.temp }}/stackot-edge.json
+
+  ingress-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y caddy
+      - run: python3 deploy/macos/verify-ingress.py
+      - run: python3 -m py_compile deploy/macos/render.py deploy/macos/gateway-run.py deploy/macos/probe.py
+
   receiver:
     runs-on: ubuntu-latest
     defaults:

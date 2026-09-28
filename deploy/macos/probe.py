@@ -13,6 +13,14 @@ import urllib.request
 
 
 def get(url, method='GET'):
+    if url.startswith('https://stackot.justn.me'):
+        argv = ['curl', '--silent', '--show-error', '--max-time', '10',
+                '--output', '/dev/null', '--write-out', '%{http_code}',
+                '--request', method]
+        if method == 'POST':
+            argv += ['--data-binary', '{}']
+        argv.append(url)
+        return int(subprocess.check_output(argv, text=True, timeout=12))
     try:
         with urllib.request.urlopen(urllib.request.Request(url, data=b'{}' if method == 'POST' else None,
                                                            method=method), timeout=10) as response:
