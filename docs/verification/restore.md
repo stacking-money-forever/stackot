@@ -58,6 +58,11 @@ python3 docs/verification/s47-probe.py --runtime-root '<private runtime root>' \
   --delivery-id 65cd5010-bb09-11f1-9c73-fb0e8f26c548 --output '<safe receipt path>'
 ```
 
+The first review command was issued after commit with --uncommitted and covered
+only an untracked duplicate failure receipt; owner did not treat it as code review.
+Correct independent review targets exact commitf3a7152. The duplicate failure
+receipt is represented by committed s47-first-failure.json, not a new oracle.
+
 S47 is NOT ACCEPT until owner review and exact-code Linux CI pass. Snapshot and
 worktree must be retained. The production webhook remains inactive; this does not
 activate the unfinished controller/worker pipeline.

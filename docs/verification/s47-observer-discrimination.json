@@ -1,0 +1,6 @@
+{
+  "mutation": "replace network response with synthetic success",
+  "oracle": "requires unchanged response and exactly one actual network request",
+  "exit": 1,
+  "evidenceClass": "S"
+}
