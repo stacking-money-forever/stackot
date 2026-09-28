@@ -28,6 +28,7 @@ jobs:
       - run: python3 -m unittest discover -s deploy -p test_alerts.py -v
       # B09 collector bookkeeping only; synthetic short cases are not 24h D proof.
       - run: python3 -m unittest discover -s deploy -p test_soak.py -v
+      - run: python3 -m unittest discover -s deploy -p test_soak_analysis.py -v
       - run: python3 -m py_compile deploy/observe-soak.py
       - run: python3 -m py_compile docs/verification/s47-probe.py
       - uses: oven-sh/setup-bun@v2
