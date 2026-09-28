@@ -3,6 +3,8 @@ from pathlib import Path
 import tempfile
 import unittest
 import json
+import subprocess
+import sys
 
 spec = importlib.util.spec_from_file_location('alerts', Path(__file__).with_name('alerts.py'))
 a = importlib.util.module_from_spec(spec)
@@ -65,6 +67,31 @@ class Alerts(unittest.TestCase):
         self.exercise(report, state, 1090000, send)
         self.assertEqual(len(nonces), 2)
         self.assertEqual(nonces[0], nonces[1])
+
+    def test_retry_refreshes_observed_queue_values(self):
+        content = []
+        def send(channel, body, nonce):
+            content.append(body)
+            if len(content) == 1: raise a.RateLimited(90000)
+            return {'channel_id': channel, 'id': '345678901234567890'}
+        state = {}
+        self.exercise({'queue': {'pending': 2, 'oldestPendingAgeMs': 300000}}, state, 1000000, send)
+        self.exercise({'queue': {'pending': 7, 'oldestPendingAgeMs': 600000}}, state, 1090000, send)
+        self.assertIn('7건', content[-1]);self.assertIn('600초', content[-1])
+
+    def test_install_refusal_cannot_mutate_active_script_or_create_rules(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'runtime'; login = Path(directory) / 'login'
+            for path in [root / 'config', root / 'bin', root / 'state', root / 'launchd', login]:path.mkdir(parents=True)
+            (root / 'config/receiver.json').write_text(json.dumps({'host':'127.0.0.1','port':9377,'ciAlertsChannelId':'123','discordGuildId':'234'}))
+            script = root / 'bin/alerts.py';script.write_text('owner program')
+            (login / 'me.justn.stackot.alerts.plist').write_text('owner login job')
+            result = subprocess.run([sys.executable, str(Path(__file__).parent / 'macos/install-alerts.py'),
+                                     '--root', str(root), '--login-dir', str(login)], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(script.read_text(), 'owner program')
+            self.assertFalse((root / 'config/alerts.yaml').exists())
+            self.assertFalse((root / 'config/alerts-target.json').exists())
 
     def test_malformed_source_does_not_become_an_alert(self):
         for q in [{'pending': True, 'oldestPendingAgeMs': 900000}, {'pending': 1, 'oldestPendingAgeMs': None},
