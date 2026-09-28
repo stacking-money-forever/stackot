@@ -27,3 +27,12 @@ and Linux CI remain pending. No row acceptance or count change.
 Remaining actual beta oracle: representative bounded delivery workload with
 linked real receipts, actual24h elapsed, measured SLO/recovery and gaps/revision
 audit. Host baseline alone cannot provide model/Discord/worker observations.
+
+Fixed collector sourcebc3abd980ffc8c14862fc16300f912f420640998, SHA256
+22c75fe7035dfd50221aac41792ae31ef3961585997e642a38a1c7f17a60ece4.
+Final independent base9dceb72 review found no actionable regression;6tests passed.
+Linux run36411778117 receiver/ingress-contract passed; runtime-config pending.
+Actual fixed24h baseline PID54300/session61836 remains live at private
+state/b09-baseline-fixed-20260928.jsonl;3samples through elapsed120s show ready,
+bundle unchanged, pending0/deadLetter3/delivered0 and Gateway false as expected.
+This is measured partial baseline, never completed24h or B09 acceptance.
