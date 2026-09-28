@@ -1,0 +1,18 @@
+{
+  "original": {
+    "flowId": "dd290a5f-c82a-41a6-a53d-90bafd10db01",
+    "revision": 10,
+    "status": "approved",
+    "requesterId": "1112741808162734110",
+    "expiresAt": 1790574200287
+  },
+  "expiry": {
+    "flowId": "a5ed17ba-cedb-45aa-a502-bd3e8fdf9a49",
+    "revision": 9,
+    "status": "pending",
+    "requesterId": "1112741808162734110",
+    "expiresAt": 1790594946107
+  },
+  "readOnlyNativeSqlite": true,
+  "bothStatesPreserved": true
+}
