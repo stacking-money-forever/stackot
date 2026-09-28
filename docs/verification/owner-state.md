@@ -1,5 +1,29 @@
 # Owner continuation state
 
+2026-09-29 B06 actual R expiry response verified. Sourceb52524c CI36414714953
+all3green, final review clean. QA plugin10file hashes verified/activated with
+new fixtureb15ef5f0, actual10000ms TTL, toolsdeny*/hooksfalse. Initial launchctl
+bootstrap exit5 rolled back and original health/fixture restored; registered
+kickstart activation then succeeded. Real Aside requester111 click on actual
+message1554092550556614667 reached native auth=true/exact message, denied expiry
+and showed specific private Korean guidance. Pending/revision9 unchanged.
+Raw credentials/context never exported; safe b06-live-* receipts retained.
+Original S28 approved/revision10 and new expiry pending/revision9 independently
+confirmed in actual read-only native SQLite. Later selector health timeout and
+host freeze/timing logs retained; current authenticated Gateway health is true.
+Integration1148936 CI36498450981 all3green,22files byte-identical,76tests/455checks
+and fresh QA-first2tests/25checks/typecheck/build pass. Native receipts53ae9d8
+pushed, CI36498668298 live. B06 still NOT ACCEPT: usable retry path/H missing.
+Agent-operated personal-session clicking remains R, never H. Count57/81.
+
+B09 active baseline PID54300 shows substantial wall/monotonic divergence:
+77samples wall45665s/mono4568s, max wall gap7116.76s/max mono60.15s,13 divergent
+intervals. Cannot call this continuous24h beta coverage. Collector unchanged;
+read-only analyzer in b09 branch7f78e03/6a3188a adds dual-clock and separately
+scoped sample/terminal coverage, status/readiness failures. Five tests pass.
+Final gap reviewb09-gap-fixed-review.log and exact CI36498831644 live. Not yet
+integrated/accepted; real representative workload/SLO/recovery remain absent.
+
 B06 source preparation in stackot-b06-20260928/rootw8Z:p1, launch29f31aa,
 latestb52524c6852a71795004c384505901556cb89097. Native auth/binding/requester
 checks precede local typed expiry classification; exact pending reconciliation
