@@ -26,3 +26,21 @@ Its genuine pending-grant click is still missing. Current fixture is already
 approved; a later wrong-actor-first oracle must use a fresh immutable fixture,
 never reset this grant or claim replay denial proves requester enforcement.
 No S28 acceptance, no worker/push/PR integration, accepted count remains54/81.
+
+## Owner continuation — 2026-09-28 authenticated UI recheck
+
+User again instructed the owner to perform the clicks. The owner opened the
+existing card in Aside, confirmed the active account display as 황준혁 /
+justn_hyeok, opened the profile menu and then the actual `계정 관리` dialog.
+The dialog lists only `justn_hyeok 활성 계정` and `계정 추가하기`; no second
+stored authenticated Discord account is available through this UI. No logout,
+credential extraction, new-account creation or impersonated callback occurred.
+The UI's locator click initially timed out because a promotional dialog
+interfered; after closing that dialog, the actual account-management button
+worked. This distinguishes the resolved UI obstruction from the remaining
+authentication dependency.
+
+The already-approved card was not reset or clicked again. The missing oracle
+is still a genuine second principal's denial against a fresh pending fixture,
+followed by the requester's approval. S28 remains NOT ACCEPT; this account-state
+observation does not add an actor event or human QA evidence.
