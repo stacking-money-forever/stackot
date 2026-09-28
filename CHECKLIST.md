@@ -10,7 +10,7 @@
 
 ## 현재 상태 (2026-09-28 기준)
 
-- 원장 81행 중 **55행 수용, 26행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 7/12, M4 0/4, M5 4/11, C 0/4.
+- 원장 81행 중 **56행 수용, 25행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 8/12, M4 0/4, M5 4/11, C 0/4.
 - receiver 코드 기준선: `bun test` 346 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, CI 매 푸시 green.
 - 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **Mac 배포의 D 증거는 확보**, 전체 배포 행 수용과 H(사람) 증거는 아직 없다. 공개 HTTPS/서명 거부·외부 내부포트 차단·4개 서비스 crash recovery 근거: `docs/verification/macos-deployment.md`, `macos-recovery.json`, `macos-edge-receipt/stackot-edge.json`. 기존 R 계약 근거: `wave-03.md`, `openclaw-contract.md`.
 
@@ -63,7 +63,7 @@
 - [x] 공개 확인: `https://stackot.justn.me/stackot/webhook` unsigned POST **401**, 다른 경로404. 독립 GitHub Linux 러너 증거 확보.
 - [ ] **S44** 4개 서비스 SIGKILL 후 자동 복구 통과; 실제 reboot 무개입 복귀는 미검증. 현재 GUI LaunchAgents는 사용자 로그인 필요.
 - [ ] **S45** Cloudflare edge HTTPS만 공개; 독립 러너에서 origin9377·9378·18789 도달 불가 검증. S44 선행 수용은 미완.
-- [ ] **S47** 스냅샷으로 빈 환경에서 pending 복원 drill (`backup.ts` + `replay.ts`)
+- [x] **S47** 실제 GitHub pending 스냅샷 → 빈 호스트 환경 → 실제 Gateway200/runId 전달 → 재시작 delivered 유지·replay 거부·프로세스 종료. `docs/verification/restore.md`; 정확 SHA Linux 수명주기 CI 통과. 모델·Discord·worker 완료 증거는 별도.
 - [ ] **S48** 이전 바이너리 + 현재 DB로 rollback drill
 - [ ] **S40** threat model + 라이브 prompt-injection tool-denial probe
 

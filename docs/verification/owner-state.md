@@ -1,5 +1,13 @@
 # Owner continuation state
 
+Latest S47 ACCEPT: genuine pending empty restore -> actual native Gateway200/runId
+-> SQL delivered -> restart/replay exclusion -> closed listeners. Source260bb3b
+CI36392488347 and integrationea597ea CI36392824869 succeeded; owner target
+fixtures and safe D receipt verified. Count56/81 (M3 8/12). Native cache is still
+in-process; no model/Discord/worker or admit-to-commit exactly-once claim. Detailed
+receipt restore.md. B10 live readback remains disabled/unprotected; concrete
+main protection/security apply plan is being refreshed in retained B10 worktree.
+
 S47 current: real final restore/drain passed on actual host/pinned versions,
 actual native HTTP200+runId correlation, receiver restart delivered exclusion,
 replay rejection and owned listener closure. Final receipt s47-final-result.json;

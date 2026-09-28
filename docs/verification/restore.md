@@ -76,6 +76,13 @@ unchanged source bundle, genuine empty restore and native admission, restart
 exclusion and both closed listeners. Linux source verification is CI36392488347;
 the added lifecycle fixture runs the orchestration path with explicit S receipt.
 
-S47 is NOT ACCEPT until owner review and exact-code Linux CI pass. Snapshot and
+**Owner ACCEPT:** exact task260bb3b CI36392488347 succeeded; integrated
+ea597eab1d3006f3b3c0dc72208a66a9ddb9fa52 CI36392824869 succeeded in receiver,
+runtime-config and ingress-contract. Owner target fixtures re-ran; real final
+receipt/software versions/unchanged snapshot/source bundle/native admission and
+closure inspected. Independent review of260bb3b found no actionable regression.
+S47 accepted, total56/81 (M3 8/12); full goal remains incomplete.
+
+Snapshot and
 worktree must be retained. The production webhook remains inactive; this does not
 activate the unfinished controller/worker pipeline.

@@ -413,6 +413,20 @@ The earlier blanket environmental blocker is superseded by current observations:
 Existing secrets are not copied into a worker checkout or recorded here. The missing runtime is being prepared in repository scope instead of being treated as a user-only prerequisite.
 # Mac deployment / real requester continuation — 2026-09-28
 
+## S47 ACCEPT — genuine empty restore/native handoff
+
+Task260bb3b CI36392488347 and integrationea597ea CI36392824869 succeeded.
+Actual selected Mac/pinned Node24.21.0/OpenClaw2026.9.6/deployed receiver bundle,
+genuine source65cd5010 pending VACUUM snapshot, identical empty restore, observed
+native HTTP200/runId, SQL delivered preservation/replay rejection and closed
+owned listeners all inspected. Network observer supplies no responses; fake
+provider mutation fails transparency test. Portable Linux lifecycle fixture is
+explicit S and executes receiver/SQLite/process/restart/cleanup; not D source.
+Two live failures retained; readiness and native response correlation corrected.
+Independent exact-code review clean; target owner fixtures passed. Native header
+cache loss/crash ambiguity remains S35/S36/S52 scope, no worker/Discord/model
+completion claim. Receipt restore.md/s47-final-result.json. Total56/81.
+
 ## B04 ACCEPT — genuine aged-pending operator notification
 
 Retained task stackot-b04-20260928/base38901cb. Brgr35d15b3a advice rejected
