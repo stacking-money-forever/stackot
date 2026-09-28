@@ -1,0 +1,6 @@
+{
+  "id": "s26-probe",
+  "name": "S26 approval storage probe",
+  "activation": { "onStartup": true },
+  "configSchema": { "type": "object", "additionalProperties": false, "properties": {} }
+}

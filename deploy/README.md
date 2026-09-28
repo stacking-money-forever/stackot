@@ -59,6 +59,14 @@ spawn이 불가하기 때문이다. 다른 에이전트의 non-main 세션은 �
 미구현이다 — generic 버튼은 서버 측 가드가 아니므로 실운영 전 독립 검증이
 필요하다.
 
+S26의 Gateway-side pending 승인 저장 모듈은 `gateway/`에 있다. 해당 디렉터리에서
+`bun install --frozen-lockfile`, `bun run typecheck`, `bun test`, `bun run build`로
+검증한다. `python3 gateway/scripts/build-native-probe.py` 뒤 저장소 루트에서
+`python3 docs/verification/s25-probe/run.py --plugin gateway/node_modules/s26-native-plugin
+--method s26probe.state --expect-approval --output gateway/node_modules/s26-restart.json`은
+고정 OpenClaw/Node를 PATH에 둔 독립 재시작 오라클이다. probe는 합성 요청을
+저장할 뿐 production callback 등록이나 승인/worker 실행을 활성화하지 않는다.
+
 ## 3. Receiver 설정
 
 1. `receiver/config.json` 생성 — `receiver/config.example.json`을 복사하고 채운다.

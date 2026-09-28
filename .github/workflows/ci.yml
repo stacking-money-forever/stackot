@@ -27,6 +27,9 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
       - uses: actions/setup-node@v4
         with:
           node-version: 24.21.0
@@ -35,3 +38,10 @@ jobs:
       - run: node deploy/verify-openclaw-template.mjs
       # S25: real local Gateway/native SDK restart; synthetic values only.
       - run: python3 docs/verification/s25-probe/run.py --output "$RUNNER_TEMP/s25-restart.json"
+      # S26: product repository through actual native store in a new Gateway.
+      - run: bun install --frozen-lockfile
+        working-directory: gateway
+      - run: bun run typecheck && bun run test && bun run build
+        working-directory: gateway
+      - run: python3 gateway/scripts/build-native-probe.py
+      - run: python3 docs/verification/s25-probe/run.py --plugin gateway/node_modules/s26-native-plugin --method s26probe.state --expect-approval --output "$RUNNER_TEMP/s26-restart.json"

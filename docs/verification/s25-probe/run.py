@@ -16,6 +16,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--openclaw', default='openclaw')
     parser.add_argument('--output', required=True)
+    parser.add_argument('--plugin')
+    parser.add_argument('--method', default='s25probe.state')
+    parser.add_argument('--expect-approval', action='store_true')
     args = parser.parse_args()
     output = Path(args.output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -34,7 +37,8 @@ def main():
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
     url = 'ws://127.0.0.1:%d' % port
-    plugin = Path(__file__).resolve().parent / 'plugin'
+    plugin = Path(args.plugin).resolve() if args.plugin else Path(__file__).resolve().parent / 'plugin'
+    plugin_id = json.loads((plugin / 'openclaw.plugin.json').read_text())['id']
     process = None
     logs = []
     pids = []
@@ -69,7 +73,7 @@ def main():
             try:
                 health = call('health')
                 if health.get('ok'):
-                    assert 's25-probe' in health['plugins']['loaded']
+                    assert plugin_id in health['plugins']['loaded']
                     assert not health.get('channelOrder')
                     return
             except (RuntimeError, json.JSONDecodeError, subprocess.TimeoutExpired):
@@ -103,7 +107,7 @@ def main():
         # --force confirms a local source; it does not grant native store trust.
         command(['plugins', 'install', str(plugin), '--accept-capabilities', '--force'], timeout=120)
         cfg = json.loads(config.read_text())
-        cfg['plugins']['allow'] = ['s25-probe']
+        cfg['plugins']['allow'] = [plugin_id]
         cfg['agents'] = {'defaults': {'workspace': str(root / 'workspace'),
                                       'heartbeat': {'every': '0m'}}}
         cfg['discovery'] = {'mdns': {'mode': 'off'}}
@@ -114,31 +118,47 @@ def main():
                                           'agentId': 'main', 'label': 's25-durability-probe'})
         assert session.get('ok') and session.get('runStarted') is False
         key = session['key']
-        initial = call('s25probe.state', {'phase': 'init', 'sessionKey': key})
-        assert initial['transitionApplied'] and initial['staleDenied']
-        assert initial['staleCode'] == 'revision_conflict'
-        assert initial['keyedStore']['code'] == 'PLUGIN_TRUST_REFUSED'
+        initial = call(args.method, {'phase': 'init', 'sessionKey': key})
+        if args.expect_approval:
+            assert initial['created'] and not initial['repeatedCreated']
+            assert initial['record'] == initial['repeatedRecord']
+            assert initial['record']['status'] == 'pending'
+            assert initial['record']['requesterId'] == '123456789012345678'
+            assert initial['record']['planHash'] == 'a' * 64
+            assert initial['record']['expiresAt'] - initial['record']['requestedAt'] == 1800000
+        else:
+            assert initial['transitionApplied'] and initial['staleDenied']
+            assert initial['staleCode'] == 'revision_conflict'
+            assert initial['keyedStore']['code'] == 'PLUGIN_TRUST_REFUSED'
         stop()
         start()
-        read = call('s25probe.state', {'phase': 'read', 'sessionKey': key,
+        read = call(args.method, {'phase': 'read', 'sessionKey': key,
                                      'flowId': initial['flowId'],
-                                     'staleRevision': initial['revisionAtCreate']})
-        assert read['flowFound']
-        flow = read['flow']
-        assert flow['flowId'] == initial['flowId'] and flow['ownerKey'] == key
-        assert flow['revision'] == initial['revisionAfterTransition']
-        assert flow['status'] == 'waiting'
+                                     'staleRevision': initial.get('revisionAtCreate', 0)})
         assert initial['gatewayPid'] != read['gatewayPid'], 'same server served both phases'
-        value = flow['stateJson']['keyedValues']['synthetic-approval-shaped-value']
-        assert value['synthetic'] and value['flowId'] == flow['flowId']
-        assert read['postRestartStale'] == {'denied': True, 'code': 'revision_conflict'}
-        assert read['keyedStore']['code'] == 'PLUGIN_TRUST_REFUSED'
+        if args.expect_approval:
+            assert read['flowId'] == initial['flowId']
+            assert read['record'] == initial['record']
+            assert read['revision'] == initial['revision'] == 1
+            assert read['unrelated'] == {'keep': True}
+            flow = {'flowId': read['flowId'], 'revision': read['revision'], 'status': 'waiting'}
+        else:
+            assert read['flowFound']
+            flow = read['flow']
+            assert flow['flowId'] == initial['flowId'] and flow['ownerKey'] == key
+            assert flow['revision'] == initial['revisionAfterTransition']
+            assert flow['status'] == 'waiting'
+            value = flow['stateJson']['keyedValues']['synthetic-approval-shaped-value']
+            assert value['synthetic'] and value['flowId'] == flow['flowId']
+            assert read['postRestartStale'] == {'denied': True, 'code': 'revision_conflict'}
+            assert read['keyedStore']['code'] == 'PLUGIN_TRUST_REFUSED'
         receipt = {'runtime': '2026.9.6', 'root': str(root), 'gateway_pids': pids,
                    'sessionKey': key, 'flowId': flow['flowId'], 'revision': flow['revision'],
                    'status': flow['status'], 'stateRecovered': True,
                    'actualGatewayPids': [initial['gatewayPid'], read['gatewayPid']],
-                   'staleDeniedBeforeAndAfterRestart': True,
-                   'keyedStoreRefusal': 'PLUGIN_TRUST_REFUSED',
+                   'approvalRecordRecovered': args.expect_approval,
+                   'staleDeniedBeforeAndAfterRestart': not args.expect_approval,
+                   'keyedStoreRefusal': None if args.expect_approval else 'PLUGIN_TRUST_REFUSED',
                    'modelOrWorkerRun': False, 'externalChannels': []}
         output.write_text(json.dumps(receipt, indent=2))
         print(json.dumps(receipt))

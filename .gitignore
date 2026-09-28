@@ -1,6 +1,7 @@
 node_modules/
 receiver/var/
 receiver/dist/
+gateway/dist/
 receiver/config.json
 receiver/node_modules/
 .env

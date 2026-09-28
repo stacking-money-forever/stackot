@@ -144,7 +144,42 @@ Run `36368159148` completed success on exactly `3dc07a65dd27463711e6e3a516349896
 
 Herdr prepared the task worktree from the repository parent with `--no-focus`. Its automatically provisioned root pane is `w6J:p1`; no existing pane was split, moved, focused, or zoomed. The inherited caller ID does not resolve (`pane_not_found`), so it is not used as a callback target or substituted with the focused pane.
 
-## Corrected prerequisite audit
+## S26/S35 brgr lanes — owner implementation and publication gates
+
+Both row worktrees start from accepted S25 bookkeeping SHA
+`8ce162cb7d3a8133e86162843a04659431385385`. S26 owns pending approval/facade/tests,
+native fixture and runner compatibility. S35 owns thread-receipt repository/tests;
+it consumes the S26 facade as recorded input and may not overwrite shared state.
+Brgr manages each no-tool supplied-facts advice task because local.devin has no
+registered write capability. Codex implements and runs full row oracles, preserving
+selected harness/configured model, exact owner binding and separate row decisions.
+
+S26 task `2e0e46d4-2825-412b-a985-bd07f1af1c98`: first API proposal rejected;
+narrowed second review also rejected (decision `8ec35a45-ab14-4b35-b983-5ce2afd60ddd`)
+for custom-file/key-store assumptions and mixing S27 expiry eligibility into S26.
+Owner implemented actual numeric-revision/object-state native contract. 11 tests /
+53 assertions and typecheck/build pass. Actual Gateway `87737 → 88002` recovers
+pending approval unchanged; S25 compatibility replay `88325 → 88592` passes.
+Actual baseline module absence and two labelled mutation controls fail the suite.
+See s26-receipt.md and retained brgr status/result for bounded evidence/risks.
+Integration replay and exact-SHA Linux restart are required before row ACCEPT.
+
+Target replay also passed: Gateway `92524 → 92784`, native flow
+`6d987f34-42b1-4edd-9ca3-b81d41911648`, same revision 1/pending record/expiry and
+unrelated state. All 20 source/fixture/receipt files hash-matched from row checkout;
+target typecheck/build/11 tests, Python syntax, workflow YAML and diff whitespace
+checks passed. Baseline S25 compatibility remained intact as recorded above.
+
+S35 task `90fcede4-2815-4213-b6ef-32662a22e0b9`: first unsafe lease-takeover proposal
+rejected; corrected review accepted as advice (decision
+`90027a73-3bbf-42ea-83a3-1175af1b50e5`). Owner qualification: **unproven** provider
+idempotency can never permit retry, even if a flag is declared. The implementation
+default is no resubmission; only a provider-backed proven capability may enable it.
+Receipt fields alone are not authentication; the eventual trusted adapter must
+verify the marker's actual bot author/context. Synthetic backend tests cannot prove
+live provider guarantees. Row S35 is still pending owner oracles/publication/CI.
+
+## Corrected prerequisite audit (current access facts)
 
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 

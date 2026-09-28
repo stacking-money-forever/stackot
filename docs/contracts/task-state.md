@@ -16,7 +16,8 @@ storage; it does not implement product approval guards or claim worker delivery.
 Product locations fixed for dependent rows: `gateway/src/state/flow-store.ts`
 wraps native managedFlows, `gateway/src/approval.ts` owns requester/plan/action/TTL
 validation, and `gateway/src/controller.ts` drives transitions. These are planned
-implementation boundaries for S26 onward, not existing/working modules. The plugin
+implementation boundaries: S26 implements the store facade and pending repository;
+the controller and action guards remain later-row work. The plugin
 must derive owner/session/actor context from server-owned runtime context, not
 caller-supplied IDs or callback text.
 
@@ -79,8 +80,11 @@ never a username, model-reported actor or actor embedded in callback text.
 Generic allowedUsers and registry TTL do not bind the current plan/action grant.
 
 This is installed-source evidence only. Actual two-user denial/expiry/plan-change
-callback behavior is unproved until S28. S26/S27 still must implement and test
-stored grants; S29 onward must enforce them before actual worker/push/PR actions.
+callback behavior is unproved until S28. S26 stores pending requests with exact
+task/requester/plan/action binding and stable epoch-ms expiry. An expired record
+remains readable and an identical creation replay does not renew it; this is
+persistence, not an eligibility decision. S27 must implement decision/consumption
+and expiry denial; S29 onward must enforce grants before worker/push/PR actions.
 No deployed VM, webhook→Discord delivery, human approval, worker execution or
 release evidence is established here. Owner acceptance also requires the same
 published SHA's Linux oracle; see wave-03 for the decision.

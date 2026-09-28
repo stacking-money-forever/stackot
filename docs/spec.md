@@ -225,6 +225,14 @@ Gateway 재시작 시에도 작업 기록은 SQLite에 보존되므로 재개 �
 버튼은 components v2로 구현. `allowedUsers`에 요청자 Discord ID. TTL 24h. 만료된 승인은
 재요청(재시도 버튼)으로 처리.
 
+S26 구현 범위: `gateway/src/approval.ts`가 요청자 decimal-string ID, task,
+plan hash/version, action, 서버 epoch-ms 시각과 최대 24h TTL의 pending 레코드를
+native managed-flow stateJson에 revision CAS로 저장한다. 같은 request ID의
+동일 요청은 원래 만료시각을 유지하며, 다른 payload는 거부한다. 실제 Gateway
+재시작으로 저장 복원을 검증한다. 저장은 승인 자체가 아니며, actor/만료/plan
+거부와 consumption(S27), Discord callback(S28), 실행 게이트(S29 onward)는
+아직 구현·검증되지 않았다.
+
 ## 9. 관리
 
 Control UI로 커버되는 것 (커스텀 페이지 만들지 않음):

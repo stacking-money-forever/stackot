@@ -10,6 +10,11 @@ rollback drill, and the M2 runtime rows behind them) stays **open** until the
 commands below have been run on the VM and their outputs recorded. A committed
 unit file proves nothing about a running service.
 
+S26 adds Gateway-side pending approval storage under `gateway/`, verified through
+a real isolated native Gateway restart with synthetic request data. The fixture
+is not installed by these VM units and does not register production callbacks
+or enable approved worker execution. Host rollout remains a separate gate.
+
 ## Topology
 
 ```

@@ -1,0 +1,39 @@
+{
+  "state": "terminal",
+  "task": {
+    "acceptance_criteria": [
+      "Accurate edge-case review on supplied exact type/CAS/schema facts, all later gates preserved, no tools/API inventions or source-reviewed claim."
+    ],
+    "artifact_contract": {
+      "max_bytes": 1048576,
+      "media_type": "text/plain"
+    },
+    "budget": {
+      "deadline_seconds": 180,
+      "max_attempts": 2
+    },
+    "create_request_id": "revise-2e0e46d4-2825-412b-a985-bd07f1af1c98-2",
+    "instructions": {
+      "forward_criteria": true,
+      "role": [],
+      "scope": [
+        "stdout-only supplied-facts design review, no tools or mutation"
+      ]
+    },
+    "objective": "No tools or file inspection. Review supplied S26 design only within <=1200 words: native revision integer, stateJson object, failure revision_conflict; Discord IDs decimal strings up to uint64. StateStore read()->{revision,state}, compareAndSwap(revision,state)->boolean or real failure. ApprovalRepository stores version1, stable request/task/requester/planhash64hex/planVersion/action start|push|pr/server requestedAt/expiresAt/max24h TTL/pending only. Current-task binding, duplicate payload consistency without expiry renewal, unrelated state preservation and bounded4 CAS retries enforced. 8 owner unit tests and actual native restart fixture cover storage; S27 decision/consumption and S28 authenticated actor remain unimplemented. Return missing edge cases only, no wrong APIs, no tools, no execution claims. Clean-head source deliberately excludes current owner edits because this advice uses only these supplied facts, not source inspection.",
+    "owner_id": "codex:01a0e54a-250b-7882-b1c7-143cfc556e1d",
+    "required_capabilities": [
+      "completion"
+    ],
+    "revision": 2,
+    "route": {
+      "harness_id": "local.devin",
+      "requested_effort": null,
+      "requested_model": null
+    },
+    "schema": "brgr/v1",
+    "task_id": "2e0e46d4-2825-412b-a985-bd07f1af1c98",
+    "workspace": "/Users/justn/Library/Application Support/brgr/worktrees/stackot/2e0e46d4-r2/"
+  },
+  "workspace_present": true
+}
