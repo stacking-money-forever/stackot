@@ -7,6 +7,7 @@ import plistlib
 import hashlib
 import os
 import importlib.util
+import secrets
 
 LEGACY_HASHES = {'1acde68fd1f909a4f53425009f44884aa2d5fe8f5b45e0ee609c2a0aab5c3522',
                  '2cc68d8ec894060cecae60353d16eed91eb453f7d03d172f5de2908c785718e9'}
@@ -76,8 +77,8 @@ def install(root, source, login_dir):
     if not rule_path.exists():module.save(rule_path, rules)
     # Atomic replacement + durable pending fingerprint makes interrupted staging retryable.
     for path in [staged, login]:
-        temporary = path.with_name(path.name + '.stage')
-        with temporary.open('wb') as file:
+        temporary = path.with_name(path.name + '.' + secrets.token_hex(8) + '.stage')
+        with temporary.open('xb') as file:
             file.write(data);file.flush();os.fsync(file.fileno())
         temporary.chmod(0o600);os.replace(temporary, path)
     module.save(record_path, desired)
