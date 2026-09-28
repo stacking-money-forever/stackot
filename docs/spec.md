@@ -361,6 +361,11 @@ Control UI에 없어서 필요하면 P1 이후에 추가하는 것:
 - Discord Forum Channel API, GitHub Webhooks 공식 문서
 # Selected deployment host
 
+Operational aged-pending notifications use `deploy/alerts.yaml` and the bounded
+monitor described in `deploy/alerts.md`. Receipt persistence, cooldown and
+uncertain acknowledgment handling are separate from CI-failure event routing.
+No worker or model starts from the monitor.
+
 The current user-selected host is the local Mac at `stackot.justn.me`
 (2026-09-28): dedicated Cloudflare HTTPS tunnel, exact webhook path, loopback
 Caddy/receiver/Gateway, user launchd supervision. See `deploy/macos/README.md`.

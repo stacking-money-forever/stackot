@@ -25,6 +25,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y caddy
       - run: python3 deploy/macos/verify-ingress.py
       - run: python3 deploy/macos/verify-migration.py
+      - run: python3 -m unittest discover -s deploy -p test_alerts.py -v
       - run: python3 -m py_compile deploy/macos/render.py deploy/macos/gateway-run.py deploy/macos/probe.py
 
   receiver:

@@ -169,6 +169,10 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
   (dirty/unpushed 보존 정책). `openclaw worktrees list`로 확인.
 # Selected host (2026-09-28)
 
+Aged-pending operations monitor is documented in [alerts.md](alerts.md); it
+reads loopback receiver status and sends bounded notifications to the actual
+configured ci-alerts channel. Runtime delivery is required before B04 acceptance.
+
 The user selected deployment on this Mac at `stackot.justn.me`.
 See [macOS deployment](macos/README.md) for launchd and the dedicated Cloudflare
 tunnel. The VM instructions below remain an alternative, not the current host.
