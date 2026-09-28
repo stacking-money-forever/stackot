@@ -1,0 +1,11 @@
+{
+  "guildId": "1544592589666127953",
+  "channels": {
+    "stackot-issues": "1553998789675843594",
+    "stackot-prs": "1553999143997935767",
+    "ci-alerts": "1553999331198238840",
+    "stackot-admin": "1553999680449421312"
+  },
+  "botReadback": "HTTP200 each; forums type15 verified",
+  "githubBacklinkLogin": "justn-hyeok"
+}

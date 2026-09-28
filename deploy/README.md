@@ -167,3 +167,8 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
 - 재시도: `openclaw tasks list` / `openclaw tasks retry <id>`.
 - Worktree 보존: 중단된 작업의 worktree는 자동 삭제되지 않는다
   (dirty/unpushed 보존 정책). `openclaw worktrees list`로 확인.
+# Selected host (2026-09-28)
+
+The user selected deployment on this Mac at `stackot.justn.me`.
+See [macOS deployment](macos/README.md) for launchd and the dedicated Cloudflare
+tunnel. The VM instructions below remain an alternative, not the current host.
