@@ -361,6 +361,11 @@ Control UI에 없어서 필요하면 P1 이후에 추가하는 것:
 - Discord Forum Channel API, GitHub Webhooks 공식 문서
 # Selected deployment host
 
+Receiver may use an optional private `openclawHookTokenFile` validated at startup
+and read before each forward. File failures are fail-closed with no retired-token
+fallback; prior/current secrets enter redaction before network. B08 actual native
+hot rotation/continuous-intake proof remains required (`deploy/token-rotation.md`).
+
 S47 restoration preserves the genuine acknowledged pending delivery and observes
 actual native hook admission before persisted delivered exclusion after restart.
 This receiver handoff proof is separate from downstream model, Discord and worker

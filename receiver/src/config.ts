@@ -4,6 +4,7 @@
  * Loaded from STACKOT_CONFIG (JSON) or default ./config.json next to the
  * package. Every field is required unless noted — fail fast at startup.
  */
+import {currentHookToken} from './hook-token.ts';
 export type RepoConfig = {
   /** Discord forum channel ID for Issue threads. */
   issuesForumChannelId: string;
@@ -31,6 +32,8 @@ export type ReceiverConfig = {
   openclawHooksUrl: string;
   /** hooks.token configured in openclaw.json (sent as Bearer). */
   openclawHookToken: string;
+  /** Optional absolute private {version:1,token} JSON, validated at startup and per-forward. */
+  openclawHookTokenFile?: string;
   /** GitHub token with repo read scope — used for reverse-link mapping lookups. */
   githubToken: string;
   /**
@@ -150,6 +153,7 @@ export async function loadConfig(): Promise<ReceiverConfig> {
     }
   }
   cfg.host ??= "127.0.0.1";
+  currentHookToken(cfg);
   if (cfg.port === undefined) {
     cfg.port = 9377;
   } else if (!Number.isInteger(cfg.port) || cfg.port < 1 || cfg.port > 65535) {

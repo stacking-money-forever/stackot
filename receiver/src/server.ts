@@ -27,6 +27,7 @@ import { describeError, redactSecrets } from "./redact.ts";
 import { createGatewayHealth, liveness, readiness, statusReport } from "./health.ts";
 import { createTelemetry } from "./telemetry.ts";
 import { collectMetrics, METRICS_INTERVAL_MS, toLogLine, type QueueMetrics } from "./metrics.ts";
+import {currentHookToken} from './hook-token.ts';
 
 const cfg: ReceiverConfig = await loadConfig();
 const secrets = redactSecrets(cfg);
@@ -169,7 +170,8 @@ const drainer = new DeliveryDrainer(telemetryOutbox, async (job) => {
       createThread: decision.createThread,
       noticeChannelId: decision.noticeChannelId,
     };
-    const result = await forwardToGateway(cfg, routed, job.id);
+    const token=currentHookToken(cfg,(value)=>{if(!secrets.includes(value))secrets.push(value);});
+    const result = await forwardToGateway({...cfg,openclawHookToken:token}, routed, job.id);
     if (result.ok) {
       gatewayHealth.recordSuccess();
     } else {

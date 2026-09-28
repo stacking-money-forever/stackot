@@ -180,6 +180,9 @@ forward only) and answers `/readyz` 200 — then stop it and record the result.
   Caddy's own service.
 # Current host selection
 
+The optional hook credential reference/rotation boundary is in
+[token-rotation.md](../token-rotation.md). No VM rotation/drill result is implied.
+
 The genuine S47 restore/drain record is [restore.md](../../docs/verification/restore.md)
 on the selected Mac. It does not establish VM restoration or model/Discord success.
 
