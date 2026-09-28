@@ -14,8 +14,11 @@ on same nonblocking/no-follow descriptor, owner/mode/size/schema validation,
 no stale fallback and old/current redaction before network. Startup legacy
 credential requirement preserved/tightened. Task stackot-b08-20260928/base6821f1e,
 rootw8S:p1, launch1a4bd38; brgr2afa0fda rejected twice, no worker pending.
-Credential/config targeted119 tests/typecheck/build passed; full suite running
-handle42217 and independent review handle-source b08-credential-review.log.
+Final B08 source895cfbe pushed on row branch;350 tests/1223 assertions,
+typecheck/build passed. Independent current-diff review found no actionable
+defect. Exact codeCI36396368749 is confirmed in_progress; not an accepted row.
+Next owner actual native same-PID hot token reload: old explicitBearer401/new
+explicitBearer200/runId, continuous receiver intake/durable drain/no secret leak.
 No live rotation or B08 acceptance yet. Pinned hooks reload is hot/reloadHooks
 source evidence, actual same-PID auth/continuous-intake oracle still required.
 
