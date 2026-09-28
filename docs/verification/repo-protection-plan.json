@@ -45,18 +45,14 @@
               "context": "ingress-contract",
               "app_id": 15368
             }
-          ]
+          ],
+          "contexts": []
         },
         "enforce_admins": true,
         "required_pull_request_reviews": null,
         "restrictions": null,
-        "required_linear_history": null,
         "allow_force_pushes": false,
-        "allow_deletions": false,
-        "block_creations": null,
-        "required_conversation_resolution": null,
-        "lock_branch": null,
-        "allow_fork_syncing": null
+        "allow_deletions": false
       },
       "notes": "All three checks succeeded in this repository within7days on integration code. GitHubActions app binding rejects other status producers. Existing main-only workflow lacks two checks; future PRs must include the current reviewed workflow (integration already does). No main merge/push is authorized by this plan. Admins also need required checks. No review-count requirement is introduced.",
       "preserve": "No prior protection object exists (verified 404); nothing to merge."

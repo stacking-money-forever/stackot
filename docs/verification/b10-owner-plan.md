@@ -18,6 +18,12 @@ deletion; enable only secret_scanning and secret_scanning_push_protection.
 No merge/main push/release is part of apply. G boundary remains an explicit
 owner governance choice; concrete plan is ready for that decision.
 
+Classic protection supports `checks[{context,app_id}]`; rulesets are not required.
+The narrowed brgr advice follows rejection of that unsupported ruleset-only claim.
+Legacy contexts is empty alongside explicit checks; optional unspecified boolean
+fields are omitted, not sent as unsupported nulls. Four required nullable fields
+remain explicit. Open PR list is currently empty, so no existing PR is affected.
+
 Readback plus a non-mutating evaluate/merge-state check must establish enforcement;
 never try a successful real merge merely to prove a gate. Keep main untouched.
 Existing dirty worker artifacts were retained/committed before refreshing these
