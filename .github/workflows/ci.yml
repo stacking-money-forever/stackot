@@ -32,6 +32,7 @@ jobs:
           bun-version: 1.4.0
       # Synthetic HTTP fixture verifies observation transparency, not D restore.
       - run: bun docs/verification/s47-observer-fixture.ts
+      - run: python3 docs/verification/s47-lifecycle-fixture.py
       - run: python3 -m py_compile deploy/macos/render.py deploy/macos/gateway-run.py deploy/macos/probe.py
 
   receiver:

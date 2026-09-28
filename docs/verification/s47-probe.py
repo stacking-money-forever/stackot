@@ -40,6 +40,8 @@ def main():
     parser.add_argument('--snapshot', required=True)
     parser.add_argument('--delivery-id', required=True)
     parser.add_argument('--output', required=True)
+    parser.add_argument('--bun', default=shutil.which('bun'))
+    parser.add_argument('--synthetic-provider-fixture', action='store_true', help='CI lifecycle S evidence only; never a D receipt')
     args = parser.parse_args()
     os.umask(0o077)
     deployed = Path(args.runtime_root).resolve();snapshot = Path(args.snapshot).resolve()
@@ -79,7 +81,8 @@ def main():
     processes, logs = [], []
     result = dict(snapshotSha256=hashlib.sha256(snapshot.read_bytes()).hexdigest(),
                   sourceDeliveryId=args.delivery_id, sourceRows=len(before), privateProbeRoot=str(root),
-                  snapshotIntegrity='ok', emptyRestoreEqual=True, fakeProvider=False,
+                  snapshotIntegrity='ok', emptyRestoreEqual=True, fakeProvider=args.synthetic_provider_fixture,
+                  evidenceClass='S' if args.synthetic_provider_fixture else 'D',
                   workerDispatched=False, outboundDelivery=False, productionGatewayChanged=False)
     def start(argv, name, child_env):
         log = (root / (name + '.log')).open('w');logs.append(log)
@@ -96,6 +99,11 @@ def main():
             except subprocess.TimeoutExpired:
                 os.killpg(child.pid, signal.SIGKILL);child.wait(timeout=5)
     try:
+        if not args.synthetic_provider_fixture:
+            node_version = subprocess.check_output([cli[0], '--version'], env=env, text=True, timeout=10).strip()
+            runtime_version = subprocess.check_output(cli + ['--version'], env=env, text=True, timeout=20).strip()
+            assert node_version == 'v24.21.0' and '2026.9.6' in runtime_version
+            result['actualRuntimeVersions'] = {'node': node_version, 'openclaw': runtime_version}
         gateway = start(cli + ['gateway', 'run', '--bind', 'loopback', '--port', str(gateway_port)], 'gateway', env)
         deadline = time.monotonic() + 45
         while time.monotonic() < deadline:
@@ -124,7 +132,7 @@ def main():
         observer = Path(__file__).with_name('s47-network-observer.ts')
         bundle = deployed / 'current/receiver/server.js'
         result['receiverBundleSha256'] = hashlib.sha256(bundle.read_bytes()).hexdigest()
-        receiver = start(['/opt/homebrew/bin/bun', '--preload', str(observer), str(bundle)], 'receiver', receiver_env)
+        receiver = start([args.bun, '--preload', str(observer), str(bundle)], 'receiver', receiver_env)
         deadline = time.monotonic() + 60
         while time.monotonic() < deadline:
             if receiver.poll() is not None:raise RuntimeError('Restored receiver exited')
@@ -140,11 +148,11 @@ def main():
         if len(matches) != 1:raise RuntimeError('Native response correlation missing/ambiguous; do not infer from SQL alone')
         result['actualNativeAdmission'] = matches[0]
         stop(receiver)
-        restart = start(['/opt/homebrew/bin/bun', '--preload', str(observer), str(bundle)], 'receiver-restart', receiver_env)
+        restart = start([args.bun, '--preload', str(observer), str(bundle)], 'receiver-restart', receiver_env)
         time.sleep(2)
         assert restart.poll() is None
         assert [row for row in rows(dbpath) if row[0] == args.delivery_id][0][2] == 'delivered'
-        replay = subprocess.run(['/opt/homebrew/bin/bun', str(Path(__file__).resolve().parents[2] / 'receiver/src/replay.ts'), args.delivery_id],
+        replay = subprocess.run([args.bun, str(Path(__file__).resolve().parents[2] / 'receiver/src/replay.ts'), args.delivery_id],
                                 env=receiver_env, capture_output=True, text=True, timeout=15)
         assert replay.returncode == 1 and 'not dead_letter' in replay.stdout
         assert len(observed.read_text().splitlines()) == 1
@@ -160,8 +168,8 @@ def main():
         for number in [gateway_port, receiver_port]:
             with socket.socket() as sock:closed.append(sock.connect_ex(('127.0.0.1', number)) != 0)
         result['ownedListenersClosed'] = all(closed)
-        Path(args.output).write_text(json.dumps(result, indent=2) + '\n')
         if not all(closed):result['passed'] = False
+        Path(args.output).write_text(json.dumps(result, indent=2) + '\n')
         print(json.dumps({k:result[k] for k in ['sourceDeliveryId','emptyRestoreEqual','ownedListenersClosed']}
                          | {'passed':result.get('passed',False),'errorType':result.get('errorType')}))
         if not all(closed):
