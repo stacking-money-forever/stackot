@@ -29,9 +29,9 @@ def get(url, method='GET'):
         return error.code
 
 
-def pid(name):
+def pid(name, domain):
     text = subprocess.check_output(['launchctl', 'print',
-        'gui/%d/me.justn.stackot.%s' % (os.getuid(), name)], text=True)
+        '%s/me.justn.stackot.%s' % (domain, name)], text=True)
     match = re.search(r'^\s*pid = (\d+)$', text, re.M)
     return int(match[1]) if match else None
 
@@ -40,19 +40,21 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', required=True)
     parser.add_argument('--services', nargs='+', choices=['receiver', 'gateway', 'ingress', 'tunnel'], required=True)
+    parser.add_argument('--domain', choices=['gui', 'system'], default='gui')
     args = parser.parse_args()
+    domain = 'system' if args.domain == 'system' else 'gui/%d' % os.getuid()
     result = dict(host='macOS', domain='stackot.justn.me', uid=os.getuid(),
                   rebootTested=False, independentOffHostProbe=False, recovery=[])
     for name in args.services:
         print('Checking crash recovery: ' + name, flush=True)
-        before = pid(name)
+        before = pid(name, domain)
         if not before:
             raise RuntimeError('owned service is not running: ' + name)
         os.kill(before, signal.SIGKILL)
         deadline = time.monotonic() + 45
         after = None
         while time.monotonic() < deadline:
-            after = pid(name)
+            after = pid(name, domain)
             if after and after != before:
                 try:
                     checks = {'receiver': ('http://127.0.0.1:9377/readyz', 200),
