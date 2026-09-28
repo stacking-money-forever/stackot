@@ -1,0 +1,74 @@
+{
+  "adapter": "process/v1",
+  "capabilities": {
+    "cancel": {
+      "evidence_ref": "activation-help-digest",
+      "semantics": "local_process_only",
+      "status": "supported",
+      "tested_identity": null
+    },
+    "completion": {
+      "evidence_ref": "activation-help-digest",
+      "semantics": "print_mode_process_exit_with_nonempty_stdout",
+      "status": "supported",
+      "tested_identity": null
+    },
+    "effort_select": {
+      "evidence_ref": null,
+      "semantics": "not_observed",
+      "status": "unsupported",
+      "tested_identity": null
+    },
+    "model_select": {
+      "evidence_ref": null,
+      "semantics": "configured_default_only",
+      "status": "unsupported",
+      "tested_identity": null
+    },
+    "workspace_write": {
+      "status": "unsupported",
+      "semantics": "scratch_write_witness_not_produced; candidate_not_activated",
+      "evidence_ref": "activation-scratch-workspace-write",
+      "tested_identity": null
+    }
+  },
+  "executable": "/Users/justn/.local/share/devin/cli/_versions/3000.11.3/bin/devin",
+  "id": "local.stackot-devin",
+  "launch": {
+    "argv": [
+      "--respect-workspace-trust",
+      "false",
+      "--prompt-file",
+      "${input.prompt_file}",
+      "-p"
+    ],
+    "effort_argv": [],
+    "env_allow": [
+      "HOME",
+      "PATH",
+      "LANG",
+      "TMPDIR"
+    ],
+    "mode": "one_shot",
+    "model_argv": []
+  },
+  "probe": {
+    "help_argv": [
+      "--help"
+    ],
+    "version_argv": [
+      "--version"
+    ]
+  },
+  "result": {
+    "max_bytes": 1048576,
+    "media_type": "text/plain",
+    "source": {
+      "kind": "stdout"
+    },
+    "success_exit_codes": [
+      0
+    ]
+  },
+  "schema": "brgr.harness/v1"
+}

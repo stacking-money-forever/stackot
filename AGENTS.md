@@ -22,9 +22,11 @@ for the per-row decisions and `docs/atomic-completion.md` for the row DAG
 
 ## Execution rules
 
-1. **One row at a time, owner-verified.** Follow the execution contract in the ledger: one bounded
-   worker task per row (`devin --model swe-2`, one narrowed retry), owner inspects the diff, re-runs
-   the oracle, and records ACCEPT/REJECT with residual risks in `docs/verification/`.
+1. **One bounded brgr task per row, owner-verified.** Follow the execution contract in the ledger:
+   run registered harnesses through brgr; preserve the selected model, allow up to two independent
+   sibling tasks, and use at most one narrowed revision. The owner inspects sealed results/diffs,
+   re-runs the oracle, makes an explicit brgr accept/reject decision, and records the row decision
+   with residual risks in `docs/verification/`. Brgr task acceptance alone is not product-row acceptance.
 2. **Do not trust a worker's report.** Compare file hashes, re-run the oracle yourself, and prove the
    new tests fail against the pre-fix code in a disposable copy. An oracle that passes on both the
    old and new implementation proves nothing.

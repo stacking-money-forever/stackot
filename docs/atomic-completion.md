@@ -1,12 +1,12 @@
 # Stackot atomic completion ledger
 
-Understood as: 원자 작업을 Devin interactive --model swe-2에 한 건씩 맡기고 Codex/Astra 오너가 직접 검증하여 제품 출시 증거까지 진행한다.
+Understood as: 원자 작업을 brgr 등록 harness로 행별 위임하고, 독립 작업은 최대 두 개 병렬 진행하며 Codex 오너가 sealed result와 실제 오라클을 검증하여 제품 출시 증거까지 진행한다. 2026-09-28 사용자 지시로 직접 interactive 전용 제약을 폐지했다.
 
 Base: origin/main 1259895 (product code d473453). Existing 21 unit tests pass. Existing outbox candidate remains unmerged in stackot-receiver-delivery-20260914; reuse its bounded store, do not claim production recovery. No credentials or deployment evidence currently established.
 
 ## Execution contract
 
-Each row is ONE task, ONE primary changeset/receipt, ONE core oracle. At most TWO Todo items (implement; verify/report), no subagents, maximum TWO sibling Devin workers. Exact CLI selector --model swe-2; no fallback. Meter provider: uncovered (Devin). Worker report is a candidate; owner checks diff, scope and oracle and records ACCEPT/REJECT. One narrowed retry only. No worker commit/push/merge/deploy/release/worktree deletion. No source changes outside its Stackot task checkout. New external-runtime-dependent paths are provisional: S23/S25 must freeze their exact location in a launch contract before dispatch.
+Each row is ONE brgr-managed bounded task, ONE primary changeset/receipt, ONE core oracle. At most TWO Todo items (implement; verify/report), no subagents, maximum TWO independent sibling tasks. Use a healthy registered harness and preserve the selected model; no silent fallback or unsupported selector override. The installed local.devin route uses its verified configured SWE-2 High default (agent.model=swe-2-high); it does not expose per-task model/effort flags. Meter provider coverage is uncovered (Devin). Owner inspects the sealed result, scope/diff and actual oracle, then explicitly brgr accepts/rejects the task and separately records product-row ACCEPT/REJECT. One narrowed brgr revision only; old evidence stays intact. No worker commit/push/merge/deploy/release/worktree deletion or source changes outside its assigned Stackot checkout. S23/S25 freeze external-runtime-dependent module locations before dependent work.
 
 L=로컬, S=합성 process/fixtures, R=실런타임, D=실배포, H=사람 QA. A D/H claim needs actual deployment/human receipt; test doubles never upgrade it. Command paths run in receiver unless stated. Named new tests are planned oracles, not claims they exist today.
 
@@ -104,7 +104,7 @@ The predecessors column is the canonical directed acyclic graph; all predecessor
 
 ## Waves and milestones
 
-Wave 1: S01 + S02, independent files, one task each. S01 must not broaden config validation (S03A-C4). S02 must not wire server ACK (S09). Wave 2: S03A + S16; wave 3: S03B + S04A; then S03C1 + S04B. Later waves choose exactly one task under the one-worker policy. Server changes serialize. S23 external contract research can run beside Receiver tasks, but no guessed OpenClaw implementation before its receipt. Clone accepted owner working snapshot into each dependent task checkout without committing; record base SHA plus overlay hashes.
+Historical waves: S01/S02, S03A/S16, S03B/S04A and S03C1/S04B used their recorded contracts. Current scheduling allows two dependency-ready brgr tasks with disjoint ownership; shared server changes and owner integration serialize. No guessed OpenClaw implementation before S23's receipt. Pass only explicit required snapshot paths for dirty inputs, inspect brgr's snapshot/worktree receipt, and preserve the source worktree and prior evidence.
 
 M1 reliable ingress: S01–S22 accepted (no external success claim). M2 runtime authority: S23–S36 accepted. M3 runnable operations: S37–S48 accepted. M4 controlled beta: S49–S52 including two actual E2Es and human approval checks. M5 public release: B01–B11. C tasks are post-release and do not block MVP.
 

@@ -93,6 +93,37 @@ Published S24 integration SHA: `cd1b2af7f9c9ebd84643229071f73fb1cb27a0d1`. Exact
 
 Run `36365179491` completed **success** on `cd1b2af7f9c9ebd84643229071f73fb1cb27a0d1`; both `receiver` and `runtime-config` jobs succeeded. Owner task/target replay, old-template sandbox discrimination and both plugin-schema negative controls are recorded above. S24 is ACCEPT; count **49/81**, M2 **3/14**. Evidence is actual installed CLI schema/policy plus bounded fixtures and Linux verification, not live worker, Discord delivery, deployed host or human acceptance. S25 is the next dependency-ready row.
 
+## S25 launch contract — native ownership and restart
+
+Task checkout `/Users/justn/dev/.worktrees/stackot-s25-20260928`, branch `codex/stackot-s25-20260928`, base `bce6c43e10d9c3f9b59eb6758ce6875f85fb6253`, non-focused managed root pane `w6N:p1`. Exact interactive Devin selector/permission mode remains SWE-2/dangerous; provider coverage uncovered. Primary artifact `docs/contracts/task-state.md`, with a minimal real SDK probe/receipt under `docs/verification/s25-probe/`. No product approval/controller implementation, real account, model, worker or host mutation is authorized in this row.
+
+Oracle: actual native flow/keyed-store creation and native reads after stopping/restarting an owned isolated Gateway; IDs, revisions, ownership and clearly synthetic approval-shaped values must be preserved. Helper/schema/file-existence evidence alone is insufficient. Installed types provide async managedFlows and native keyed stores; authenticated probe methods require operator.admin. Callback sender source inspection does not become live Discord evidence. Owner reruns and reviews all artifacts; one narrowed retry, <=18 scoped tool actions. Product module paths/storage decisions must follow the observed native contract rather than an assumed Receiver-only design.
+
+Live launch: Herdr's 5-second startup observation timed out, but exact foreground inspection showed PID 20247 with `devin --model swe-2 --permission-mode dangerous --prompt-file .../s25-launch.txt` in the S25 checkout. The same `w6N:p1` then registered Devin/working. It was not restarted or replaced; monitor this exact pane/artifact set. S25 is not accepted yet.
+
+## Parallel execution update — user-authorized 2026-09-28
+
+Understood as: keep the full goal, run independent dependency-ready lanes in parallel, and retain row-specific ownership, actual oracles and explicit owner acceptance. The user's latest instruction supersedes the earlier one-active-row scheduling limit. At most two sibling Devin workers remain the bound; shared owner ledgers/integration are still serialized.
+
+- Lane 1 S25 remains on `w6N:p1`, owning native state contract/probe files only.
+- Lane 2 B10 is dependency-ready from accepted S38. Checkout `/Users/justn/dev/.worktrees/stackot-b10-20260928`, branch `codex/stackot-b10-20260928`, base `bce6c43e10d9c3f9b59eb6758ce6875f85fb6253`, non-focused managed root `w6P:p1`. Same exact SWE-2/dangerous harness; provider coverage uncovered. Owns repository protection readback, concrete plan JSON and its receipt only.
+
+B10 is read-only GitHub inspection/preparation: no setting change, merge, credential access or remote message is authorized by parallelism. Its oracle is actual feature/check enforcement readback, so a disabled configuration remains unsatisfied even when its plan is ready. Neither worker may edit checklist/owner-state/waves or the other's files. Owner re-runs each oracle, integrates separately and records ACCEPT/REJECT. Count stays 49/81.
+
+B10 startup observation timed out at 5 seconds; exact foreground inspection then confirmed PID 27995 with the requested SWE-2/dangerous argv in its checkout, and the same `w6P:p1` registered Devin/working. No restart/model substitution occurred. S25 remains concurrently live and its owned probe Gateway was observed on loopback 28790; that alone is not its restart/state oracle.
+
+## User-directed brgr migration
+
+The user explicitly removed the interactive-only restriction and requested brgr. Active AGENTS/checklist/ledger/owner-state now use brgr; historical launch receipts remain factual past evidence. Direct S25 was interrupted, its owned Gateway shut down cleanly, and its partial probe was preserved. B10 had already produced its audit/plan/receipt; those files are retained.
+
+Live brgr 2.3.1 doctor reports healthy registry/store/integration and local.devin. Its route uses configured default only; safe config read confirmed agent.model `swe-2-high`, matching the prior SWE-2 High execution. No per-task model/effort flag or global model/config change was made. A write-requiring task was rejected before admission because workspace_write is unsupported. A scoped custom write-harness contract passed syntax validation but its scratch did not produce a write witness/successful result; it was not activated and no write capability is claimed.
+
+Supported migration shape is explicit: brgr produces read-only review/patch proposals; Codex owns actual file application/runtime execution and the full row oracle. This does not remove the row's write/restart/publication requirements or turn advice into acceptance. Two actual brgr tasks were admitted through healthy local.devin:
+- B10 readback/plan verification: `1b4324d2-e776-4826-8368-47a095c4edb2`.
+- S25 native-contract/probe patch proposal: `d2c703dc-5254-48f1-8b1b-0632f497222b`.
+
+The inherited Herdr caller ID is stale. These brgr process runs omit only stale Herdr presentation variables for that invocation rather than targeting a focused/unrelated pane or changing global auto-pane settings. Owner binding remains the exact Codex thread (confirmed in task status). Workspaces/snapshots are created by brgr; inspect sealed results and explicitly accept/reject, then separately decide the product row. Existing product count remains 49/81.
+
 Herdr prepared the task worktree from the repository parent with `--no-focus`. Its automatically provisioned root pane is `w6J:p1`; no existing pane was split, moved, focused, or zoomed. The inherited caller ID does not resolve (`pane_not_found`), so it is not used as a callback target or substituted with the focused pane.
 
 ## Corrected prerequisite audit
