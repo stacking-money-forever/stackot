@@ -9,7 +9,9 @@ Prepare specific expiry guidance only after actual callback authorization,
 account/guild/conversation/parent/message binding and exact requester checks;
 then the trusted repository must throw APPROVAL_EXPIRED. Other failures remain
 generic. Do not expose IDs/hashes/tokens/errors or imply old approval is renewed.
-Do not invent a retry button/command that is absent from native UI/controller.
+Do not claim a retry button/command until its native UI/controller exists.
+Continuation adds fresh-card retry binding and a guarded durable server issuer;
+runtime functions never persist in binding JSON. Old intents/grants preserved.
 Require new immutable approval/plan for subsequent work; old request untouched.
 Owner verifies source/tests and exact SHA Linux CI; new tests must distinguish
 pre-fix code. Actual native expired-message delivery, usable re-request path

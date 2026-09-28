@@ -2,8 +2,9 @@ import type {ApprovalInput,ApprovalRepository} from "./approval.ts";
 import {ApprovalExpiredError} from "./approval.ts";
 
 export type CallbackBinding={token:string;accountId:string;guildId:string;conversationId:string;
-  parentConversationId:string;messageId:string;request:ApprovalInput;decision:"approve"|"deny";
-  repository:ApprovalRepository};
+  parentConversationId:string;messageId:string;request:ApprovalInput;decision:"approve"|"deny"|"retry";
+  repository:ApprovalRepository;retryAvailable?:boolean;
+  renew?:(actorId:string)=>Promise<{kind:string}>};
 // Resolver is server-owned and must recover bindings/native ownership durably.
 // This interface alone is not production registry or actor-authentication proof.
 export type CallbackRoute={accountId:string;guildId:string;conversationId:string;parentConversationId:string};
@@ -23,7 +24,7 @@ const token=(v:unknown):v is string=>typeof v==="string"&&
 // Register a private handler only through the trusted native bootstrap API.
 // Never expose an HTTP/RPC endpoint accepting an alleged native context object.
 export type CallbackAudit={event:"stackot.approval";senderId?:string;authorized:boolean;
-  guildId?:string;conversationId?:string;messageId?:string;outcome:"denied"|"approved"|"rejected"};
+  guildId?:string;conversationId?:string;messageId?:string;outcome:"denied"|"approved"|"rejected"|"requested"};
 export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRegistry,observe?:(event:CallbackAudit)=>void):void {
   api.registerInteractiveHandler({channel:"discord",namespace,handler:async raw=>{
     const ctx=raw as Partial<Context>|null;
@@ -49,11 +50,18 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
       const request=binding.request;
       if(request.requesterId!==ctx.senderId)throw new Error("CALLBACK_ACTOR_DENIED");
       verifiedBinding=binding;
+      if(binding.decision==="retry"){
+        if(typeof binding.renew!=="function")throw new Error("RENEWAL_UNAVAILABLE");
+        const result=await binding.renew(ctx.senderId);
+        text="승인 요청의 발행 상태를 확인하고 있습니다. 기존 승인은 재사용되지 않습니다.";
+        if(result.kind==="published"){text="새 승인 요청을 발행했습니다. 이 스레드의 새 계획과 승인 버튼을 확인해 주세요.";outcome="requested";}
+      }else{
       await binding.repository.decide({requestId:request.requestId,taskId:request.taskId,
         planHash:request.planHash,planVersion:request.planVersion,action:request.action,
         actorId:ctx.senderId},binding.decision);
       text=binding.decision==="approve"?"승인했습니다.":"거부했습니다.";
       outcome=binding.decision==="approve"?"approved":"rejected";
+      }
     }catch(error){
       // No grant metadata or provider/storage exception is exposed in the reply.
       if(verifiedBinding&&error instanceof ApprovalExpiredError){
@@ -66,6 +74,7 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
               current.taskId===request.taskId&&current.planHash===request.planHash&&
               current.planVersion===request.planVersion&&current.action===request.action){
             text="이 승인 요청은 만료됐습니다. 기존 버튼은 재사용할 수 없습니다. 작업을 계속하려면 새 계획에 대한 승인 요청이 필요합니다.";
+            if(verifiedBinding.retryAvailable)text="이 승인 요청은 만료됐습니다. 이 카드의 ‘승인 재요청’을 눌러 현재 계획을 다시 확인하고 새 승인 버튼으로 승인해 주세요. 기존 승인은 재사용되지 않습니다.";
           }
         }catch{
           // Unknown reconciliation is a generic reply, never an invented state.

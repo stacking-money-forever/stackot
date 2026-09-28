@@ -3,6 +3,8 @@ import {FlowCallbackRegistry} from "./callback-registry.ts";
 import {FlowStateStore,type ManagedFlows,type NativeFlow,type State} from "./state/flow-store.ts";
 import {registerActorQa,QA_SCHEMA} from "./qa.ts";
 import {STACKOT_CONTROLLER_ID} from "./controller.ts";
+import {ApprovalRenewal} from "./renewal.ts";
+import {discordPromptTransport,type NativePromptApi} from "./discord-prompt.ts";
 export {STACKOT_CONTROLLER_ID} from "./controller.ts";
 export interface GatewayApi extends InteractiveApi {
   registerGatewayMethod(name:string,handler:(input:{params:Record<string,unknown>;
@@ -50,10 +52,16 @@ export function nativeCallbackRegistry(api:GatewayApi,agentId:string):CallbackRe
       if(snapshot.cancelRequestedAt!==undefined)throw new Error("FLOW_CANCEL_REQUESTED");
       return snapshot;
     };
-    return new FlowCallbackRegistry({read,compareAndSwap:async(revision,state)=>{
+    const store={read,compareAndSwap:async(revision:number,state:State)=>{
       const snapshot=await read();if(snapshot.revision!==revision)return false;
       return facade.compareAndSwap(revision,state);
-    }}).resolve(token);
+    }};
+    const binding=await new FlowCallbackRegistry(store).resolve(token);
+    if(binding?.decision==="retry"){
+      const renewal=new ApprovalRenewal(store,discordPromptTransport(api as unknown as NativePromptApi,context));
+      binding.renew=actor=>renewal.reissue(binding.request,context,actor);
+    }
+    return binding;
   }};
 }
 export default {

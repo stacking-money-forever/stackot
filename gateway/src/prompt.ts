@@ -14,7 +14,7 @@ export interface PromptTransport {
 }
 // Only trusted transport code may assert this before any visible send.
 export class PromptNotSentError extends Error {}
-type Intent={schemaVersion:1;fingerprint:string;approveToken:string;denyToken:string;
+type Intent={schemaVersion:1;fingerprint:string;approveToken:string;denyToken:string;retryToken?:string;
   phase:"prepared"|"plan_inflight"|"plan_sent"|"card_inflight"|"card_sent"|"bound";
   planMessageId?:string;messageId?:string};
 export type PromptResult={kind:"published";messageId:string;reused:boolean}|
@@ -29,6 +29,7 @@ function object(v:Json|undefined):State{
 function intent(v:Json|undefined):Intent{
   const e=object(v) as unknown as Intent;
   if(e.schemaVersion!==1||!uuid(e.approveToken)||!uuid(e.denyToken)||e.approveToken===e.denyToken||
+    (e.retryToken!==undefined&&(!uuid(e.retryToken)||[e.approveToken,e.denyToken].includes(e.retryToken)))||
     !["prepared","plan_inflight","plan_sent","card_inflight","card_sent","bound"].includes(e.phase))
     throw new Error("PROMPT_STATE_INVALID");return e;
 }
@@ -52,7 +53,7 @@ export class ApprovalPromptPublisher {
       !route.conversationId.startsWith("channel:")||!snowflake(route.conversationId.slice(8)))
       throw new Error("PROMPT_ROUTE_INVALID");
     const key=hash(requestId),fingerprint=hash(JSON.stringify([route,requestId]));
-    const proposed:Intent={schemaVersion:1,fingerprint,approveToken:randomUUID(),denyToken:randomUUID(),phase:"prepared"};
+    const proposed:Intent={schemaVersion:1,fingerprint,approveToken:randomUUID(),denyToken:randomUUID(),retryToken:randomUUID(),phase:"prepared"};
     for(let attempt=0;attempt<8;attempt++){
       const snapshot=await this.store.read();if(snapshot.state.schemaVersion!==1)throw new Error("STATE_VERSION_UNSUPPORTED");
       const table=snapshot.state.approvalPrompts===undefined?{}:object(snapshot.state.approvalPrompts);
@@ -78,7 +79,8 @@ export class ApprovalPromptPublisher {
       const spec:ComponentSpec={text:`${approval.taskId} · 계획 ${approval.planVersion}${planLink}\n이 계획에 대한 ${labels[approval.action]}을 승인할까요?`,
         reusable:true,blocks:[{type:"actions",buttons:[
           {label:"승인",style:"success",callbackData:`stackot-approval:${entry.approveToken}`,callbackDataKind:"callback",reusable:true,allowedUsers:users},
-          {label:"거부",style:"danger",callbackData:`stackot-approval:${entry.denyToken}`,callbackDataKind:"callback",reusable:true,allowedUsers:users}]}]};
+          {label:"거부",style:"danger",callbackData:`stackot-approval:${entry.denyToken}`,callbackDataKind:"callback",reusable:true,allowedUsers:users},
+          ...entry.retryToken?[{label:"승인 재요청",style:"success" as const,callbackData:`stackot-approval:${entry.retryToken}`,callbackDataKind:"callback" as const,reusable:true as const,allowedUsers:[approval.requesterId]}]:[]]}]};
       const check=async()=>{await this.pending(requestId);};
       if(entry.phase==="prepared"){
         if(!await this.transition(key,entry,"prepared",{phase:"plan_inflight"}))continue;
@@ -104,6 +106,7 @@ export class ApprovalPromptPublisher {
         const common={...route,messageId:r.messageId,request:request(approval)};
         await this.registry.bind({...common,decision:"approve"},entry.approveToken);
         await this.registry.bind({...common,decision:"deny"},entry.denyToken);
+        if(entry.retryToken)await this.registry.bind({...common,decision:"retry"},entry.retryToken);
       };
       if(entry.phase==="plan_sent"){
         if(!snowflake(entry.planMessageId))throw new Error("PROMPT_STATE_INVALID");

@@ -20,7 +20,7 @@ async function fixture(plan="실제 코딩 없이 승인 경계를 확인한다.
   const result=(id:string):PromptReceipt=>({channel:"discord",messageId:id,target:{kind:"channel",id:route.conversationId.slice(8)}});
   const transport:PromptTransport={sendPlan:async(text,check)=>{await check();planCalls++;plans.push(text);return result("500");},
     sendCard:async(spec,check,record)=>{await check();cardCalls++;specs.push(spec);await record(result("600"));
-      expect(Object.keys(store.state.approvalCallbacks as State)).toHaveLength(2);return result("600");},
+      expect(Object.keys(store.state.approvalCallbacks as State)).toHaveLength(3);return result("600");},
     editCard:async(id,spec)=>{editCalls++;specs.push(spec);return result(id);}};
   const publisher=new ApprovalPromptPublisher(store,transport,()=>now);
   return {store,input,publisher,transport,specs,plans,result,setClock:(v:number)=>{now=v;},
@@ -32,7 +32,8 @@ test("full plan precedes reusable, requester-bound buttons and stable replay",as
   expect(published).toEqual({kind:"published",messageId:"600",reused:false});expect(f.plans[0]).toContain(full);
   expect(f.counts()).toEqual({plan:1,card:1,edit:0});expect(f.specs[0]?.text).toContain("/111/345678901234567890/500");
   const buttons=f.specs[0]!.blocks[0]!.buttons;
-  expect(buttons.map(b=>b.allowedUsers)).toEqual([[f.input.requesterId],[f.input.requesterId]]);
+  expect(buttons.map(b=>b.allowedUsers)).toEqual([[f.input.requesterId],[f.input.requesterId],[f.input.requesterId]]);
+  expect(buttons[2]?.label).toBe("승인 재요청");
   expect(buttons.every(b=>b.reusable&&b.callbackDataKind==="callback")).toBe(true);
   expect(buttons.every(b=>/^stackot-approval:[0-9a-f-]{36}$/.test(b.callbackData))).toBe(true);
   expect(await f.publisher.publish(route,f.input.requestId)).toEqual({kind:"published",messageId:"600",reused:true});

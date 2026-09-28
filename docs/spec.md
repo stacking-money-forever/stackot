@@ -231,6 +231,12 @@ approval repository의 정확한 만료 오류에만 비공개 만료 안내를 
 오류에는 기존 일반 거부 안내를 유지한다. 재시도 버튼/새 승인 발행 경로와
 실제 사용자 이해 QA는 아직 미검증이며, 아래 정책 표의 목표와 별개다.
 
+B06 재요청 준비 구현: 새 승인 카드에 `승인 재요청`을 추가한다. 실제 native
+요청자·route/message 확인을 통과한 만료 pending 요청만 현재 계획에 대한
+새 pending 승인을 발행한다. 기존 승인·TTL은 그대로 두며, 재클릭/재시작은
+영속 재요청 ID와 기존 plan/card receipt를 재사용한다. 새 승인이 필요하며
+재요청 자체는 승인·worker 실행이 아니다. 새 코드의 실제 전달·사람 QA는 별도다.
+
 S26 구현 범위: `gateway/src/approval.ts`가 요청자 decimal-string ID, task,
 plan hash/version, action, 서버 epoch-ms 시각과 최대 24h TTL의 pending 레코드를
 native managed-flow stateJson에 revision CAS로 저장한다. 같은 request ID의

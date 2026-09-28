@@ -183,6 +183,8 @@ forward only) and answers `/readyz` 200 — then stop it and record the result.
 Expired approval guidance preparation is documented in
 [b06-expired-approval.md](../../docs/verification/b06-expired-approval.md).
 No VM/native delivery, re-request control or human QA is implied by that source.
+Retry-control source preparation is still separate from its native deployment
+and human QA; fresh card intents include the retry control, legacy cards persist.
 
 The optional hook credential reference/rotation boundary is in
 [token-rotation.md](../token-rotation.md), including actual selected-Mac drill
