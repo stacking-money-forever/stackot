@@ -8,11 +8,11 @@ import socket
 import subprocess
 
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--origin-ip', required=True)
+parser.add_argument('--origin-ip', help='Optional candidate port probe; owner must separately confirm current tunnel origin')
 parser.add_argument('--output', required=True)
 args = parser.parse_args()
-origin = ipaddress.ip_address(args.origin_ip)
-if not origin.is_global:
+origin = ipaddress.ip_address(args.origin_ip) if args.origin_ip else None
+if origin is not None and not origin.is_global:
     raise ValueError('Origin must be the observed public tunnel origin address')
 observed = {}
 for path, method, expected in [('/stackot/webhook', 'POST', 401),
@@ -27,7 +27,7 @@ for path, method, expected in [('/stackot/webhook', 'POST', 401),
     assert code == expected, (method, path, code)
     observed[method + ' ' + path] = code
 private = {}
-for port in [9377, 9378, 18789]:
+for port in ([9377, 9378, 18789] if origin is not None else []):
     try:
         connection = socket.create_connection((str(origin), port), timeout=5)
     except OSError:
@@ -35,8 +35,9 @@ for port in [9377, 9378, 18789]:
     else:
         connection.close()
         raise RuntimeError('Private origin port reachable:' + str(port))
-receipt = dict(domain='stackot.justn.me', originIp=str(origin),
+receipt = dict(domain='stackot.justn.me', originIp=str(origin) if origin else None,
                publicPaths=observed, privatePorts=private,
-               evidence='D: one independent GitHub Linux runner vantage; no reboot claim')
+               currentOriginIdentityVerified=False,
+               evidence='D: independent runner public HTTPS. Optional private-port results are candidates until owner live origin confirmation; no reboot claim')
 Path(args.output).write_text(json.dumps(receipt, indent=2) + '\n')
 print(json.dumps(receipt))

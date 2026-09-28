@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # Address freshly observed from this dedicated tunnel on 2026-09-28.
-      - run: python3 deploy/macos/verify-public.py --origin-ip 210.180.194.253 --output "$RUNNER_TEMP/stackot-edge.json"
+      # Do not automate private-port claims against a potentially stale origin IP.
+      - run: python3 deploy/macos/verify-public.py --output "$RUNNER_TEMP/stackot-edge.json"
       - uses: actions/upload-artifact@v4
         with:
           name: stackot-deployment-edge

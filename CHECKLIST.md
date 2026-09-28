@@ -12,7 +12,7 @@
 
 - 원장 81행 중 **54행 수용, 27행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 7/12, M4 0/4, M5 3/11, C 0/4.
 - receiver 코드 기준선: `bun test` 346 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, CI 매 푸시 green.
-- 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. R 증거는 이 범위에 한정되며, 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **D(배포)·H(사람) 증거는 0건**. 근거: `docs/verification/wave-03.md`, `openclaw-contract.md`, `s23-owner-probe.md`.
+- 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **Mac 배포의 D 증거는 확보**, 전체 배포 행 수용과 H(사람) 증거는 아직 없다. 공개 HTTPS/서명 거부·외부 내부포트 차단·4개 서비스 crash recovery 근거: `docs/verification/macos-deployment.md`, `macos-recovery.json`, `macos-edge-receipt/stackot-edge.json`. 기존 R 계약 근거: `wave-03.md`, `openclaw-contract.md`.
 
 ## 0. 증거 등급 규칙 (먼저 읽을 것)
 
@@ -46,23 +46,23 @@
 
 ## 2. 사용자 자산 (값이 없으면 위 행들이 시작조차 못 한다)
 
-- [ ] **Discord**: 봇 토큰, 길드 ID, 포럼 3개(이슈/PR) + `#ci-alerts` + `#stackot-admin` 채널 ID
-- [ ] **`githubBacklinkLogin`**: GitHub 이슈/PR에 스레드 URL을 기록하는 계정 로그인 (S19부터 필수 설정)
-- [ ] **`githubWebhookSecret`**: webhook 서명 비밀값
+- [x] **Discord**: 실제 봇/길드, 현재 승인 범위인 Stackot 저장소의 이슈·PR 포럼 2개 + `#ci-alerts` + `#stackot-admin` ID를 비공개 receiver 설정에 연결. `macos-discord-assets.json`; 다른 저장소 온보딩은 별도 범위.
+- [x] **`githubBacklinkLogin`**: `justn-hyeok`를 비공개 설정에 연결 (실제 역링크 쓰기는 S49)
+- [x] **`githubWebhookSecret`**: 비공개 설정 배치, 실제 공개 unsigned POST401
 - [ ] **GitHub 토큰**: repo:read 최소권한(공용), 원하면 **repo별 토큰**(B01에서 지원)
 - [ ] **GitHub push/PR 권한**: S33/S34/S49~S51을 위해 (worker가 자격을 쥐지 않도록 게이트에서만 사용)
-- [ ] **`openclawHookToken`**: gateway hooks.token (gateway와 receiver 동일 값)
-- [ ] **도메인 + A 레코드 + ACME 메일**: 공개 webhook 엔드포인트용
+- [ ] **`openclawHookToken`**: receiver에 배치했으나 Gateway hooks는 controller 검증 전 비활성화; 아직 연동 완료 아님
+- [x] **도메인 + HTTPS**: 사용자 지정 `stackot.justn.me`, Cloudflare DNS 터널과 edge TLS 검증. 현재 선택 경로는 직접 A/ACME 인증서 발급을 사용하지 않음.
 
-## 3. 호스트 배포 (5행) — 준비물은 `deploy/vm/`에 이미 있음
+## 3. 호스트 배포 (5행) — 사용자 선택 Mac + `stackot.justn.me`
 
 **준비물은 증거가 아니다.** 아래 명령을 실제로 돌려 출력을 남겨야 한다.
 
-- [ ] Proxmox KVM 게스트 생성(2–4 vCPU / 4–8 GB / 60–100 GB) + `deploy/vm/cloud-init.yaml` user-data
-- [ ] `deploy/vm/README.md` 순서대로 secrets 배치 → Caddy/유닛 설치 → receiver 기동
-- [ ] 공개 확인: `https://<도메인>/stackot/webhook`에 서명 없이 POST → **401**(200이면 실패), 그 외 경로 404
-- [ ] **S44** `systemctl kill -s SIGKILL stackot-receiver` 후 자동 재기동 + `reboot` 후 무개입 복귀
-- [ ] **S45** 외부에서 443/80만 열려 있고 9377·18789는 도달 불가(gateway loopback 유지) 증명
+- [x] 사용자 선택 호스트: 현재 Mac. Proxmox VM 생성 대신 `deploy/macos/README.md` 경로 사용.
+- [x] 비공개 secrets·실제 채널 설정 → 전용 Caddy/tunnel/Gateway/receiver launchd 설치·기동. 배포 receiver SHA4915f5b.
+- [x] 공개 확인: `https://stackot.justn.me/stackot/webhook` unsigned POST **401**, 다른 경로404. 독립 GitHub Linux 러너 증거 확보.
+- [ ] **S44** 4개 서비스 SIGKILL 후 자동 복구 통과; 실제 reboot 무개입 복귀는 미검증. 현재 GUI LaunchAgents는 사용자 로그인 필요.
+- [ ] **S45** Cloudflare edge HTTPS만 공개; 독립 러너에서 origin9377·9378·18789 도달 불가 검증. S44 선행 수용은 미완.
 - [ ] **S47** 스냅샷으로 빈 환경에서 pending 복원 drill (`backup.ts` + `replay.ts`)
 - [ ] **S48** 이전 바이너리 + 현재 DB로 rollback drill
 - [ ] **S40** threat model + 라이브 prompt-injection tool-denial probe

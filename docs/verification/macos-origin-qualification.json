@@ -1,0 +1,12 @@
+{
+  "tunnelId": "1cf785f2-fd19-4e7c-b713-f9bb5ce214a0",
+  "observedAtUTC": "2026-09-28T05:37:54.890053+00:00",
+  "liveOriginIPs": [
+    "210.180.194.253"
+  ],
+  "qualifiedRun": 36381808394,
+  "probeOrigin": "210.180.194.253",
+  "matchesCurrentTunnelOrigin": true,
+  "preflightObservationUTC": "2026-09-28T05:23:57Z",
+  "limitations": "Dated single-run proof. Future CI does not claim private-port reachability against hardcoded origin; no reboot proof."
+}

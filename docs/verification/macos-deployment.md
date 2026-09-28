@@ -36,14 +36,39 @@ matcher. Actual Caddy oracle passes public/loopback Host401 and other paths404;
 same oracle fails pre-fix3ed3957 (publicHost200, loopback401). Linux CI includes
 this real-Caddy/synthetic401-upstream contract, distinct from deployed evidence.
 
-Deployed receiver release3ed3957 bundleSHA256
+Initial receiver release3ed3957, current release4915f5b108aca7b05297009c6bc6675ca8491ca5; same bundleSHA256
 a630c9f1acc5dbcdc5a2a7c5010ba34c3c0e84fc0e758276e7460dc8d7be373e.
 Owner corrected live configuration and replayed kill/recovery on all four owned
 services. `macos-recovery.json` records PID changes, private readiness, public
 unsigned401 and other paths404. Hooks still disabled; no live GitHub deliveries
 registered or full-controller claim. Login-start entries are installed; actual
-reboot remains untested. Independent GitHub runner edge/private-port oracle is
-scheduled on the deployment branch only. Accepted count54/81, no S44/S45 accept.
+reboot remains untested. Independent GitHub runner edge/private-port oracle
+passed on exactSHA4915f5b, CI36381808394; artifact retained in
+`macos-edge-receipt/stackot-edge.json`. All four Linux jobs succeeded (receiver,
+runtime-config, ingress-contract, deployment-edge). Accepted count54/81; S44
+reboot and S45 dependency prevent full row acceptance.
 
 Local owner receiver346tests/1206assertions and Gateway71tests/409assertions pass;
-both typechecks and builds pass. Exact-SHA Linux CI must be observed after push.
+both typechecks and builds pass. Exact-SHA Linux CI4915f5b succeeded as above.
+
+Gateway Discord is now ready/connected in QA-only mode, restricted to approved
+claw-control thread/users, all model tools denied, hooks disabled, heartbeat0m.
+Native sessions.create returned runStarted=false for the S28 route; actual card
+publication succeeded with workerDispatched=false. Owner's authorized serial
+Aside click as requester1112741808162734110 yielded native authorized=true,
+approved/decidedBy1112741808162734110. Immediate replay and replay after Gateway
+restart yielded denied; approved revision10 persisted. Wrong actor's genuinely
+authenticated client is unavailable, so two-user proof remains missing. These
+are agent-operated R events, not H. Actor artifacts belong to the retained S28 checkout. These
+changes do not activate the unfinished controller/worker/push/PR pipeline.
+
+Independent review found a future stale-origin risk in the automated port probe.
+The dated run36381808394 used a freshly observed dedicated tunnel origin; owner
+post-run API readback matches it (`macos-origin-qualification.json`). Future CI
+tests public HTTPS only, without a hardcoded origin. Optional port results are
+explicit candidates until owner confirms current origin; no automatic S45 claim.
+
+System launchd migration is fully prepared/dry-run validated for four owned
+labels, executing as justn. `sudo -n true` returned "a password is required";
+root installation needs user-local administrator authentication. No privileged
+write or reboot occurred. Current GUI jobs remain running and login-dependent.

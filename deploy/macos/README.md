@@ -37,3 +37,10 @@ independent off-host private-port scan. Preserve that distinction in receipts.
 GitHub automatic retry is not an availability assumption; retain delivery IDs
 for explicit redelivery. Full S44 acceptance still needs actual reboot recovery;
 full S45 needs independent external boundary evidence.
+
+For boot-time execution before this user logs in, `install-system.py --plan`
+validates the exact four system targets and preserves old login plists. Actual
+installation requires local administrator authentication and runs each job as
+`--user justn`, never as root. It neither reboots nor changes other services.
+Then use `probe.py --domain system` for owned crash recovery. A real reboot drill
+and any FileVault unlock requirement remain separate evidence.

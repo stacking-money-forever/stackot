@@ -1,0 +1,16 @@
+{
+  "domain": "stackot.justn.me",
+  "originIp": "210.180.194.253",
+  "publicPaths": {
+    "POST /stackot/webhook": 401,
+    "GET /": 404,
+    "GET /hooks": 404,
+    "GET /stackot/webhook/extra": 404
+  },
+  "privatePorts": {
+    "9377": "unreachable from this runner",
+    "9378": "unreachable from this runner",
+    "18789": "unreachable from this runner"
+  },
+  "evidence": "D: one independent GitHub Linux runner vantage; no reboot claim"
+}
