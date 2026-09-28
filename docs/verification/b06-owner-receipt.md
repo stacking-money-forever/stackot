@@ -38,3 +38,11 @@ native gates; plain storage Error with the same message stays generic. Targeted
 oracle fails on the pre-classificationc6862dc callback. Privatec6862dc package and
 prepared configuration are also inactive/retained; replace the activation plan
 with the corrected source before any live update.
+
+QA-first isolated test also reproduced the plugin→QA→plugin constant import
+cycle (`QA_SCHEMA` before initialization), masked by full-suite module caching.
+Shared controller.ts removes the runtime cycle while preserving plugin.ts's
+public controller-ID export. Fresh `bun test test/qa.test.ts` now2pass/25assertions;
+the same isolated invocation fails on the pre-fixbe19bf6 source. CI now runs this
+fresh QA-first oracle independently. Full76tests/455assertions, typecheck/build
+remain clean. Previously staged packages/config remain inactive.

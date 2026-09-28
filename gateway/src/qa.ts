@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 import type {GatewayApi} from "./plugin.ts";
-import {STACKOT_CONTROLLER_ID} from "./plugin.ts";
+import {STACKOT_CONTROLLER_ID} from "./controller.ts";
 import {FlowStateStore,type NativeFlow} from "./state/flow-store.ts";
 import {ApprovalRepository,type ApprovalInput} from "./approval.ts";
 import {ApprovalPromptPublisher,type PromptRoute} from "./prompt.ts";

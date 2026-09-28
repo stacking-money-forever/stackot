@@ -2,7 +2,8 @@ import {registerApprovalCallbacks,type CallbackRoute,type InteractiveApi,type Ca
 import {FlowCallbackRegistry} from "./callback-registry.ts";
 import {FlowStateStore,type ManagedFlows,type NativeFlow,type State} from "./state/flow-store.ts";
 import {registerActorQa,QA_SCHEMA} from "./qa.ts";
-export const STACKOT_CONTROLLER_ID="stackot";
+import {STACKOT_CONTROLLER_ID} from "./controller.ts";
+export {STACKOT_CONTROLLER_ID} from "./controller.ts";
 export interface GatewayApi extends InteractiveApi {
   registerGatewayMethod(name:string,handler:(input:{params:Record<string,unknown>;
     respond:(ok:boolean,value?:object,error?:object)=>void})=>Promise<void>,options:{scope:"operator.admin"}):void;
