@@ -1,5 +1,8 @@
 B06 — expired approval guidance and human QA, NOT ACCEPT without actual H.
 Own gateway/src/callback.ts, targeted callback tests and expired-guidance receipt.
+Native-expiry supporting preparation: qa.ts/qa.test.ts/packaged schema optional
+server-configured approvalTtlMs(1..900seconds), no new RPC parameters. Preserve
+old default fingerprints; TTL changes require a new fixture. Actual time only.
 Predecessor S27 accepted. Current callback returns generic latest-request text
 for every failure. It does not renew an approval or dispatch work.
 Prepare specific expiry guidance only after actual callback authorization,

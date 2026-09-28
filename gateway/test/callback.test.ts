@@ -75,3 +75,28 @@ test("S27 expiry, changed plan and replay remain authoritative behind callback b
   const f=await fixture();await f.registration.handler(f.ctx);await f.registration.handler(f.ctx);
   expect(f.store.revision).toBe(2);expect(f.replies[1]?.text).not.toBe("승인했습니다.");
 });
+
+test("verified requester gets expiry guidance without approval renewal or state mutation",async()=>{
+  const f=await fixture();f.setClock(1100);await f.registration.handler(f.ctx);
+  const reply=f.replies[0];expect(reply?.ephemeral).toBe(true);
+  expect(reply?.text).toContain("만료");expect(reply?.text).toContain("새 계획");
+  expect(reply?.text).toContain("승인 요청이 필요합니다");expect(reply?.text).toContain("기존 버튼은 재사용할 수 없습니다");
+  expect(reply?.text).not.toContain(input.requestId);expect(reply?.text).not.toContain(token);
+  expect(reply?.text).not.toContain(input.planHash);
+  expect(f.store.revision).toBe(1);expect((await f.repo.get(input.requestId))?.status).toBe("pending");
+  expect((await f.repo.get(input.requestId))?.expiresAt).toBe(1100);
+});
+
+test("expiry is not disclosed for wrong requester, invalid binding or untrusted lookup exception",async()=>{
+  for(const delta of [{senderId:"234567890123456789"},{auth:{isAuthorizedSender:false}},
+    {guildId:"222"},{interaction:{messageId:"999"}}]){
+    const f=await fixture();f.setClock(1100);
+    await f.registration.handler({...f.ctx,...delta,interaction:{...f.ctx.interaction,...delta.interaction}});
+    expect(f.replies[0]?.text).not.toContain("만료");expect(f.store.revision).toBe(1);
+  }
+  const f=await fixture();let registration!:Parameters<InteractiveApi["registerInteractiveHandler"]>[0];
+  registerApprovalCallbacks({registerInteractiveHandler:value=>{registration=value;}},
+    {resolve:async()=>{throw new Error("APPROVAL_EXPIRED");}});
+  await registration.handler(f.ctx);expect(f.replies[0]?.text).not.toContain("만료");
+  expect(f.store.revision).toBe(1);
+});
