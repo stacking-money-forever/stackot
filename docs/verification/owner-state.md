@@ -1,6 +1,20 @@
 # Owner continuation state
 
-Last updated 2026-09-21 (after S12, S13, S17, S18 accepted; S19 in flight).
+Last updated 2026-09-28. The latest continuation is the section below; historical wave sections are retained as evidence.
+
+## Current continuation — wave 03
+
+- Native goal is active in the current owner thread. Completion still requires the full checklist; current accepted count is **47/81**, not the historical 67-row arithmetic below.
+- Owner checkout remains `/Users/justn/dev/.worktrees/stackot-completion-20260921`, baseline `fd5ff804a26931adb338b11a9a2e96e451772cb9`. Current owner changes are verification notes; no row has been newly accepted or published.
+- Active row: **S23, publication/CI pending**, task checkout `/Users/justn/dev/.worktrees/stackot-s23-20260928`, branch `codex/stackot-s23-20260928`, interactive Devin name `stackot-s23`, root pane `w6J:p1`. Live foreground argv was verified as `--model swe-2 --permission-mode dangerous`. Provider coverage: Devin `uncovered`.
+- Installed in the task checkout's ignored `receiver/node_modules/.stackot-runtime/`: checksum-verified Node `24.21.0`, OpenClaw `2026.9.6 (eb377ac)`, standalone acpx `0.19.3`, external ACP plugin `@openclaw/acpx@2026.9.6` (its private acpx dependency is `0.19.0`). No global runtime or user auth store was changed.
+- Owner independently observed real local Gateway startup, token-authenticated health `ok: true`, acpx loaded with no plugin errors, zero external channels and sessions, and loopback-only listeners on port 28789. The owned probe Gateway shut down cleanly after SIGTERM. This is bounded R startup evidence only; no worker, Discord, deployed or human result was observed.
+- S23 first attempt rejected for missing artifacts after bounded discovery. The one narrowed retry produced both files. Owner re-ran CLI/schema/source/helper oracles, corrected false wildcard/snapshot claims and removed the unproved Receiver-only storage mandate. Final contract/launch/receipt hashes match the task checkout. The native worker is terminal/cancelled; artifact evidence, not its completion label, supports the candidate.
+- Resume by checking the published S23 commit's exact-SHA CI, then record ACCEPT and advance S24. Carry the original one-row, one narrowed retry, preserved worktree/receipt and CI-before-acceptance rules forward. Source, schema and helper observations do not prove live worker or account integration.
+- Superseded blocker: working repository-local Discord/GitHub credentials and GitHub admin/push access are now observed. Receiver configuration, required Discord forums/operations channels, deployment host/DNS and human participation remain unestablished. Credential access is not authorization for remote writes.
+- The earlier latest-docs timeout finding is not a pinned-version defect: installed `2026.9.6` accepts and forwards per-call `runTimeoutSeconds`. Freeze the installed API before editing S24; do not rewrite it to match moving docs.
+
+Full launch/preparation/runtime receipts: `docs/verification/wave-03.md`. The inherited caller `w1:p2Z` does not resolve, so it is not a callback target and no focused-pane substitute was chosen.
 
 ## Goal and standing constraints
 

@@ -1,0 +1,26 @@
+S23 — freeze the installed OpenClaw/acpx contract
+
+Owner: current Codex thread. You own ONLY docs/verification/openclaw-contract.md and docs/verification/s23-receipt.md in this task worktree. You are not alone in the codebase: preserve all owner preparation and other edits; never revert another contributor's work.
+
+Baseline fd5ff804a26931adb338b11a9a2e96e451772cb9. One row, at most two flat Todo items, no subagents. No commit, push, merge, deployment, remote write, account change, secret access, global install, or worktree deletion. Use apply_patch for manual edits. Do not modify product code/templates/runbooks or CHECKLIST/owner-state/wave ledgers. The owner will integrate and verify.
+
+The owner is preparing real pinned packages at:
+  receiver/node_modules/.stackot-runtime/node-v24.21.0-darwin-arm64/bin/node
+  receiver/node_modules/.stackot-runtime/packages/node_modules/.bin/openclaw
+  receiver/node_modules/.stackot-runtime/packages/node_modules/.bin/acpx
+Add their directories to PATH only per command. Set OPENCLAW_STATE_DIR and OPENCLAW_CONFIG_PATH to a private path under receiver/node_modules/.stackot-runtime/probe-state before every OpenClaw call so no user global state is touched. Never read ~/.codex/auth.json or any token-bearing file. Never inspect the primary checkout .env. Do not start a Gateway connected to an external account.
+
+Task: probe installed version/help/config/schema/ACP/worktree/task APIs, and inspect pinned package source when a CLI help cannot establish a behavior. Produce a compact contract document grounded in actual installed binaries, with exact commands and sanitized observations. Use official docs only as secondary context and label version differences. Core oracle: commands in the document rerun against the pinned binaries and claims match pinned implementation.
+
+Specifically decide with installed-version evidence:
+- Node runtime compatibility, package versions and upstream provenance.
+- Whether current deploy/openclaw.json5.template validates with non-secret probe replacements; record validation errors without patching it (S24 owns fixes).
+- ACP requester sandbox restrictions, write/exec permissions, per-call versus configured timeout, and cwd authorization.
+- Worktree create/reuse/preservation contracts (do not remove a worktree); task retry semantics.
+- Whether TaskFlow requires controller code for resume; public extension/plugin API entry points for S25.
+- Hook Idempotency-Key acceptance/lifetime/restart behavior and 200 admission versus terminal delivery.
+- Discord callback allowedUsers/TTL/restart persistence and whether these alone satisfy requester+plan-hash+action-bound approvals. Do not conflate generic component access with product approval state.
+
+A local synthetic config is allowed only under the ignored probe-state path with clearly synthetic tokens and no external channels. Missing runtime/provider credentials are NOT permission to invent runtime success. Each claim must identify version/help/source/runtime as its evidence type. Report exact unresolved questions so the owner can probe them.
+
+Receipt <=3000 bytes: changed files, commands/results, unsupported assumptions, residual risks. Reply with both artifact paths and a short candidate summary. Completion is candidate-only; do not call the row accepted.
