@@ -10,7 +10,7 @@
 
 ## 현재 상태 (2026-09-28 기준)
 
-- 원장 81행 중 **53행 수용, 28행 미완**. 마일스톤: **M1 36/36**, M2 7/14, M3 7/12, M4 0/4, M5 3/11, C 0/4.
+- 원장 81행 중 **54행 수용, 27행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 7/12, M4 0/4, M5 3/11, C 0/4.
 - receiver 코드 기준선: `bun test` 346 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, CI 매 푸시 green.
 - 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. R 증거는 이 범위에 한정되며, 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **D(배포)·H(사람) 증거는 0건**. 근거: `docs/verification/wave-03.md`, `openclaw-contract.md`, `s23-owner-probe.md`.
 
@@ -40,7 +40,8 @@
 - [ ] **S31** cancel/timeout 후 작업물 보존
 - [ ] **S29** 유효 승인 이후에만 ACP spawn (acpx 플러그인 + codex 로그인 선행)
 - [ ] **S28** 승인 actor를 Discord UI 밖에서 강제 확인 — 아래 Discord 값 필요
-- [ ] **S33/S34/S36** push·PR·역링크 쓰기 어댑터 — 아래 GitHub 권한 필요
+- [ ] **S33/S34** push·PR 쓰기 어댑터 — 아래 GitHub 권한 필요
+- [x] **S36** 기존 thread 유지·역링크 실패만 재개 — 합성 회복/marker 신뢰/중복 거부 및 정확 SHA Linux CI, `wave-03.md`. 실제 GitHub 쓰기는 S49.
 - [x] **S35** thread intent/receipt 영속화·실패 후 재사용 — 합성 외부 생성자 + 실제 native 저장 재시작·정확 SHA Linux CI. 실제 Discord 어댑터는 S49.
 
 ## 2. 사용자 자산 (값이 없으면 위 행들이 시작조차 못 한다)

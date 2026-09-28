@@ -267,8 +267,6 @@ actual S26 and labelled mutants are recorded above. S27 ACCEPT at synthetic acto
 decision class; actual Discord principal and execution remain S28/S29. Count
 **53/81**, M2 **7/14**. Full goal/deployment/human/release requirements remain open.
 
-## Corrected prerequisite audit (current access facts)
-
 ## S36 owner candidate — backlink-only recovery
 
 Brgr first revision rejected unsafe inflight absent-marker send; narrowed revision
@@ -287,7 +285,32 @@ Evidence S only for backend recovery, not actual GitHub/Discord auth or process
 restart. Source/receipt explain live adapter capability/auth requirements.
 Publish and inspect exact-SHA Linux CI before S36 ACCEPT; count remains 53/81.
 
-## Corrected prerequisite audit (continued current access facts)
+### S36 — ACCEPT after exact-SHA Linux success
+
+Retained task `691589c`; published integration `d9de98c8ec9d4b7295dc6a7d75c70221a7296487`.
+CI [36371979435](https://github.com/stacking-money-forever/stackot/actions/runs/36371979435)
+completed success on exactly that SHA, both Receiver and runtime-config including
+41 Gateway tests/typecheck/build and original three native restart regressions.
+Owner task/target hashes, fixture replay, Receiver marker compatibility and
+discriminating mutation controls passed. S36 ACCEPT at S external-backend class;
+no new native-process/GitHub/Discord/author authentication claim. Count **54/81**,
+M2 **8/14**. Actual provider writes and marker trust still require S49.
+
+## S28 continuation — real callback actor integration pending
+
+Owner inspected pinned native registerInteractiveHandler and Discord factory/source
+in dedicated S28 checkout; exact contract in s28-installed-callback-contract.md.
+Native source actually invokes handler even with auth.isAuthorizedSender=false.
+S27 requester predicate must be connected independently to native senderId plus
+bound account/guild/conversation/parent/message/action. Raw callback data/payload
+are strings, not authenticated actor/flow/action objects. No generic HTTP/RPC
+native-context injection surface is allowed; structural shape/token is not origin
+proof. Brgr `2e5131a6-2e91-42a8-8dc0-db404d806b75` is in one narrowed advice revision;
+first proposal mostly correct but rejected those two contract errors. Runtime
+two-user proof remains pending real forum/account/principal preparation. Source
+and any synthetic test cannot accept this R/H row. Full goal stays active.
+
+## Corrected prerequisite audit (current access facts)
 
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 
