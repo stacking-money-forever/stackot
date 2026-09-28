@@ -179,8 +179,6 @@ Receipt fields alone are not authentication; the eventual trusted adapter must
 verify the marker's actual bot author/context. Synthetic backend tests cannot prove
 live provider guarantees. Row S35 is still pending owner oracles/publication/CI.
 
-### S26 — ACCEPT after exact-SHA Linux restart success
-
 ### S35 target candidate — publication pending
 
 Owner integrated ten owned files with SHA-256 matches, plus the unchanged S26
@@ -194,7 +192,7 @@ a fake external dependency, not a live Discord guarantee. S35 remains pending
 exact-SHA Linux replay before product ACCEPT. S27 brgr advice is in its one
 narrowed revision after rejection of pending→consumed shortcut/metadata leakage.
 
-### S26 publication details
+### S26 — ACCEPT after exact-SHA Linux restart success
 
 Task evidence commit `281b93f` is retained on S26 branch. Integration SHA
 `7477852f6299918a8cbe9637bb7209d826e76051` was pushed; CI
@@ -206,6 +204,31 @@ S26 ACCEPT is pending storage only; count **51/81**, M2 **5/14**. Actual actor,
 expiry eligibility/decision/consumption, worker and deployment remain open.
 
 ## Corrected prerequisite audit (current access facts)
+
+## S27 owner candidate — guard matrix and publication
+
+Task `9e2f11b3-8a0e-47d8-a613-642035ad1464`, healthy local.devin configured SWE-2
+High, no-tool supplied-facts advice, owner implementation. First proposal rejected
+for approval/consumption shortcut and metadata return before actor check; narrowed
+result rejected (decision `dc6b9272-28d4-4709-b895-fcdc6bd008ab`) for replacing the
+real S26 schema and putting native revision into product stateJson. No third retry.
+Exact status/result and scoped owner receipt are preserved on the S27 branch.
+
+Owner implements separate pending→approved/denied and approved→consumed CAS.
+Both stages check actor, current task/requester/hash/version/action, active-task
+status and inclusive expiry each retry, propagate real persistence failures, deny
+replay, record durable server operationId, and return no eligibility if expiry
+passes while awaiting storage acknowledgement. Lost-ack leaves a used marker;
+future trusted controller must reconcile, never issue a replacement grant.
+CAS single eligibility is not exactly-once external execution or real actor auth.
+
+Task 21 tests / 184 assertions, typecheck/build pass. Target combined 32 tests /
+218 assertions and both-module build pass; five owned file hashes match. New guard
+matrix fails against actual S26 module and labelled actor/replay/expiry mutants.
+Evidence S only for actor/guard behavior; actual Discord S28, execution S29+ and
+deployment/human gates remain. Publication/exact-SHA Linux CI before S27 ACCEPT.
+
+## Corrected prerequisite audit (continued)
 
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 

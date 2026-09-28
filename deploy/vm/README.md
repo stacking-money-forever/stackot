@@ -15,6 +15,11 @@ a real isolated native Gateway restart with synthetic request data. The fixture
 is not installed by these VM units and does not register production callbacks
 or enable approved worker execution. Host rollout remains a separate gate.
 
+S27 implements approval/consumption predicates using supplied trusted context.
+Its denial/concurrency tests are synthetic, not actual Discord authentication.
+These guards alone do not authorize production dispatch or establish exactly-once
+execution; trusted callback/worker integration and lost-ack reconciliation remain.
+
 S35 adds durable thread intent/receipt reconciliation. Its restart fixture uses a
 synthetic external provider and the real native flow store; it does not provision
 Discord channels or prove live marker authentication/idempotency. These modules

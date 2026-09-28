@@ -67,6 +67,11 @@ S26의 Gateway-side pending 승인 저장 모듈은 `gateway/`에 있다. 해당
 고정 OpenClaw/Node를 PATH에 둔 독립 재시작 오라클이다. probe는 합성 요청을
 저장할 뿐 production callback 등록이나 승인/worker 실행을 활성화하지 않는다.
 
+S27의 승인/소비 guard는 합성 actor/context 거부 매트릭스로 검증한다. 호출
+context는 향후 신뢰된 서버 callback adapter가 만들어야 하며 메시지·모델·
+callback payload의 actor 값을 그대로 전달하면 안 된다. 소비 성공의 operation ID는
+실행 receipt가 아니므로, actual dispatch/응답 유실 대조 없이 작업 성공으로 표시하지 않는다.
+
 S35 thread receipt 저장 모듈도 `gateway/`에서 함께 검증한다. 저장소 루트에서
 `python3 gateway/scripts/build-thread-probe.py` 뒤 같은 restart runner에
 `--plugin gateway/node_modules/s35-native-plugin --method s35probe.state --expect-thread`를

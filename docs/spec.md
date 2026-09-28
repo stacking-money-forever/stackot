@@ -233,6 +233,15 @@ native managed-flow stateJson에 revision CAS로 저장한다. 같은 request ID
 거부와 consumption(S27), Discord callback(S28), 실행 게이트(S29 onward)는
 아직 구현·검증되지 않았다.
 
+S27은 pending→approved/denied 결정과 approved→consumed 권한 소비를 분리한다.
+두 단계 모두 서버가 제공한 actor, 현재 task/requester/plan/version/action,
+active task 상태와 `now < expiresAt`를 매 CAS 재시도마다 검사한다. 저장 응답이
+만료 뒤 도착해도 권한을 반환하지 않는다. 거부·소비된 요청은 재승인/재소비로
+갱신되지 않으며, 소비에는 서버 operation ID를 남긴다. 이는 레코드당 한 번의
+dispatch eligibility이지 외부 작업 exactly-once 보장이 아니다. 응답 유실과
+dispatch 전 장애는 신뢰된 controller의 receipt 대조로 복구해야 한다.
+실제 Discord actor 출처(S28)와 worker/push/PR 실행 가드는 아직 별도 행이다.
+
 S35의 `gateway/src/thread-receipt.ts`는 thread 생성 intent와 receipt를 native
 state에 저장한다. inflight 재시도는 기존 operation의 신뢰된 marker 확인이
 먼저이며, 빈 조회나 시간 경과만으로 다시 생성하지 않는다. 확인 불가 시

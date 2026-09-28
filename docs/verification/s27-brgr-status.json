@@ -1,0 +1,44 @@
+{
+  "state": "terminal",
+  "task": {
+    "acceptance_criteria": [
+      "Two-phase approve/deny then one-use consumption; actor check precedes metadata return, expiry and binding rechecked on every CAS retry, storage failure/replay deny; no external exactly-once/runtime claim; <=700 words no tools."
+    ],
+    "artifact_contract": {
+      "max_bytes": 8388608,
+      "media_type": "text/plain"
+    },
+    "budget": {
+      "deadline_seconds": 180,
+      "max_attempts": 2
+    },
+    "create_request_id": "revise-9e2f11b3-8a0e-47d8-a613-642035ad1464-2",
+    "evidence": {
+      "capture_diff": false,
+      "capture_logs": true,
+      "files": []
+    },
+    "instructions": {
+      "forward_criteria": true,
+      "role": [],
+      "scope": [
+        "stdout-only supplied-facts S27 proposal; no source inspection or mutation"
+      ]
+    },
+    "objective": "No tools. Narrowed S27 supplied-facts proposal <=700 words. Native numeric revision CAS/object stateJson, four fresh-read retries, current task requester/hash/version/action binding, decimal uint64 actor IDs, epoch-ms times/max24h TTL. Two separate operations: decide(pending->approved|denied) from trusted server actor, then consume(approved->consumed with durable server operationId). No pending->consumed shortcut. Both operations validate actor/binding/active-task/clock/now>=expiresAt before returning any stored grant or identity. Replays must deny new eligibility; do not return sensitive consumed metadata to unauthorized callers. Recheck now and predicates each retry, reject malformed future clocks and corrupt schema, real storage failure propagates. Consumed eligibility authorizes at most one dispatch decision, NOT exactly-once external execution; lost write ack/dispatch crash requires later trusted controller reconciliation, not grant renewal. S28 actor auth and S29 execution remain unimplemented. Return precise small state matrix plus tests only, no native API invention, subagents or tool/source-reviewed claims.",
+    "owner_id": "codex:01a0e54a-250b-7882-b1c7-143cfc556e1d",
+    "required_capabilities": [
+      "completion"
+    ],
+    "revision": 2,
+    "route": {
+      "harness_id": "local.devin",
+      "requested_effort": null,
+      "requested_model": null
+    },
+    "schema": "brgr/v1",
+    "task_id": "9e2f11b3-8a0e-47d8-a613-642035ad1464",
+    "workspace": "/Users/justn/Library/Application Support/brgr/worktrees/stackot/9e2f11b3-r2/"
+  },
+  "workspace_present": true
+}
