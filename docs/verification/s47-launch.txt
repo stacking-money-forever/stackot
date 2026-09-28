@@ -1,0 +1,22 @@
+S47 — real empty-environment pending restore and drain.
+Base1e5559b, retained dedicated stackot-s47-20260928, rootw8Q:p1.
+Primary artifact docs/verification/restore.md; owner executable probe may accompany it.
+Prerequisites S46/S14 accepted. Source is a genuine GitHub issues.edited delivery,
+65cd5010-bb09-11f1-9c73-fb0e8f26c548, acknowledged by deployed receiver4915f5b.
+Supported production replay retained original received_at; consistent VACUUM INTO
+snapshot contains actual pending row. Private snapshot is preserved on selected Mac.
+No fake provider, backdated row, model-reported success or synthetic promotion.
+Owner uses actual pinned Node24.21.0/OpenClaw2026.9.6 hooks admission and receiver
+bundle in a new private empty restore environment on this host. Agent tools denied,
+no ACP plugin, deliver=false, no production Gateway hooks activation, no worker,
+push/PR or external Discord messages. Actual native hook run-admission receipt
+proves only outbox handoff, not model/Discord/worker completion. Inspect live SDK
+contract before selecting commands; do not assume Idempotency-Key support.
+Oracle: snapshot integrity/count/ID equality, empty target restore, actual pending
+row -> delivered against actual native Gateway with associated admission/run ID,
+restart preserves delivered row, replay is rejected for delivered and all owned
+processes stop. Preserve task, snapshot and private state; never delete worktree.
+Brgr supplied-facts advice only: no tools/writes/delegation/credential access.
+Owner owns mutation, exact-source checks, oracle and row acceptance. One narrowed
+advisory retry maximum. Actual Linux CI required before accepting filesystem/process
+changes; no S47 acceptance from prepared scripts or fake HTTP success.
