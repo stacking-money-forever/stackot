@@ -14,6 +14,11 @@ export class ApprovalRenewal {
   constructor(private readonly store:StateStore,private readonly transport:PromptTransport,
     private readonly now=Date.now,private readonly ttlMs=86_400_000){}
   async reissue(original:ApprovalInput,route:PromptRoute,actorId:string):Promise<PromptResult>{
+    return this.issue(original,route,actorId,new Set());
+  }
+  private async issue(original:ApprovalInput,route:PromptRoute,actorId:string,ancestry:Set<string>):Promise<PromptResult>{
+    if(ancestry.has(original.requestId)||ancestry.size>=16)throw new Error("RENEWAL_CHAIN_INVALID");
+    ancestry.add(original.requestId);
     if(actorId!==original.requesterId)throw new Error("RENEWAL_ACTOR_DENIED");
     const id=(value:string)=>/^[1-9][0-9]{0,19}$/.test(value)&&BigInt(value)<=18_446_744_073_709_551_615n;
     if(!route.accountId?.trim()||!id(route.guildId)||!id(route.parentConversationId)||
@@ -67,8 +72,19 @@ export class ApprovalRenewal {
       }
       // request() preserves original issuance/expiry on retry; publish() owns
       // durable admission/receipt recovery and never blind-resends unknown sends.
-      await repo.request(record.input);
-      return new ApprovalPromptPublisher(store,this.transport,this.now).publish(route,record.input.requestId);
+      const issued=await repo.request(record.input);
+      if(this.now()>=issued.approval.expiresAt){
+        // An old retry button must not report a stale bound card as usable.
+        // Follow the durable lineage; each expired generation remains intact.
+        return this.issue(record.input,route,actorId,ancestry);
+      }
+      const published=await new ApprovalPromptPublisher(store,this.transport,this.now).publish(route,record.input.requestId);
+      if(published.kind==="published"){
+        const current=await repo.get(record.input.requestId);
+        if(!current)throw new Error("RENEWAL_APPROVAL_MISSING");
+        if(this.now()>=current.expiresAt)return this.issue(record.input,route,actorId,ancestry);
+      }
+      return published;
     }
     throw new Error("RENEWAL_WRITE_CONFLICT");
   }

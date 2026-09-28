@@ -73,3 +73,16 @@ test("unknown physical send acknowledgement does not create another fresh reques
   expect((await f.service().reissue(f.original,f.route,f.original.requesterId)).kind).toBe("uncertain");
   expect(sends).toBe(1);expect(Object.keys(f.store.state.approvals as State)).toHaveLength(2);expect(f.counts().cards).toBe(0);
 });
+
+test("an old retry control follows expired renewal lineage to one fresh pending request",async()=>{
+  const f=await fixture();f.setClock(1100);await f.service().reissue(f.original,f.route,f.original.requesterId);
+  const first=Object.keys(f.store.state.approvals as State).find(x=>x!=="original")!;
+  const old=await f.repo.get(first);f.setClock(61100);
+  expect((await f.service().reissue(f.original,f.route,f.original.requesterId)).kind).toBe("published");
+  const ids=Object.keys(f.store.state.approvals as State);expect(ids).toHaveLength(3);
+  const newest=ids.find(x=>!["original",first].includes(x))!;
+  expect(await f.repo.get(newest)).toMatchObject({status:"pending",requestedAt:61100,expiresAt:121100});
+  expect(await f.repo.get(first)).toEqual(old);
+  f.setClock(61200);await f.service().reissue(f.original,f.route,f.original.requesterId);
+  expect(Object.keys(f.store.state.approvals as State)).toHaveLength(3);expect(f.counts()).toEqual({plans:2,cards:2});
+});
