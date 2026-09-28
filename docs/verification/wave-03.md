@@ -87,6 +87,12 @@ Host prerequisite updated through the newly available proxmox-agent capability: 
 
 Target integration worktree re-ran the final oracle successfully (both pinned installs, plugin-aware validation, both exact-field denials, controller/default sandbox policy). Task evidence is preserved in local commit `58a055e` on the S24 branch. Product delta and verification notes are ready for integration-branch publication; S24 remains pending the exact-SHA Linux run.
 
+Published S24 integration SHA: `cd1b2af7f9c9ebd84643229071f73fb1cb27a0d1`. Exact-SHA Linux CI run [36365179491](https://github.com/stacking-money-forever/stackot/actions/runs/36365179491) was observed in progress. It includes both unchanged Receiver verification and the new pinned runtime-config oracle. The owned idle Devin pane `w6M:p1` was closed after integration and a fresh idle check; task checkout/branch/commits/probe evidence are retained. Do not mark S24 ACCEPT before the actual CI result.
+
+### S24 — ACCEPT after exact-SHA Linux success
+
+Run `36365179491` completed **success** on `cd1b2af7f9c9ebd84643229071f73fb1cb27a0d1`; both `receiver` and `runtime-config` jobs succeeded. Owner task/target replay, old-template sandbox discrimination and both plugin-schema negative controls are recorded above. S24 is ACCEPT; count **49/81**, M2 **3/14**. Evidence is actual installed CLI schema/policy plus bounded fixtures and Linux verification, not live worker, Discord delivery, deployed host or human acceptance. S25 is the next dependency-ready row.
+
 Herdr prepared the task worktree from the repository parent with `--no-focus`. Its automatically provisioned root pane is `w6J:p1`; no existing pane was split, moved, focused, or zoomed. The inherited caller ID does not resolve (`pane_not_found`), so it is not used as a callback target or substituted with the focused pane.
 
 ## Corrected prerequisite audit
