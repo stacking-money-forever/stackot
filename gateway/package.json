@@ -2,10 +2,12 @@
   "name": "@stackot/gateway",
   "private": true,
   "type": "module",
+  "version": "0.1.0",
+  "openclaw": { "extensions": ["./dist/plugin.js"] },
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build": "bun build src/approval.ts src/thread-receipt.ts src/backlink.ts src/callback.ts src/callback-registry.ts --target=node --outdir dist"
+    "build": "bun build src/plugin.ts src/approval.ts src/thread-receipt.ts src/backlink.ts src/callback.ts src/callback-registry.ts --target=node --outdir dist"
   },
   "devDependencies": {
     "@types/bun": "1.4.0",

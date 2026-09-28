@@ -26,9 +26,33 @@ Native false-auth bypass and ignored message-binding labelled mutants fail the
 helper suite; actual baseline lacks the new helper. No authentic callback was
 submitted or accepted. Source/type facts are not real actor-auth proof.
 
-Remaining S28 executable work: native plugin bootstrap, server-owned route/flow
-registry discovery after restart, real pending-message/component producer and
-actual two-user native probe. Required actual forum/account setup and principals
+Native bootstrap follow-on: native plugin manifest/entrypoint, on-each-call native
+route/owner/managed-flow-list token resolution and readonly admin health added.
+Six new synthetic bootstrap tests/28 assertions check fresh list resolution,
+foreign owner/controller/agent denial, duplicate token denial, missing route and
+role-routing ambiguity. Native callback omits role IDs, so matching role-dependent
+bindings are refused rather than inferred. No process-local locator map exists.
+Native cancelRequestedAt metadata is carried beside the revision/state snapshot;
+only the approval store checks it before reads/CAS. Generic receipt persistence
+does not change policy. Cancellation after discovery is denied in a synthetic
+test even when task JSON still says planned. Actual native cancel/worker lifecycle
+proof remains later runtime verification; this test is not R evidence.
+Removing the late-cancellation read guard actually returns a successful approval
+in the discriminating synthetic test; the final implementation rejects it.
+Target final artifact replay also passes on actual Gateway PIDs 71659→72023.
+Total Gateway suite is 58 tests/348 assertions; no actor evidence upgrade.
+
+First real bootstrap run failed: installer disabled plugin with missing required
+agent config. Owner configured agent and explicitly enabled only that reviewed
+plugin in owned fixture, disabled default memory slot and re-ran actual config
+validation/start/restart. Real Gateway PIDs `57620 → 57867`, plugin stackot-gateway
+loaded both times, readonly native health succeeded, first listener stopped and
+owned cleanup completed. No external channels, actor callback, model or worker.
+R is bootstrap only, not actual actor/route/flow integration. Source stage helper
+excludes dev dependencies/scripts and copies reviewed manifest/bundles only.
+
+Remaining S28 executable work: real pending-message/component producer and actual
+two-user native probe, including native route/flow integration. Actual forum/account setup and principals
 must be prepared before the live probe. New helpers alone do not activate the
 production path and do not satisfy S28. No fake RPC actor injection, TS brand or
 synthetic UI filtering may replace that runtime evidence. Count remains 54/81.

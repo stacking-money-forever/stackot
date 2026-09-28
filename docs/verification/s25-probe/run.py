@@ -21,6 +21,8 @@ def main():
     shape = parser.add_mutually_exclusive_group()
     shape.add_argument('--expect-approval', action='store_true')
     shape.add_argument('--expect-thread', action='store_true')
+    shape.add_argument('--expect-bootstrap', action='store_true')
+    parser.add_argument('--plugin-agent')
     args = parser.parse_args()
     output = Path(args.output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -113,9 +115,30 @@ def main():
         cfg['agents'] = {'defaults': {'workspace': str(root / 'workspace'),
                                       'heartbeat': {'every': '0m'}}}
         cfg['discovery'] = {'mdns': {'mode': 'off'}}
+        if args.plugin_agent:
+            cfg['plugins']['entries'][plugin_id]['config'] = {'agentId': args.plugin_agent}
+            cfg['plugins']['entries'][plugin_id]['enabled'] = True
+            cfg['plugins'].setdefault('slots', {})['memory'] = 'none'
+            cfg['agents']['list'] = [{'id': args.plugin_agent, 'workspace': str(root / 'workspace')}]
+            cfg['bindings'] = [{'agentId': args.plugin_agent, 'match': {'channel': 'discord', 'guildId': '111'}}]
         config.write_text(json.dumps(cfg, indent=2))
         command(['config', 'validate'])
         start()
+        if args.expect_bootstrap:
+            first = call(args.method)
+            assert first['pluginId'] == plugin_id and first['callbackRegistered']
+            stop()
+            start()
+            second = call(args.method)
+            assert second['callbackRegistered'] and second['pluginId'] == plugin_id
+            assert first['gatewayPid'] != second['gatewayPid']
+            receipt = {'runtime': '2026.9.6', 'root': str(root), 'pluginId': plugin_id,
+                       'actualGatewayPids': [first['gatewayPid'], second['gatewayPid']],
+                       'nativeBootstrapRecovered': True, 'actualActorCallback': False,
+                       'modelOrWorkerRun': False, 'externalChannels': []}
+            output.write_text(json.dumps(receipt, indent=2))
+            print(json.dumps(receipt))
+            return
         session = call('sessions.create', {'key': 'agent:main:s25-' + uuid.uuid4().hex,
                                           'agentId': 'main', 'label': 's25-durability-probe'})
         assert session.get('ok') and session.get('runStarted') is False

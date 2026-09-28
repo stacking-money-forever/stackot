@@ -314,6 +314,36 @@ and any synthetic test cannot accept this R/H row. Full goal stays active.
 
 ### S28 independent helper/registry preparation — NOT ACCEPT
 
+### S28 native bootstrap follow-on — still NOT ACCEPT
+
+Final target replay: actual Gateway 71659→72023 loaded current artifact and served
+parameter-free native readonly health; listeners/groups stopped. Full target
+58 tests/348 assertions, typecheck/build and source hashes/Python/YAML checks pass.
+SDK TaskFlowRecord defines cancelRequestedAt separately from model JSON. Snapshot
+now exposes that metadata; callback-only approval store checks it before read/CAS.
+Generic receipt persistence retains its policy. Synthetic late-cancel test proves
+removing the guard actually returns a successful approval; final code rejects.
+This is S cancellation evidence, not an actual native cancellation/lifecycle probe.
+Actor/component and real native route/flow integration remain unproved.
+
+Earlier helper SHA `7eab0c146becb601752c712f6befcbc3a8fb8f55` passed exact Linux CI
+`36373047613`. Owner added actual plugin manifest/entrypoint, SDK route resolution
+with channel/parent peer (installed Discord source contract), native bound managed
+flow list lookup each callback, strict agent/account/owner/controller/active-flow
+checks, duplicate-token denial and no process-local index. Native context omits
+role IDs; matching role-dependent bindings are refused. The readonly admin health
+RPC rejects all parameters and cannot inject actor contexts or decide grants.
+
+Five additional synthetic tests/21 assertions, total 57/341. Actual plugin startup
+trial failed because installer left entry disabled with missing agent config.
+After explicit owned-fixture config+enable and memory-slot disable, actual Gateway
+PIDs 57620→57867 both loaded stackot-gateway and served readonly native health.
+Listeners/process groups stopped; no external channels/model/worker/actor calls.
+This R is bootstrap only; route/list selection still has synthetic test evidence.
+Required documents/stage builder and Linux fourth bootstrap oracle are updated.
+Actual component producer and real two-user native callback proof remain open;
+target replay/publication gates follow. No S28 acceptance/count change.
+
 Brgr narrowed advice accepted after source qualification, decision
 `e71e7e21-b8b2-4480-a7cf-8e0e3f441b9b`; exact status/result retained. The native
 source contract snapshot hash matched `8234928a104953d3759938175b31fbc5f55e8d382c369dbdbaa5534645827626`.

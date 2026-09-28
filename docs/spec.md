@@ -246,8 +246,9 @@ S28 준비 코드는 native handler 등록 helper와 flow별 callback binding �
 추가했다. native auth, numeric sender, account/guild/channel/parent/message
 binding을 확인한 뒤 S27 결정을 호출하며, callback payload로 actor/flow/plan을
 선택하지 않는다. 단순 객체 모양/token은 호출 출처 증명이 아니다. production
-plugin bootstrap, 재시작 후 route/flow 발견, 실제 component 발행과 두 사용자
-검증은 아직 남아 있고 helper/합성 테스트만으로 S28을 수용하지 않는다.
+plugin 등록 엔트리와 native route/flow 조회 코드를 추가했고 실제 독립 Gateway
+재기동에서 plugin 등록을 확인했다. route/flow 선택은 합성 매트릭스로 확인했으며
+실제 component 발행과 두 사용자 검증이 남아 있어 S28은 아직 수용하지 않는다.
 
 S35의 `gateway/src/thread-receipt.ts`는 thread 생성 intent와 receipt를 native
 state에 저장한다. inflight 재시도는 기존 operation의 신뢰된 marker 확인이
