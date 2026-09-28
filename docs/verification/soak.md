@@ -51,7 +51,13 @@ identify timing/coverage gaps, not their cause.
 `deploy/analyze-soak.py --input <private receipt>` audits both timelines without
 changing/restarting the active collector. It distinguishes terminal-record
 presence from beta acceptance, rejects malformed/backwards clock assumptions,
-and reports wallCoverageContinuous=false for the actual receipt. Three targeted
+and reports wallCoverageContinuousThroughLastSample=false for the actual receipt. Five targeted
 tests cover regular scheduling that conceals wall gaps, backward time and false
 terminal/clock data. Existing raw receipts stay intact. B09 remains NOT ACCEPT:
 this run is neither representative beta traffic nor continuous24h coverage.
+
+Review additionally required separating readiness/status failures and terminal
+coverage. The analyzer now reports each failed probe separately, names coverage
+through the last sample explicitly and gives terminal coverage=null when legacy
+end records have no wall timestamp. A known terminal wall gap is measured;
+monotonic terminal gaps are reported independently. No clock value is inferred.
