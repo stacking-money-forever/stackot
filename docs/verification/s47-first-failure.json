@@ -1,0 +1,17 @@
+{
+  "snapshotSha256": "42a61ce86ddc84203477dbb4f034959a6416a4d8d240b388f6919063779b8d18",
+  "sourceDeliveryId": "65cd5010-bb09-11f1-9c73-fb0e8f26c548",
+  "sourceRows": 3,
+  "privateProbeRoot": "/Users/justn/Library/Application Support/Stackot/state/s47-8652ab89db93",
+  "snapshotIntegrity": "ok",
+  "emptyRestoreEqual": true,
+  "fakeProvider": false,
+  "workerDispatched": false,
+  "outboundDelivery": false,
+  "productionGatewayChanged": false,
+  "receiverBundleSha256": "a630c9f1acc5dbcdc5a2a7c5010ba34c3c0e84fc0e758276e7460dc8d7be373e",
+  "passed": false,
+  "errorType": "RuntimeError",
+  "error": "Actual native Gateway refused admission; restored event remains undelivered",
+  "ownedListenersClosed": true
+}

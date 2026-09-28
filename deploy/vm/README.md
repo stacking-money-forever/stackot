@@ -180,6 +180,9 @@ forward only) and answers `/readyz` 200 — then stop it and record the result.
   Caddy's own service.
 # Current host selection
 
+The genuine S47 restore/drain record is [restore.md](../../docs/verification/restore.md)
+on the selected Mac. It does not establish VM restoration or model/Discord success.
+
 The B04 alert policy/one-shot monitor is in [../alerts.md](../alerts.md). Its
 current installer targets the selected Mac; no VM alert supervisor or live
 receipt is implied by these VM templates.
