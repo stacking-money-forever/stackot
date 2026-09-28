@@ -27,10 +27,23 @@ second lost crash-recovery oracle/incomplete launchctl targets. Actual task mode
 observation unavailable; no delegated writes. Owner wrote and executed artifacts.
 
 Initial forced-kill drill restarted ingress/Gateway but tunnel drill failed its
-bounded deadline; retained failure log `macos-preflight-recovery.log`. Investigate
-that failure before asserting supervision. Preserve failure, no acceptance from
-configured KeepAlive alone. Login-start entries are installed; actual reboot
-and independent off-host private-port scan remain untested. Accepted count54/81.
+HTTP oracle; retained failure log `macos-preflight-recovery.log`. Python public
+HTTP received403 while curl traversed the edge. After changing the oracle to
+curl, the meaningful unsigned POST check exposed200: Caddy's loopback site name
+implicitly matched Host127.0.0.1 and public Hoststackot.justn.me matched no route.
+Fix: listen on HTTP port9378 with explicit loopback bind, without implicit Host
+matcher. Actual Caddy oracle passes public/loopback Host401 and other paths404;
+same oracle fails pre-fix3ed3957 (publicHost200, loopback401). Linux CI includes
+this real-Caddy/synthetic401-upstream contract, distinct from deployed evidence.
+
+Deployed receiver release3ed3957 bundleSHA256
+a630c9f1acc5dbcdc5a2a7c5010ba34c3c0e84fc0e758276e7460dc8d7be373e.
+Owner corrected live configuration and replayed kill/recovery on all four owned
+services. `macos-recovery.json` records PID changes, private readiness, public
+unsigned401 and other paths404. Hooks still disabled; no live GitHub deliveries
+registered or full-controller claim. Login-start entries are installed; actual
+reboot remains untested. Independent GitHub runner edge/private-port oracle is
+scheduled on the deployment branch only. Accepted count54/81, no S44/S45 accept.
 
 Local owner receiver346tests/1206assertions and Gateway71tests/409assertions pass;
 both typechecks and builds pass. Exact-SHA Linux CI must be observed after push.
