@@ -8,13 +8,14 @@ import hashlib
 import os
 import importlib.util
 import secrets
+import fcntl
 
 LEGACY_HASHES = {'1acde68fd1f909a4f53425009f44884aa2d5fe8f5b45e0ee609c2a0aab5c3522',
                  '2cc68d8ec894060cecae60353d16eed91eb453f7d03d172f5de2908c785718e9'}
 digest = lambda value: hashlib.sha256(value).hexdigest()
 
 
-def install(root, source, login_dir):
+def _install(root, source, login_dir):
     root = Path(root).resolve();source = Path(source).resolve()
     if root.stat().st_uid != os.getuid() or not Path(login_dir).is_dir():
         raise SystemExit('Owned runtime and existing login directory required')
@@ -83,6 +84,19 @@ def install(root, source, login_dir):
         temporary.chmod(0o600);os.replace(temporary, path)
     module.save(record_path, desired)
     print('B04 immutable release staged; bootstrap owned login plist. No message sent.')
+
+
+def install(root, source, login_dir):
+    root = Path(root).resolve()
+    if root.stat().st_uid != os.getuid():
+        raise SystemExit('Runtime ownership mismatch')
+    with (root / 'state/alerts-install.lock').open('a') as lock:
+        os.fchmod(lock.fileno(), 0o600)
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            raise SystemExit('Another alert install is active; retry after its recorded completion')
+        return _install(root, source, login_dir)
 
 
 if __name__ == '__main__':
