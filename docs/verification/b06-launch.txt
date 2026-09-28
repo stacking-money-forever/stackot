@@ -1,0 +1,15 @@
+B06 — expired approval guidance and human QA, NOT ACCEPT without actual H.
+Own gateway/src/callback.ts, targeted callback tests and expired-guidance receipt.
+Predecessor S27 accepted. Current callback returns generic latest-request text
+for every failure. It does not renew an approval or dispatch work.
+Prepare specific expiry guidance only after actual callback authorization,
+account/guild/conversation/parent/message binding and exact requester checks;
+then the trusted repository must throw APPROVAL_EXPIRED. Other failures remain
+generic. Do not expose IDs/hashes/tokens/errors or imply old approval is renewed.
+Do not invent a retry button/command that is absent from native UI/controller.
+Require new immutable approval/plan for subsequent work; old request untouched.
+Owner verifies source/tests and exact SHA Linux CI; new tests must distinguish
+pre-fix code. Actual native expired-message delivery, usable re-request path
+and human comprehension remain full row requirements, not fixture substitutes.
+brgr advice only: supplied facts, <=800bytes, no tools/files/subagents. One narrow
+retry maximum. Owner writes/verifies; no production plugin changes in this stage.
