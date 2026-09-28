@@ -3,8 +3,9 @@
  *
  * Posts normalized events to POST /hooks/agent. Admission (HTTP 200) means the
  * run was accepted — delivery to Discord happens inside the Gateway session.
- * Failures are logged, never thrown into the webhook path: GitHub redelivers
- * on 5xx only, and replaying an accepted event is worse than a lost notice.
+ * Failures are logged, never thrown into the webhook path. GitHub does not
+ * automatically redeliver failed deliveries; this receiver's durable outbox
+ * retries forwarding independently after its persisted intake ACK.
  */
 import type { ReceiverConfig } from "./config.ts";
 import type { NormalizedEvent } from "./normalize.ts";

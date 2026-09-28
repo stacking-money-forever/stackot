@@ -26,6 +26,12 @@ jobs:
       - run: python3 deploy/macos/verify-ingress.py
       - run: python3 deploy/macos/verify-migration.py
       - run: python3 -m unittest discover -s deploy -p test_alerts.py -v
+      - run: python3 -m py_compile docs/verification/s47-probe.py
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      # Synthetic HTTP fixture verifies observation transparency, not D restore.
+      - run: bun docs/verification/s47-observer-fixture.ts
       - run: python3 -m py_compile deploy/macos/render.py deploy/macos/gateway-run.py deploy/macos/probe.py
 
   receiver:
