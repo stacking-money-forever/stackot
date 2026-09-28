@@ -59,8 +59,14 @@ Replay/concurrency/restart use the same ID and existing plan/card publication
 intents; uncertain send acknowledgements never blind-resend. Cancellation,
 running tasks, decided originals and changed prepared intents fail closed.
 
-Owner84tests/504assertions/typecheck/build pass. Six renewal fixtures cover
+Owner85tests/510assertions/typecheck/build pass. Seven renewal fixtures cover
 distinct immutable issuance, negative gates, concurrency, current-plan binding,
 state races and unknown acknowledgement. Callback tests ensure wrong native
 auth/requester never reach issuer. A random renewal-ID mutation fails the replay
 oracle. These tests are S; new native button/renewal behavior and H are pending.
+
+Review found an old retry could point at an already-expired renewed approval.
+Issuer now follows the durable expired lineage to a fresh pending request,
+without changing prior grants, and checks expiry again after publication before
+reporting success. Replays share the latest recorded generation. Cycles/deep
+corrupt lineage are rejected rather than looping or blindly issuing requests.
