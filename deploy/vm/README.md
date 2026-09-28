@@ -20,6 +20,11 @@ Its denial/concurrency tests are synthetic, not actual Discord authentication.
 These guards alone do not authorize production dispatch or establish exactly-once
 execution; trusted callback/worker integration and lost-ack reconciliation remain.
 
+S28 callback/flow-binding helpers pass synthetic denial tests. They are not an
+activated production plugin; native bootstrap, restart route discovery, actual
+component emission and real two-user principal verification remain unfinished.
+Do not enable execution based solely on helper build/test success.
+
 S35 adds durable thread intent/receipt reconciliation. Its restart fixture uses a
 synthetic external provider and the real native flow store; it does not provision
 Discord channels or prove live marker authentication/idempotency. These modules

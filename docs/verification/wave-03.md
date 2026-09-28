@@ -312,6 +312,26 @@ and any synthetic test cannot accept this R/H row. Full goal stays active.
 
 ## Corrected prerequisite audit (current access facts)
 
+### S28 independent helper/registry preparation — NOT ACCEPT
+
+Brgr narrowed advice accepted after source qualification, decision
+`e71e7e21-b8b2-4480-a7cf-8e0e3f441b9b`; exact status/result retained. The native
+source contract snapshot hash matched `8234928a104953d3759938175b31fbc5f55e8d382c369dbdbaa5534645827626`.
+Owner added private registration helper and per-server-resolved-flow callback
+binding repository. No HTTP/RPC native-context injection method. Native sender
+and stored requester both checked, native route/message binding enforced, S27
+decision predicates retained. Registry uses existing native revision store,
+canonical request metadata, rejects token rebinding and persists both approve/
+deny tokens without lost updates. Source contract explains actual factory auth=false.
+
+11 new synthetic tests/58 assertions; task full suite 52/320 plus typecheck/build
+pass. Labelled auth/message-binding bypass mutants fail helper matrix; baseline
+new-module absence fails imports. Synthetic API/context/MemoryStore are not actual
+native ingress, principal authentication, process restart or human proof.
+Production bootstrap, native route/flow discovery, actual component producer and
+two-user runtime probe remain executable S28 work. No S28 count change before
+those conditions and exact-SHA publication evidence. See s28-receipt.md for limits.
+
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 
 Existing secrets are not copied into a worker checkout or recorded here. The missing runtime is being prepared in repository scope instead of being treated as a user-only prerequisite.
