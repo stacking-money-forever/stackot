@@ -50,5 +50,14 @@ class CoverageTests(unittest.TestCase):
         self.assertEqual(result['failedReadinessProbes'],1)
         self.assertEqual(result['failedStatusProbes'],0)
 
+    def test_wall_adjustment_cannot_conceal_monotonic_gap_in_samples_or_terminal(self):
+        sample_gap=module.analyze([self.start(),self.sample(1000,0),self.sample(1060,3600)])
+        self.assertFalse(sample_gap['wallCoverageContinuousThroughLastSample'])
+        terminal_gap=module.analyze([self.start(),self.sample(1000,0),{'kind':'end','wallTime':1060,'elapsedSeconds':3600}])
+        self.assertFalse(terminal_gap['wallCoverageContinuousThroughTerminal'])
+        self.assertEqual(terminal_gap['clockDivergenceIntervals'],1)
+        backwards=module.analyze([self.start(),self.sample(1000,0),{'kind':'end','wallTime':999,'elapsedSeconds':60}])
+        self.assertTrue(backwards['clockWentBackward'])
+
 
 if __name__=='__main__':unittest.main()
