@@ -1,5 +1,24 @@
 # Owner continuation state
 
+B10 refreshed concrete app-bound main3checks/admin enforcement/scanning plan
+retained in stackot-b10-20260928 branch175528a. Current main unprotected404,
+rulesets[], scanning disabled, no open main PRs. Official repo-wide7day check
+availability corrected old main-only assertion; classic checks/app_id supported.
+G approval requested once for exact settings only, no main merge/push/release;
+answer still pending. Brgr634e87e3 advice rejected twice (oversize/incorrect API).
+Explicit shared brgr home is required in old worktrees to avoid different local
+store lookup; task was live, never restarted from a missing-default-home error.
+
+B08 independent implementation now owns optional private hook token JSON read
+on same nonblocking/no-follow descriptor, owner/mode/size/schema validation,
+no stale fallback and old/current redaction before network. Startup legacy
+credential requirement preserved/tightened. Task stackot-b08-20260928/base6821f1e,
+rootw8S:p1, launch1a4bd38; brgr2afa0fda rejected twice, no worker pending.
+Credential/config targeted119 tests/typecheck/build passed; full suite running
+handle42217 and independent review handle-source b08-credential-review.log.
+No live rotation or B08 acceptance yet. Pinned hooks reload is hot/reloadHooks
+source evidence, actual same-PID auth/continuous-intake oracle still required.
+
 Latest S47 ACCEPT: genuine pending empty restore -> actual native Gateway200/runId
 -> SQL delivered -> restart/replay exclusion -> closed listeners. Source260bb3b
 CI36392488347 and integrationea597ea CI36392824869 succeeded; owner target
