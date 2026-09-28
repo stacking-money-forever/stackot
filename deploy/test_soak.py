@@ -10,6 +10,11 @@ spec.loader.exec_module(soak)
 
 
 class ObservationTests(unittest.TestCase):
+    def test_missing_or_non_boolean_status_fields_are_not_observations(self):
+        for value in [{}, {'outboxReady': 'true', 'gateway': {'reachable': True}, 'queue': None},
+                      {'outboxReady': True, 'gateway': {'reachable': 1}, 'queue': None}]:
+            with self.assertRaises(ValueError): soak.sanitize(value)
+
     def test_status_discards_raw_errors_and_untrusted_fields(self):
         value = {'outboxReady': True, 'gateway': {'reachable': False, 'lastError': 'private-token'},
                  'queue': {'pending': 2, 'deadLetter': 3, 'delivered': 4, 'oldestPendingAgeMs': 500},
