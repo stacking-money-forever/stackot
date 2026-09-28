@@ -1,0 +1,19 @@
+{
+  "samples": 83,
+  "terminalReceiptRecorded": false,
+  "wallElapsedThroughLastSampleSeconds": 46025.626739025116,
+  "monotonicElapsedThroughLastSampleSeconds": 4928.885270334,
+  "largestWallGapSeconds": 7116.7573001384735,
+  "largestMonotonicGapSeconds": 60.15322129099968,
+  "clockWentBackward": false,
+  "clockDivergenceIntervals": 13,
+  "wallCoverageContinuousThroughLastSample": false,
+  "wallCoverageContinuousThroughTerminal": null,
+  "terminalWallGapSeconds": null,
+  "terminalMonotonicGapSeconds": null,
+  "failedStatusProbes": 0,
+  "failedReadinessProbes": 0,
+  "betaAcceptance": false,
+  "evidenceScope": "baseline samples; gaps and clock divergence do not identify their cause",
+  "partialTrailingRecordIgnored": false
+}

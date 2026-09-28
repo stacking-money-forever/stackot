@@ -21,10 +21,12 @@ def analyze(rows):
     if interval < 1: raise ValueError('Invalid interval')
     samples = []
     ended = False
+    terminal = None
     for row in rows[1:]:
         if ended: raise ValueError('Records after terminal receipt')
         if row.get('kind') == 'end':
             ended = True
+            terminal = row
         elif row.get('kind') == 'sample':
             number(row['wallTime']); number(row['elapsedSeconds'])
             if type(row.get('observed')) is not bool or type(row.get('ready')) is not bool:
@@ -38,6 +40,15 @@ def analyze(rows):
     mono_gaps = [b-a for a,b in zip(mono,mono[1:])]
     threshold = interval*2+6
     diverged = [i for i,(w,m) in enumerate(zip(wall_gaps,mono_gaps)) if abs(w-m)>threshold]
+    terminal_wall_gap = None
+    terminal_mono_gap = None
+    if terminal is not None:
+        if 'wallTime' in terminal:
+            terminal_wall_gap=number(terminal['wallTime'])-wall[-1]
+        if 'elapsedSeconds' in terminal:
+            terminal_mono_gap=number(terminal['elapsedSeconds'])-mono[-1]
+    through_last=bool(samples) and all(0<=g<=threshold for g in wall_gaps)
+    through_terminal=None if terminal_wall_gap is None else through_last and 0<=terminal_wall_gap<=threshold
     return {'samples':len(samples), 'terminalReceiptRecorded':ended,
             'wallElapsedThroughLastSampleSeconds':wall[-1]-started,
             'monotonicElapsedThroughLastSampleSeconds':mono[-1],
@@ -45,8 +56,12 @@ def analyze(rows):
             'largestMonotonicGapSeconds':max(mono_gaps,default=0),
             'clockWentBackward':any(x<0 for x in wall_gaps+mono_gaps),
             'clockDivergenceIntervals':len(diverged),
-            'wallCoverageContinuous':bool(samples) and all(0<=g<=threshold for g in wall_gaps),
-            'failedProbes':sum(not x['observed'] for x in samples),
+            'wallCoverageContinuousThroughLastSample':through_last,
+            'wallCoverageContinuousThroughTerminal':through_terminal,
+            'terminalWallGapSeconds':terminal_wall_gap,
+            'terminalMonotonicGapSeconds':terminal_mono_gap,
+            'failedStatusProbes':sum(not x['observed'] for x in samples),
+            'failedReadinessProbes':sum(not x['ready'] for x in samples),
             'betaAcceptance':False,
             'evidenceScope':'baseline samples; gaps and clock divergence do not identify their cause'}
 
