@@ -96,3 +96,10 @@ before renaming, checks disabled-target collisions, and rejects changed rollback
 sources rather than loading unreviewed configuration. A concurrent-edit fixture
 preserves the modified login plist and restores the old GUI job; pre-recheck
 df24b7f fails that oracle. Native/privileged proof remains separate.
+
+Final code9ee9f23 CI36384079212 succeeded in all four jobs. Integrated code
+cc04da58adce6eba9bd3b1e6011f49a191028165 CI36384155714 succeeded in receiver,
+runtime-config and ingress-contract (edge job deliberately skipped on integration).
+Daemon recovery recheck confirmed public unsigned401, same live loopback services
+and sudo still requiring administrator authentication. No operation was repeated
+merely because the owner server restarted. Four running services are preserved.

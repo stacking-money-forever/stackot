@@ -6,7 +6,11 @@ source4915f5b, dedicated Cloudflare tunnel and four login launchd jobs running.
 Unsigned public POST401/other paths404, four owned SIGKILL recoveries, actual
 GitHub inactive-hook ping200/ignored, external runner HTTPS and dated origin
 private-port negative receipts verified. CI4915f5b/36381808394 and follow-on
-1973e8f/36382885560 succeeded; root-installer rollback fixdf24b7f CI pending.
+1973e8f/36382885560 succeeded; root-installer rollback fixdf24b7f and
+concurrent-edit fix9ee9f23 CI succeeded. Integration codeSHA
+cc04da58adce6eba9bd3b1e6011f49a191028165 CI36384155714 succeeded
+(receiver/runtime-config/ingress-contract; edge job deliberately skipped on
+integration branch). Task9ee9f23 CI36384079212 all four jobs succeeded.
 Independent reviews found/corrected public Host mismatch, future stale-origin
 probe and system-bootstrap failure recovery. Full S44/S45 remain NOT ACCEPT:
 root installation needs local administrator authentication (sudo-n requires
