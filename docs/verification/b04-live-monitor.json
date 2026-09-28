@@ -1,0 +1,94 @@
+{
+  "state": {
+    "target": {
+      "channelId": "1553999331198238840",
+      "guildId": "1544592589666127953",
+      "statusUrl": "http://127.0.0.1:9377/status"
+    },
+    "phase": "sent",
+    "active": true,
+    "observedAt": 1790576629402,
+    "nonce": "762177702939690535",
+    "content": "Stackot \uc6b4\uc601 \uc54c\ub9bc: \ub300\uae30 \uc911 1\uac74, \uac00\uc7a5 \uc624\ub798\ub41c \uc694\uccad 7\ucd08. Receiver \uc0c1\ud0dc\uc640 Gateway \uc804\ub2ec \uc624\ub958\ub97c \ud655\uc778\ud558\uc138\uc694.",
+    "lastSentAt": 1790576629402,
+    "messageId": "1554015771594592369"
+  },
+  "samples": [
+    {
+      "atMs": 1790576619558,
+      "queue": {
+        "pending": 0,
+        "deadLetter": 0,
+        "delivered": 0,
+        "oldestPendingAgeMs": null
+      },
+      "phase": "idle"
+    },
+    {
+      "atMs": 1790576621626,
+      "queue": {
+        "pending": 0,
+        "deadLetter": 0,
+        "delivered": 0,
+        "oldestPendingAgeMs": null
+      },
+      "phase": "idle"
+    },
+    {
+      "atMs": 1790576623703,
+      "queue": {
+        "pending": 1,
+        "deadLetter": 0,
+        "delivered": 0,
+        "oldestPendingAgeMs": 1537
+      },
+      "phase": "idle"
+    },
+    {
+      "atMs": 1790576625768,
+      "queue": {
+        "pending": 1,
+        "deadLetter": 0,
+        "delivered": 0,
+        "oldestPendingAgeMs": 3603
+      },
+      "phase": "idle"
+    },
+    {
+      "atMs": 1790576627841,
+      "queue": {
+        "pending": 1,
+        "deadLetter": 0,
+        "delivered": 0,
+        "oldestPendingAgeMs": 5675
+      },
+      "phase": "idle"
+    },
+    {
+      "atMs": 1790576629910,
+      "queue": {
+        "pending": 1,
+        "deadLetter": 0,
+        "delivered": 0,
+        "oldestPendingAgeMs": 7745
+      },
+      "phase": "inflight"
+    },
+    {
+      "atMs": 1790576631951,
+      "queue": {
+        "pending": 1,
+        "deadLetter": 0,
+        "delivered": 0,
+        "oldestPendingAgeMs": 9785
+      },
+      "phase": "sent"
+    }
+  ],
+  "sourceIssue": 2,
+  "sourceMarker": "b04-edit-67c1b450-906e-4f2f-9efb-28e7077d1ade",
+  "testThresholdMs": 5000,
+  "usesReceiverReceivedAt": true,
+  "backdated": false,
+  "workerDispatched": false
+}

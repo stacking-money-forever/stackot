@@ -1,0 +1,37 @@
+{
+  "sourceCodeSHA": "e68fdaa",
+  "marker": "b04-final-44365945-396e-450a-b33d-6fbf0e1b4800",
+  "state": {
+    "target": {
+      "channelId": "1553999331198238840",
+      "guildId": "1544592589666127953",
+      "statusUrl": "http://127.0.0.1:9377/status"
+    },
+    "phase": "sent",
+    "active": true,
+    "observedAt": 1790578461034,
+    "nonce": "1065552936650729107",
+    "content": "Stackot \uc6b4\uc601 \uc54c\ub9bc: \ub300\uae30 \uc911 1\uac74, \uac00\uc7a5 \uc624\ub798\ub41c \uc694\uccad 14\ucd08. Receiver \uc0c1\ud0dc\uc640 Gateway \uc804\ub2ec \uc624\ub958\ub97c \ud655\uc778\ud558\uc138\uc694.",
+    "lastSentAt": 1790578461034,
+    "messageId": "1554023450291478633"
+  },
+  "queueBefore": {
+    "pending": 1,
+    "deadLetter": 2,
+    "delivered": 0,
+    "oldestPendingAgeMs": 15712
+  },
+  "queueAfter": {
+    "pending": 1,
+    "deadLetter": 2,
+    "delivered": 0,
+    "oldestPendingAgeMs": 16781
+  },
+  "newPostRestartLog": "{\"outcome\": \"cooldown\", \"messageId\": \"1554023450291478633\"}\n",
+  "testThresholdMs": 5000,
+  "actualElapsedClock": true,
+  "workerDispatched": false,
+  "actualMessageReadback": true,
+  "extraPostRestartAlerts": [],
+  "messageUrl": "https://discord.com/channels/1544592589666127953/1553999331198238840/1554023450291478633"
+}

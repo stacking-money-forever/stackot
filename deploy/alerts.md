@@ -16,8 +16,10 @@ and error class only. Atomic state replacement uses file and directory fsync.
 Discord `enforce_nonce=true` covers only the provider's short uniqueness window,
 not indefinite exactly-once delivery. Unknown send/ack persistence remains
 inflight/uncertain and fails subsequent runs without blind resend. Operator
-reconciles the persisted nonce against actual channel history before changing
-state; do not erase the intent. 429 records next-attempt time and reuses nonce.
+cross-checks the actual author, exact content and intent time window against
+channel history before changing state. Actual GET readback omitted nonce; do
+not assume nonce lookup is available. If the result is ambiguous, retain the
+uncertain intent and do not resend. 429 records next-attempt time and reuses nonce.
 Other explicit refusal is retried no sooner than60s. Failed source/send yields
 nonzero exit plus private structured log; provider outage can still prevent any
 Discord notification. This availability boundary is explicit.

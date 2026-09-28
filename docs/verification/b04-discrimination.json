@@ -1,0 +1,6 @@
+{
+  "base": "1e5329a",
+  "result": "fails installer-preservation and retry-current-values tests",
+  "adapter": "isolated login directory only; no old mutation/order or alert semantics changed",
+  "evidenceClass": "S"
+}

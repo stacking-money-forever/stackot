@@ -1,0 +1,36 @@
+{
+  "marker": "b04-restart-5b09ec93-59f9-4552-aa2a-bca5bd13bef0",
+  "state": {
+    "target": {
+      "channelId": "1553999331198238840",
+      "guildId": "1544592589666127953",
+      "statusUrl": "http://127.0.0.1:9377/status"
+    },
+    "phase": "sent",
+    "active": true,
+    "observedAt": 1790577513994,
+    "nonce": "16017958799541600422",
+    "content": "Stackot \uc6b4\uc601 \uc54c\ub9bc: \ub300\uae30 \uc911 1\uac74, \uac00\uc7a5 \uc624\ub798\ub41c \uc694\uccad 7\ucd08. Receiver \uc0c1\ud0dc\uc640 Gateway \uc804\ub2ec \uc624\ub958\ub97c \ud655\uc778\ud558\uc138\uc694.",
+    "lastSentAt": 1790577513994,
+    "messageId": "1554019482077495417"
+  },
+  "queueBeforeRestart": {
+    "pending": 1,
+    "deadLetter": 1,
+    "delivered": 0,
+    "oldestPendingAgeMs": 8838
+  },
+  "queueAfterRestart": {
+    "pending": 1,
+    "deadLetter": 1,
+    "delivered": 0,
+    "oldestPendingAgeMs": 9926
+  },
+  "nativeRestart": "bootout/bootstrap gui job",
+  "postRestartCooldownObserved": true,
+  "testThresholdMs": 5000,
+  "workerDispatched": false,
+  "postRestartMessageReadback": true,
+  "additionalBotAlertIdsAfterReceipt": [],
+  "messageUrl": "https://discord.com/channels/1544592589666127953/1553999331198238840/1554019482077495417"
+}
