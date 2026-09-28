@@ -1,0 +1,41 @@
+B10 — independent repository protection readback and concrete remediation plan
+
+User now authorized more parallel work. You are the second sibling; S25 is active
+in another worktree. You are not alone: do not revert or touch others' files.
+Exact interactive harness --model swe-2 --permission-mode dangerous. No subagents,
+MCP, commit, push, merge, setting mutation, messages or credentials-file access.
+Only read GitHub through gh api GET for stacking-money-forever/stackot. Never query
+secret-scanning alerts, tokens or raw auth. Do not print gh auth tokens or configs.
+
+Base bce6c43e10d9c3f9b59eb6758ce6875f85fb6253. Predecessor S38 is accepted.
+Own ONLY docs/verification/repo-protection.md,
+docs/verification/repo-protection-plan.json and docs/verification/b10-receipt.md
+(<=3000 bytes). Two flat Todos max; <=8 scoped tool actions. No source/workflow,
+checklist, owner-state, wave or S25 state-contract edits. apply_patch for manual
+edits; exact executable /Users/justn/.codex/tmp/arg0/codex-arg0UIcHIw/apply_patch
+if missing on PATH.
+
+Read current repository metadata/default branch/admin permissions/security flags,
+default-branch protection and active rulesets. Inspect actual default-branch SHA,
+workflow job names and check-run names to select valid required checks. Distinguish
+integration-only runtime-config job from checks actually available on main.
+No protected settings or code may change during this audit.
+
+Primary artifact: repo-protection.md with timestamps, queried endpoints/statuses,
+sanitized readback and supported-but-unconfigured versus permission/plan limits.
+Provide exact desired request payloads in plan JSON for ONLY required-status-check
+enforcement and secret scanning/push protection. Preserve existing rules if any;
+do not invent review quotas, merge policy or unrelated security features. Never
+apply these requests. Identify stale-plan conditions and readback needed after a
+future authorized application. New setting changes are NOT authorized merely
+because admin access exists or parallelism was requested.
+
+Acceptance oracle: owner repeats the GETs and checks enforced features. If
+disabled/unprotected, report B10 not satisfied; a plan/readback file is not ACCEPT.
+Future default-branch workflow adoption/merge or GitHub plan restrictions must be
+stated concretely, not hidden behind generic environment blockers. The purpose is
+to finish all independent preparation while S25 runs, not claim a finished gate.
+
+You may use official GitHub documentation only for an uncertain API/feature, with
+one bounded lookup, not broad research. No destructive/change experiment or extra
+paid model. Finish the three candidate artifacts, reply with paths and stop.
