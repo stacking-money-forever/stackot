@@ -37,7 +37,9 @@ export class ApprovalRenewal {
         old.expiresAt-old.requestedAt!==original.ttlMs)throw new Error("RENEWAL_ORIGINAL_DENIED");
       if(!Number.isSafeInteger(clock)||clock<old.expiresAt)throw new Error("RENEWAL_NOT_EXPIRED");
       const task=object(snapshot.state.task);
-      if(task.id!==original.taskId||task.requesterId!==actorId||!["planned","waiting"].includes(task.status as string)||
+      const active=["planned","waiting"].includes(task.status as string)||
+        (task.status==="running"&&["push","pr"].includes(original.action));
+      if(task.id!==original.taskId||task.requesterId!==actorId||!active||
         typeof task.planText!=="string"||!task.planText||typeof task.planHash!=="string"||
         createHash("sha256").update(task.planText).digest("hex")!==task.planHash||
         typeof task.planVersion!=="number"||!Number.isSafeInteger(task.planVersion)||task.planVersion<1)

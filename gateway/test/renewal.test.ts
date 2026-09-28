@@ -10,10 +10,10 @@ class Store implements StateStore{
   async read(){this.onRead?.();return {revision:this.revision,state:structuredClone(this.state),cancelRequestedAt:this.cancelRequestedAt};}
   async compareAndSwap(revision:number,state:State){if(this.revision!==revision)return false;this.state=structuredClone(state);this.revision++;return true;}
 }
-async function fixture(){
+async function fixture(action:ApprovalInput["action"]="start"){
   const store=new Store();let now=100;const plan="새 승인도 코딩을 자동 실행하지 않는다.";
   const original:ApprovalInput={requestId:"original",taskId:"owner/repo#7",requesterId:"123456789012345678",
-    planHash:createHash("sha256").update(plan).digest("hex"),planVersion:1,action:"start",ttlMs:1000};
+    planHash:createHash("sha256").update(plan).digest("hex"),planVersion:1,action,ttlMs:1000};
   store.state={schemaVersion:1,task:{id:original.taskId,requesterId:original.requesterId,planHash:original.planHash,
     planVersion:1,planText:plan,status:"planned"}};
   const repo=new ApprovalRepository(store,()=>now);await repo.request(original);
@@ -85,4 +85,13 @@ test("an old retry control follows expired renewal lineage to one fresh pending 
   expect(await f.repo.get(first)).toEqual(old);
   f.setClock(61200);await f.service().reissue(f.original,f.route,f.original.requesterId);
   expect(Object.keys(f.store.state.approvals as State)).toHaveLength(3);expect(f.counts()).toEqual({plans:2,cards:2});
+});
+
+test("running tasks may renew push/PR approvals while running start remains denied",async()=>{
+  for(const action of ["push","pr"] as const){
+    const f=await fixture(action);f.setClock(1100);(f.store.state.task as State).status="running";
+    expect((await f.service().reissue(f.original,f.route,f.original.requesterId)).kind).toBe("published");
+    const id=Object.keys(f.store.state.approvals as State).find(x=>x!=="original")!;
+    expect(await f.repo.get(id)).toMatchObject({status:"pending",action});
+  }
 });
