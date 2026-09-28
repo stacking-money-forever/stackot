@@ -8,11 +8,11 @@
 `docs/verification/wave-*.md`, 진행 상태 요약은 `docs/verification/owner-state.md`에 있다.
 이 파일은 **사람이 실제로 해야 할 일 순서**만 담는다.
 
-## 현재 상태 (2026-09-22 기준)
+## 현재 상태 (2026-09-28 기준)
 
-- 원장 81행 중 **47행 수용, 34행 미완**. 마일스톤: **M1 36/36**, M2 1/14, M3 7/12, M4 0/4, M5 3/11, C 0/4.
+- 원장 81행 중 **48행 수용, 33행 미완**. 마일스톤: **M1 36/36**, M2 2/14, M3 7/12, M4 0/4, M5 3/11, C 0/4.
 - receiver 코드 기준선: `bun test` 346 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, CI 매 푸시 green.
-- 수용된 47행의 증거 등급은 **전부 L(로컬) 또는 S(합성 프로세스)**. **R(실런타임)·D(배포)·H(사람) 증거는 0건** — 제품은 실제 GitHub·Discord·OpenClaw 앞에서 한 번도 돌지 않았다.
+- 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. R 증거는 이 범위에 한정되며, 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **D(배포)·H(사람) 증거는 0건**. 근거: `docs/verification/wave-03.md`, `openclaw-contract.md`, `s23-owner-probe.md`.
 
 ## 0. 증거 등급 규칙 (먼저 읽을 것)
 
@@ -30,8 +30,8 @@
 
 전제: VM(§3) 또는 동등한 호스트. 설치 명령은 `deploy/README.md` §2가 정본이다.
 
-- [ ] **OpenClaw 설치** — `npm install -g openclaw@latest --allow-scripts=openclaw`
-- [ ] **S23** 설치본에서 version/config/`--help`/ACP/worktree API를 probe해 **계약을 얼린다**(추측 구현 금지). 산출물: `docs/verification/openclaw-contract.md`
+- [x] **OpenClaw 설치** — S23 전용 워크트리의 ignored runtime에 Node 24.21.0, OpenClaw 2026.9.6, ACP 플러그인 2026.9.6 설치. 배포 호스트 설치와는 별도다.
+- [x] **S23** 설치본 version/config/`--help`/ACP/worktree 계약 확인. 산출물: `docs/verification/openclaw-contract.md`; 오너 재실행·교정·정확 SHA CI 성공은 `wave-03.md`에 기록.
 - [ ] **S24** `deploy/openclaw.json5.template`의 치환본이 실제 버전 스키마로 `openclaw config validate`를 통과
 - [ ] **S25** task/approval/run 상태의 소유자 확정(재시작 durability probe) → `docs/contracts/task-state.md`
 - [ ] **S26/S27** 승인 레코드(요청자+plan hash+TTL) 저장·거부 매트릭스 — S25 계약 확정 후 위치 고정

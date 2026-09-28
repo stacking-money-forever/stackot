@@ -47,7 +47,11 @@ Final donor/integration SHA-256 MATCH values:
 - launch: `433acce6d1e75ad1baa5fc8e2da0eba176846c0e90ef409316bb0a2434ccec18`;
 - receipt: `a93047072c3fe53bfb1605e1ef674ff1a8cda7001b87227d40d7993c94d02845` (2686 bytes).
 
-S23 remains pending publication/CI; accepted count is still 47/81.
+### S23 — ACCEPT after publication and exact-SHA CI
+
+Task evidence commit: `c141e89087516a3d71e2381ab9479e001a60679f` on the retained S23 branch. Owner integration commit `b89e725cb4d370401501ebb6d67d6bbaccff4820` was pushed to `origin/codex/stackot-completion-20260921`. CI run [36362592296](https://github.com/stacking-money-forever/stackot/actions/runs/36362592296) completed **success** on exactly that SHA. Owner checked both the source contracts and the real installed CLI/runtime oracles above. Row S23 is ACCEPT; total becomes **48/81**, M2 **2/14**.
+
+Residual: no live ACP turn, approved publication, Discord callback/send, native state restart, deployed host or human result is claimed. These remain their own rows. The owned terminal/cancelled Devin pane `w6J:p1` was closed only after artifact integration and a fresh live done check. Its worktree, local task commit, launch prompt, receipt, and ignored installation/probe state are retained.
 
 Herdr prepared the task worktree from the repository parent with `--no-focus`. Its automatically provisioned root pane is `w6J:p1`; no existing pane was split, moved, focused, or zoomed. The inherited caller ID does not resolve (`pane_not_found`), so it is not used as a callback target or substituted with the focused pane.
 
