@@ -5,6 +5,7 @@ import unittest
 import json
 import subprocess
 import sys
+import fcntl
 from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location('alerts', Path(__file__).with_name('alerts.py'))
@@ -114,6 +115,17 @@ class Alerts(unittest.TestCase):
             installed = json.loads((root / 'state/alerts-install.json').read_text())
             self.assertNotIn('pending', installed)
             self.assertTrue((login / 'me.justn.stackot.alerts.plist').exists())
+
+    def test_overlapping_installer_stops_before_mutation(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory);(root / 'state').mkdir();(root / 'login').mkdir()
+            with (root / 'state/alerts-install.lock').open('a') as lock:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                result = subprocess.run([sys.executable, str(Path(__file__).parent / 'macos/install-alerts.py'),
+                                        '--root', str(root), '--login-dir', str(root / 'login')], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Another alert install is active', result.stderr)
+            self.assertFalse((root / 'state/alerts-install.json').exists())
 
     def test_malformed_source_does_not_become_an_alert(self):
         for q in [{'pending': True, 'oldestPendingAgeMs': 900000}, {'pending': 1, 'oldestPendingAgeMs': None},

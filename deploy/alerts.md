@@ -25,7 +25,9 @@ Discord notification. This availability boundary is explicit.
 Stage via `macos/install-alerts.py --root <private runtime root>`. Validate plist,
 then use the immutable versioned script/target files staged by that installer.
 A durable pending install fingerprint permits retry after an interrupted plist
-write without modifying the active program. An exact known legacy script/config
+write without modifying the active program. Exclusive installer locking and
+unique staged plist names prevent overlapping attempts from mixing install records.
+An exact known legacy script/config
 can be migrated without an old install record; unknown or edited files stop
 before runtime mutation. Reduced target configs contain no GitHub credentials.
 
