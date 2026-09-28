@@ -136,6 +136,12 @@ Owner assembled a reproducible real-native probe from the preserved plugin, with
 
 Seven source/contract/receipt/launch artifacts SHA-256 matched between retained task and integration checkouts. JS/Python syntax, workflow YAML and whitespace checks pass. The native source actor contract uses authenticated Discord interaction user/policy before plugin dispatch; actual two-user behavior remains S28. Product module/storage locations are now frozen in task-state.md, but product approval/controller code is not implemented by S25. The workflow adds the same real native restart oracle on Linux; no acceptance before exact-SHA success. Count stays 49/81.
 
+S25 task artifacts are committed on retained row branch as `efb7315`. Owner integration SHA `3dc07a65dd27463711e6e3a51634989647863e97` is pushed; exact-SHA CI [36368159148](https://github.com/stacking-money-forever/stackot/actions/runs/36368159148) is observed in progress. It now executes native restart in addition to the template and Receiver checks. Migration-policy CI `36367146267` passed. Resume that exact S25 run, inspect actual Linux failures if any, and record product ACCEPT only on success. Brgr advisory acceptance remains distinct.
+
+### S25 — ACCEPT after actual Linux native restart success
+
+Run `36368159148` completed success on exactly `3dc07a65dd27463711e6e3a51634989647863e97`; both Receiver and runtime-config (including real native restart) jobs passed. Owner separately executed task/target probes and reviewed the native trust/source contract. S25 ACCEPT is bounded to ownership/API/storage/restart evidence, with actual callback actors, approvals, worker/publication and deployment unproved. Count **50/81**, M2 **4/14**. S26 and the independent S35 receipt lane are dependency-ready.
+
 Herdr prepared the task worktree from the repository parent with `--no-focus`. Its automatically provisioned root pane is `w6J:p1`; no existing pane was split, moved, focused, or zoomed. The inherited caller ID does not resolve (`pane_not_found`), so it is not used as a callback target or substituted with the focused pane.
 
 ## Corrected prerequisite audit
