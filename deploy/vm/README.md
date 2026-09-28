@@ -72,9 +72,14 @@ Follow `deploy/README.md` §2 — it is the canonical sequence, and ledger row S
 freezes the exact OpenClaw/acpx contract from the *installed* versions before any
 adapter is written:
 
+Node must be 24.16+ on the 24.x line (S23 verified 24.21.0) or 26.1+ — the
+OpenClaw package engines reject other majors; `cloud-init.yaml` installs 24.x
+via NodeSource.
+
 ```bash
-npm install -g openclaw@latest --allow-scripts=openclaw
-openclaw plugins install @openclaw/acpx
+npm install -g openclaw@2026.9.6 --allow-scripts=openclaw
+openclaw plugins install @openclaw/acpx@2026.9.6 --pin --accept-capabilities
+openclaw plugins install @openclaw/discord@2026.9.6 --pin --accept-capabilities
 # Discord bot token for the gateway:
 install -m 0600 -o stackot -g stackot /dev/null ~stackot/.openclaw/.env
 #   DISCORD_BOT_TOKEN=...

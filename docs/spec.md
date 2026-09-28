@@ -185,21 +185,29 @@ Gateway 재시작 시에도 작업 기록은 SQLite에 보존되므로 재개 �
 
 ### ACP 런타임
 
-`openclaw plugins install @openclaw/acpx` 후 `sessions_spawn({ runtime: "acp", agentId:
+`openclaw plugins install @openclaw/acpx@2026.9.6` 후 `sessions_spawn({ runtime: "acp", agentId:
 "codex", cwd: <worktree> })`로 harness를 실행한다.
 
 - worker는 OpenClaw 도구를 기본적으로 받지 않는다(ACP 설계상 격리). 포럼 보고는 부모
   세션이 완료 이벤트를 받아 수행.
 - harness별 auth는 호스트에 사전 구성돼 있어야 한다(codex 로그인 등).
 - 비대면 실행이므로 permission profile을 headless로 설정(승인 프롬프트 클릭 불가).
+  ACP harness의 `permissionMode`/`nonInteractivePermissions`는 harness 내부
+  동작이며 §8이 요구하는 제품 push/PR 승인 가드와는 별개다 — 그 가드는 아직
+  미구현이며 실운영 전 독립 검증이 필요하다.
 
 ### 격리
 
 - **worktree**: OpenClaw managed worktree. 브랜치 `openclaw/<issue번호>-<slug>`,
-  스냅샷·cleanup·restore 내장. `.worktreeinclude`로 `.env` 등 ignored 파일 시딩.
-- **sandbox**: `agents.defaults.sandbox.mode: "non-main"` — 채널에서 파생된 세션은 자동
-  docker 격리(기본 network none). worker harness는 ACP이므로 sandbox 밖이지만, 작업
-  디렉터리가 worktree로 한정되고 tool policy로 위험 명령을 게이트한다.
+  스냅샷·cleanup·restore 내장. `.worktreeinclude`로 ignored 파일 시딩 가능 — 단
+  Discord/GitHub/publication secrets은 worker에 주입하지 않는다(게이트 전용).
+- **sandbox**: 전역 `agents.defaults.sandbox.mode: "non-main"` — 다른 에이전트의
+  채널 파생 세션은 자동 docker 격리(기본 network none). 단, stackot 컨트롤러는
+  per-agent `sandbox.mode: "off"`다: 샌드박스 요청자는 ACP spawn이 불가해 채널
+  파생 세션이 ACP·Discord 액션을 내려면 비격리여야 한다. 이것은 worker 격리가
+  아니다(ACP worker는 원래 sandbox 밖; cwd도 보안 경계가 아님). push/PR 등 외부
+  변경에는 §8이 요구하는 제품 승인 가드가 필요하며 이는 아직 미구현이다 —
+  generic 버튼은 서버 측 가드가 아니므로 실운영 전 독립 검증이 필요하다.
 
 ## 8. 승인 정책
 
@@ -240,7 +248,9 @@ Control UI에 없어서 필요하면 P1 이후에 추가하는 것:
   `hooks.token`(Bearer) 사용, Gateway는 loopback에서만 수신.
 - **외부 콘텐츠**: GitHub 이슈 본문/댓글은 신뢰하지 않는 데이터로 취급. Receiver가 전달하는
   메시지에 "데이터" 프레이밍 유지, 프롬프트 주입 지시는 실행 대상에서 제외(스킬 명시).
-- **격리**: 작업별 managed worktree + `non-main` sandbox.
+- **격리**: 작업별 managed worktree + 다른 에이전트의 `non-main` sandbox(stackot
+  컨트롤러는 ACP/Discord 액션을 위해 예외적 비격리 — worker 격리 아님).
+  push/PR 승인 가드는 spec 요구사항이며 아직 미구현 — 실운영 전 독립 검증 필요.
 - **Secrets**: 스킬에 "로그와 Discord 메시지에서 secret 마스킹" 규칙 명시. Control UI 로그는
   Gateway 로그 정책을 따름.
 - **감사**: 외부 API 변경(push, PR 생성)은 포럼 메시지에 승인자·시각 기록. 상세는 tasks
@@ -261,7 +271,8 @@ Control UI에 없어서 필요하면 P1 이후에 추가하는 것:
 설정:
 
 - [ ] Discord 서버 구성: 카테고리, 포럼 채널 3개, 태그, 봇 권한(Send Messages in Threads 포함)
-- [ ] openclaw.json: guild allowlist, components TTL 24h, sandbox `non-main`, hooks enable
+- [ ] openclaw.json: guild allowlist + guild binding(→stackot), components TTL 24h,
+  stackot sandbox off + 나머지 `non-main`, hooks enable
 - [ ] ACP: acpx 플러그인, codex harness auth, permission profile
 
 동작 검증:

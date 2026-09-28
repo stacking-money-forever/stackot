@@ -5,8 +5,10 @@ Gateway·Receiver·GitHub webhook 연결을 다룬다.
 
 ## 0. 사전 준비
 
-- 서버: Linux/macOS, Docker 설치 (sandbox backend), Node 22+
-- OpenClaw Gateway 설치: `npm install -g openclaw@latest --allow-scripts=openclaw`
+- 서버: Linux/macOS, Docker 설치 (sandbox backend), Node 24.16+ on 24.x (S23 검증 24.21.0) 또는 26.1+
+- OpenClaw Gateway 설치: `npm install -g openclaw@2026.9.6 --allow-scripts=openclaw`
+  후 `openclaw plugins install @openclaw/acpx@2026.9.6 --pin --accept-capabilities`
+  및 `openclaw plugins install @openclaw/discord@2026.9.6 --pin --accept-capabilities`
 - Discord 앱: [bot-setup.md](bot-setup.md) 완료 — 토큰, 권한, 초대, ID 확보까지
 
 ## 1. Discord 서버 구성
@@ -31,7 +33,7 @@ GitHub 카테고리 (프로젝트마다 반복 — 이름은 프로젝트명 추
 
 ## 2. Gateway 설정
 
-1. 템플릿 복사: `deploy/openclaw.json5.template` → `~/.openclaw/openclaw.json5`,
+1. 템플릿 복사: `deploy/openclaw.json5.template` → `~/.openclaw/openclaw.json`,
    placeholder 채우기 (`<GUILD_ID>`, 채널 ID 4개, `<OWNER_DISCORD_USER_ID>`,
    `<LONG_RANDOM_HOOK_TOKEN>` — `openssl rand -hex 32`).
 2. `DISCORD_BOT_TOKEN`을 환경변수 또는 `~/.openclaw/.env`에 설정.
@@ -48,6 +50,14 @@ GitHub 카테고리 (프로젝트마다 반복 — 이름은 프로젝트명 추
    ```
 5. ACP worker auth (호스트에 사전 구성): `codex` 로그인 상태 확인.
    `openclaw config set plugins.entries.acpx.enabled true` (템플릿에 포함됨).
+
+참고: 템플릿은 stackot 에이전트에만 `sandbox.mode: "off"`를 둔다 — 채널 파생
+컨트롤러 세션이 ACP spawn·Discord 액션을 내야 하고 샌드박스 요청자는 ACP
+spawn이 불가하기 때문이다. 다른 에이전트의 non-main 세션은 전역 `non-main`
+기본값으로 계속 docker 격리된다. 이는 worker 격리가 아니며(cwd도 보안 경계가
+아님) push/PR 등 외부 변경을 위한 제품 승인 가드는 spec이 요구하지만 아직
+미구현이다 — generic 버튼은 서버 측 가드가 아니므로 실운영 전 독립 검증이
+필요하다.
 
 ## 3. Receiver 설정
 

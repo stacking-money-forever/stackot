@@ -17,3 +17,18 @@ jobs:
       - run: bun run typecheck
       - run: bun run test
       - run: bun run build
+
+  # S24: pinned runtime-config template oracle on the pushed SHA. Schema /
+  # sandbox-policy evidence only -- synthetic IDs, isolated state dir; the
+  # oracle installs the pinned acpx/discord plugins into that state. No
+  # gateway, Discord connection, model call, worker, or real secrets.
+  runtime-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.21.0
+      - run: npm install --global openclaw@2026.9.6 --allow-scripts=openclaw
+      - run: openclaw --version
+      - run: node deploy/verify-openclaw-template.mjs

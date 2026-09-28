@@ -57,8 +57,8 @@ runcmd:
   # Bun (receiver) installed system-wide so a system service can exec it.
   - BUN_INSTALL=/usr/local bash -c 'curl -fsSL https://bun.sh/install | bash'
   - ln -sf /usr/local/bin/bun /usr/local/bin/bunx || true
-  # Node LTS (OpenClaw gateway is a Node package). Install via NodeSource.
-  - bash -c 'curl -fsSL https://deb.nodesource.com/setup_22.x | bash -'
+  # Node 24.x (OpenClaw engines: >=24.16 <25 or >=26.1). Install via NodeSource.
+  - bash -c 'curl -fsSL https://deb.nodesource.com/setup_24.x | bash -'
   - apt-get install -y nodejs
 
   # --- Caddy (public HTTPS terminator) -------------------------------------

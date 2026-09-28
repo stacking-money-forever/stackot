@@ -5,10 +5,19 @@
   agents: {
     entries: {
       stackot: {
-        default: true,
         workspace: "~/.openclaw/workspace-stackot",
         // The stackot skill lives in the workspace skills dir:
         //   ~/.openclaw/workspace-stackot/skills/stackot/SKILL.md
+        //
+        // stackot is the channel-facing controller: a sandboxed requester
+        // cannot spawn ACP, so its Discord-derived sessions must run
+        // unsandboxed to issue ACP and Discord actions. This is NOT worker
+        // containment -- ACP workers run outside the OpenClaw sandbox by
+        // design, and cwd is not a security boundary. The spec-required
+        // product approval/publication guards for push/PR are NOT yet
+        // implemented; they must be independently verified before live
+        // operation (generic buttons are not a server-side guard).
+        sandbox: { mode: "off" },
       },
     },
     defaults: {
@@ -22,6 +31,17 @@
       },
     },
   },
+
+  // -- Discord routing ----------------------------------------------
+  // Pin this guild's Discord traffic to the stackot agent explicitly.
+  // Single account: match.accountId is left unset per the binding schema.
+  bindings: [
+    {
+      type: "route",
+      agentId: "stackot",
+      match: { channel: "discord", guildId: "<GUILD_ID>" },
+    },
+  ],
 
   // ── Discord channel ────────────────────────────────────────────
   channels: {
