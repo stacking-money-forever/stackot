@@ -269,6 +269,26 @@ decision class; actual Discord principal and execution remain S28/S29. Count
 
 ## Corrected prerequisite audit (current access facts)
 
+## S36 owner candidate — backlink-only recovery
+
+Brgr first revision rejected unsafe inflight absent-marker send; narrowed revision
+also rejected (decision `300f3aac-01cb-4055-8d27-2cdf86b56e67`) for treating the
+GitHub backlink as a new Discord thread. No third attempt. Owner implemented
+actual backlink-only repository using unchanged native state facade and accepted
+S35 receipt. It never calls a thread creator or changes the thread receipt.
+Controlled definitely-not-sent resets, ambiguous-ack/post-write failure recovery,
+concurrency, marker binding and duplicate detection are tested. The marker is
+compatible with actual Receiver findThreadId's expected-author/guild contract.
+
+Task/target six owned files SHA-256 match. Target typecheck/build and combined
+41 tests / 262 assertions pass (9 new backlink tests / 44 assertions). Baseline
+module absence and labelled unsafe-resend/author-bypass mutants fail the suite.
+Evidence S only for backend recovery, not actual GitHub/Discord auth or process
+restart. Source/receipt explain live adapter capability/auth requirements.
+Publish and inspect exact-SHA Linux CI before S36 ACCEPT; count remains 53/81.
+
+## Corrected prerequisite audit (continued current access facts)
+
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 
 Existing secrets are not copied into a worker checkout or recorded here. The missing runtime is being prepared in repository scope instead of being treated as a user-only prerequisite.

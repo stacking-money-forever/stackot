@@ -78,6 +78,11 @@ S35 thread receipt 저장 모듈도 `gateway/`에서 함께 검증한다. 저장
 지정하면 합성 외부 생성 성공/receipt 저장 실패 후 실제 native Gateway 재시작
 복원을 검사한다. 외부 생성자는 fixture이며 Discord 전송·marker 인증 증거가 아니다.
 
+S36 backlink 저장/복구도 Gateway 테스트에 포함된다. 이미 수용된 thread
+receipt가 없으면 쓰지 않으며, 실패 시 GitHub marker만 재개한다. adapter의
+실제 작성자/repo/item 응답 및 definitely-not-sent/idempotency 근거가 필요하다.
+합성 backend 통과는 GitHub 쓰기·Discord 연결의 활성화나 실제 E2E 증거가 아니다.
+
 ## 3. Receiver 설정
 
 1. `receiver/config.json` 생성 — `receiver/config.example.json`을 복사하고 채운다.

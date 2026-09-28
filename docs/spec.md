@@ -249,6 +249,13 @@ uncertain을 반환한다. 실제 provider의 영속 idempotency가 입증된 �
 같은 operation 재전송이 허용된다. 외부 provider 테스트는 합성이고 실제
 Discord marker 인증·thread 생성 어댑터는 후속 실연동 검증이 필요하다.
 
+S36의 `gateway/src/backlink.ts`는 이미 저장된 thread receipt를 소비하고
+GitHub 역링크만 재개한다. task/repo/item/기록자와 guild/forum/thread/operation을
+묶은 marker를 확인하며, 불확실한 응답이나 빈 조회로 다시 쓰지 않는다. 신뢰된
+provider가 전송되지 않았음을 입증한 경우만 같은 operation을 재시도한다.
+중복 marker는 오류로 드러내고 기존 thread receipt를 수정하지 않는다. 합성
+회복 오라클과 Receiver marker 형식 호환을 검증하며 실제 쓰기는 S49에 남는다.
+
 ## 9. 관리
 
 Control UI로 커버되는 것 (커스텀 페이지 만들지 않음):

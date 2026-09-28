@@ -25,6 +25,11 @@ synthetic external provider and the real native flow store; it does not provisio
 Discord channels or prove live marker authentication/idempotency. These modules
 still need the trusted production controller/adapter before host activation.
 
+S36 adds backlink-only reconciliation against the accepted thread receipt.
+Synthetic retries leave the thread unchanged and reconcile one GitHub marker;
+actual provider author metadata, send-outcome guarantees and live account writes
+are not established by this fixture. Production activation remains gated on S49.
+
 ## Topology
 
 ```

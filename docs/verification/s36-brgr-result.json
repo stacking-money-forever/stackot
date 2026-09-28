@@ -1,0 +1,52 @@
+{
+  "artifacts": [
+    {
+      "reference": {
+        "bytes": 3848,
+        "digest": "sha256:f41cb8dac5f82811db493ce7690fa706024cf8ed0eea31df1b04863171468ee3",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/f4/1cb8dac5f82811db493ce7690fa706024cf8ed0eea31df1b04863171468ee3"
+      },
+      "text": "## S36 proposal — Discord backlink thread create-once via CAS marker\n\n**Scope.** S36 implements the create-once backlink thread send inside the backlink repository. Thread receipt storage is already durable and reused unchanged; this row adds no new thread-create storage path. Provider authentication and live Discord integration remain S49 — S36 treats the provider as an injected backend returning either a durable thread id, a definitive-not-sent outcome, or an ambiguous failure.\n\n**Inputs (S35 contract).** Each operation carries an operation UUID string, decimal-string Discord IDs (guild, forum, thread when known), plus trusted-backend metadata: real GitHub author, repo, item, and body. An owned marker binds one GitHub item to exactly one Discord guild/forum/thread tuple and one operation identity; it is never anonymous.\n\n**Object and CAS.** The backlink object has native numeric revision metadata and a `stateJson` payload. All transitions are CAS writes conditional on the observed revision (and, where noted, operation identity). States:\n\n- `prepared` — intent recorded, no send attempted. Marker absent provider-side.\n- `inflight` — a send attempt has begun; outcome unknown. Records the operation UUID that owns the attempt.\n- `sent` — provider returned a durable thread id; the existing durable thread receipt is written and reused for all later reads.\n- `duplicate-detected` — terminal; reconciliation found more than one owned marker.\n\n**Transitions.**\n\n1. `prepared → inflight`: single CAS winner only. The winner performs a provider prelookup for the marker and may send **only after a successful prelookup that confirms absence**. CAS losers become observers.\n2. `inflight → sent`: on a successful send, write the durable receipt, then CAS `inflight → sent` guarded by operation identity and current revision.\n3. `inflight → prepared` (reset): allowed **only** when the backend reports a proven definitely-not-sent outcome (e.g., request rejected before acceptance, never a transport-level guess). The reset CAS is guarded by both the owning operation UUID and current revision; a stale observer cannot reset another operation's attempt. A generic thrown error is ambiguous and leaves the row `inflight`.\n4. `inflight → duplicate-detected`: reconciliation finding ≥2 owned markers yields a hard duplicate-detected result — never collapsed into one guarantee, never auto-resolved.\n\n**Exact no-resend rule.** Any observer or ambiguous-ack retry that finds state `inflight` may look up and reconcile against the provider, but an absent marker lookup **never** permits a create. The only exceptions: (a) the row has been CAS-reset to `prepared` via the proven-not-sent path above, letting a new winner re-run transition 1; or (b) the provider contract carries proven durable idempotency keyed on the operation UUID, so a repeated send cannot produce a second thread. Without one of those, `inflight` + absent marker is a stuck state requiring repair, not a resend.\n\n**Oracle (synthetic `thread1` / backlink `effective1`, post-write receipt crash).** Fixture: provider returns `thread1`; the process crashes after the provider write but before the `inflight → sent` CAS lands. On restart, an observer sees `inflight`, runs prelookup, finds the owned marker `thread1` bound to `effective1`'s GitHub item + guild/forum/thread + operation UUID, reconciles `inflight → sent`, and reuses the recovered receipt — zero duplicate sends. Negative assertions run in the same harness: a second owned marker yields `duplicate-detected`; a generic thrown error leaves `inflight` with no resend; a proven-not-sent outcome CAS-resets to `prepared`; and an `inflight`-with-absent-marker observer attempts no create.\n\n**Non-goals.** No provider SDK/auth (S49), no new receipt schema, no collapsing of duplicates.\n"
+    },
+    {
+      "reference": {
+        "bytes": 3848,
+        "digest": "sha256:f41cb8dac5f82811db493ce7690fa706024cf8ed0eea31df1b04863171468ee3",
+        "media_type": "text/x-brgr-stdout",
+        "store_relative_path": "artifacts/sha256/f4/1cb8dac5f82811db493ce7690fa706024cf8ed0eea31df1b04863171468ee3"
+      },
+      "text": "## S36 proposal — Discord backlink thread create-once via CAS marker\n\n**Scope.** S36 implements the create-once backlink thread send inside the backlink repository. Thread receipt storage is already durable and reused unchanged; this row adds no new thread-create storage path. Provider authentication and live Discord integration remain S49 — S36 treats the provider as an injected backend returning either a durable thread id, a definitive-not-sent outcome, or an ambiguous failure.\n\n**Inputs (S35 contract).** Each operation carries an operation UUID string, decimal-string Discord IDs (guild, forum, thread when known), plus trusted-backend metadata: real GitHub author, repo, item, and body. An owned marker binds one GitHub item to exactly one Discord guild/forum/thread tuple and one operation identity; it is never anonymous.\n\n**Object and CAS.** The backlink object has native numeric revision metadata and a `stateJson` payload. All transitions are CAS writes conditional on the observed revision (and, where noted, operation identity). States:\n\n- `prepared` — intent recorded, no send attempted. Marker absent provider-side.\n- `inflight` — a send attempt has begun; outcome unknown. Records the operation UUID that owns the attempt.\n- `sent` — provider returned a durable thread id; the existing durable thread receipt is written and reused for all later reads.\n- `duplicate-detected` — terminal; reconciliation found more than one owned marker.\n\n**Transitions.**\n\n1. `prepared → inflight`: single CAS winner only. The winner performs a provider prelookup for the marker and may send **only after a successful prelookup that confirms absence**. CAS losers become observers.\n2. `inflight → sent`: on a successful send, write the durable receipt, then CAS `inflight → sent` guarded by operation identity and current revision.\n3. `inflight → prepared` (reset): allowed **only** when the backend reports a proven definitely-not-sent outcome (e.g., request rejected before acceptance, never a transport-level guess). The reset CAS is guarded by both the owning operation UUID and current revision; a stale observer cannot reset another operation's attempt. A generic thrown error is ambiguous and leaves the row `inflight`.\n4. `inflight → duplicate-detected`: reconciliation finding ≥2 owned markers yields a hard duplicate-detected result — never collapsed into one guarantee, never auto-resolved.\n\n**Exact no-resend rule.** Any observer or ambiguous-ack retry that finds state `inflight` may look up and reconcile against the provider, but an absent marker lookup **never** permits a create. The only exceptions: (a) the row has been CAS-reset to `prepared` via the proven-not-sent path above, letting a new winner re-run transition 1; or (b) the provider contract carries proven durable idempotency keyed on the operation UUID, so a repeated send cannot produce a second thread. Without one of those, `inflight` + absent marker is a stuck state requiring repair, not a resend.\n\n**Oracle (synthetic `thread1` / backlink `effective1`, post-write receipt crash).** Fixture: provider returns `thread1`; the process crashes after the provider write but before the `inflight → sent` CAS lands. On restart, an observer sees `inflight`, runs prelookup, finds the owned marker `thread1` bound to `effective1`'s GitHub item + guild/forum/thread + operation UUID, reconciles `inflight → sent`, and reuses the recovered receipt — zero duplicate sends. Negative assertions run in the same harness: a second owned marker yields `duplicate-detected`; a generic thrown error leaves `inflight` with no resend; a proven-not-sent outcome CAS-resets to `prepared`; and an `inflight`-with-absent-marker observer attempts no create.\n\n**Non-goals.** No provider SDK/auth (S49), no new receipt schema, no collapsing of duplicates.\n"
+    }
+  ],
+  "result": {
+    "artifacts": [
+      {
+        "bytes": 3848,
+        "digest": "sha256:f41cb8dac5f82811db493ce7690fa706024cf8ed0eea31df1b04863171468ee3",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/f4/1cb8dac5f82811db493ce7690fa706024cf8ed0eea31df1b04863171468ee3"
+      },
+      {
+        "bytes": 3848,
+        "digest": "sha256:f41cb8dac5f82811db493ce7690fa706024cf8ed0eea31df1b04863171468ee3",
+        "media_type": "text/x-brgr-stdout",
+        "store_relative_path": "artifacts/sha256/f4/1cb8dac5f82811db493ce7690fa706024cf8ed0eea31df1b04863171468ee3"
+      }
+    ],
+    "attempt_id": "fa43542b-d6ff-4bc9-946e-61a62cbddf63",
+    "error": null,
+    "outcome": "candidate",
+    "result_id": "858ca2e7-de8e-4308-acd5-de7e849a342f",
+    "revision": 2,
+    "schema": "brgr/v1",
+    "task_id": "a974436a-b8da-4a08-8644-1c92f6f3f928",
+    "unresolved_effects": []
+  },
+  "route_observation": {
+    "effort": null,
+    "effort_source": "unavailable",
+    "model": null,
+    "model_source": "unavailable"
+  }
+}

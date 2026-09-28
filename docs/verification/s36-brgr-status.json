@@ -1,0 +1,44 @@
+{
+  "state": "terminal",
+  "task": {
+    "acceptance_criteria": [
+      "Precise prepared winner-only create; inflight absent lookup never resends except proven provider idempotency; definitive-not-sent reset guarded CAS, duplicate detection and actual marker metadata validation; <=600 words no tools."
+    ],
+    "artifact_contract": {
+      "max_bytes": 8388608,
+      "media_type": "text/plain"
+    },
+    "budget": {
+      "deadline_seconds": 180,
+      "max_attempts": 2
+    },
+    "create_request_id": "revise-a974436a-b8da-4a08-8644-1c92f6f3f928-2",
+    "evidence": {
+      "capture_diff": false,
+      "capture_logs": true,
+      "files": []
+    },
+    "instructions": {
+      "forward_criteria": true,
+      "role": [],
+      "scope": [
+        "stdout-only supplied-facts S36 proposal, no source reads or mutation"
+      ]
+    },
+    "objective": "No tools. Correct S36 proposal <=600 words only, supplied facts: native numeric revision metadata/object stateJson CAS; S35 operation UUID strings and decimal Discord IDs. Thread receipt is already durable and reused; no thread-create path in backlink repository. Backlink prepared->inflight CAS winner ONLY sends after successful prelookup. Inflight observers or ambiguous-ack retries may lookup/reconcile but absent marker NEVER permits create, unless proven durable provider idempotency. A proven definitely-not-sent backend outcome may CAS-reset inflight to prepared, guarded by operation identity/current revision; generic thrown error must remain ambiguous. Duplicate owned markers are a hard duplicate-detected result, never collapsed to one guarantee. Trusted backend must supply real author/repo/item/body metadata; owned marker binds GitHub item and Discord guild/forum/thread plus operation. Outline CAS states, exact no-resend rule, and synthetic thread1/backlink effective1 post-write receipt-crash oracle. Actual provider authentication/integration stays S49. No invented SDK, subagents, file writes, source-read or execution claims.",
+    "owner_id": "codex:01a0e54a-250b-7882-b1c7-143cfc556e1d",
+    "required_capabilities": [
+      "completion"
+    ],
+    "revision": 2,
+    "route": {
+      "harness_id": "local.devin",
+      "requested_effort": null,
+      "requested_model": null
+    },
+    "schema": "brgr/v1",
+    "task_id": "a974436a-b8da-4a08-8644-1c92f6f3f928",
+    "workspace": "/Users/justn/Library/Application Support/brgr/worktrees/stackot/a974436a-r2/"
+  },
+  "workspace_present": true
+}
