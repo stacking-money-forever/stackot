@@ -82,6 +82,9 @@ def evaluate(report, rules, state, now, channel, guild, send, persist):
         state.update(target=target, phase='prepared', active=True, nonce=str(secrets.randbits(64)),
                      content='Stackot 운영 알림: 대기 중 %d건, 가장 오래된 요청 %d초. Receiver 상태와 Gateway 전달 오류를 확인하세요.' % (queue['pending'], age // 1000), observedAt=now)
         persist(state)
+    # A known refusal/rate limit has not delivered this intent. Refresh the
+    # sampled queue values while retaining its nonce and recipient binding.
+    state['content'] = 'Stackot 운영 알림: 대기 중 %d건, 가장 오래된 요청 %d초. Receiver 상태와 Gateway 전달 오류를 확인하세요.' % (queue['pending'], age // 1000)
     state['phase'] = 'inflight'
     persist(state)  # Fail before external send if intent persistence fails.
     try:
