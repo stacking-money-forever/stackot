@@ -240,6 +240,27 @@ storage only. Live Discord auth/idempotency/deployment remain unproved. Count
 
 ## Corrected prerequisite audit (current access facts)
 
+## S36 brgr launch — backlink-only recovery
+
+Accepted S35 prerequisite; owner row checkout `codex/stackot-s36-20260928` at
+`/Users/justn/dev/.worktrees/stackot-s36-20260928`, base `e87e6da`, non-focused
+Herdr root `w6T:p1`. Brgr `a974436a-b8da-4a08-8644-1c92f6f3f928`, local.devin
+configured SWE-2 High (per-task observation unavailable), no-tool supplied-facts
+proposal, deadline 180s, one narrowed revision. Owner binding is current Codex
+thread. No global config/model or inferred parent change; registered write
+capability still unavailable, so actual implementation is owner work.
+
+Primary artifact gateway/src/backlink.ts + tests. Oracle: accepted thread remains
+one while only failed backlink work resumes; ambiguous ack/post-write-receipt
+failure reconciles actual owned marker instead of blindly replaying. Scope binds
+repo/item/expected GitHub author and guild/forum/thread. Generic errors/empty
+lookup do not prove a write was absent. Synthetic backend evidence stays S;
+live GitHub/Discord integration stays S49. No account, credential or host mutation.
+One immediate status sanity check observed running. Inspect sealed result, decide,
+then implement and run the full oracle before separate product acceptance.
+
+## Corrected prerequisite audit (continued current access facts)
+
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 
 Existing secrets are not copied into a worker checkout or recorded here. The missing runtime is being prepared in repository scope instead of being treated as a user-only prerequisite.
