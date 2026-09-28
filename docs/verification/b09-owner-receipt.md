@@ -20,7 +20,7 @@ disabled downstream, matching deployed bundlea630c9f1... for source4915f5b.
 Independent review found elapsed-time flags could imply observed coverage and
 readiness503 skipped status. First24h run PID50025/session69101 was deliberately
 SIGTERM stopped; its receipt has interrupted=true and is retained privately.
-Fixed tests5pass. Both targeted mutants fail: elapsed flags mislabeled as
+Fixed tests6pass, including missing/non-boolean status rejection. Both targeted mutants fail: elapsed flags mislabeled as
 observation and returning early on readiness error. Exact-commit final review
 and Linux CI remain pending. No row acceptance or count change.
 

@@ -12,6 +12,10 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 def sanitize(value):
     if not isinstance(value, dict):
         raise ValueError('Invalid status shape')
+    if (type(value.get('outboxReady')) is not bool or
+            not isinstance(value.get('gateway'), dict) or
+            type(value['gateway'].get('reachable')) is not bool or 'queue' not in value):
+        raise ValueError('Invalid readiness fields')
     queue = value.get('queue')
     if queue is None:
         return {'outboxReady': value.get('outboxReady') is True,

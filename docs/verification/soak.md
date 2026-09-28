@@ -26,7 +26,7 @@ and recovery measurements; report gaps/deployment switches and compare measured
 SLOs with the chosen workload contract. An unavailable representative workload
 keeps the row incomplete, even if baseline observations continue successfully.
 
-The 5 Python tests validate sanitization, elapsed/interrupt rules, gap reporting,
+The 6 Python tests validate sanitization, elapsed/interrupt rules, gap reporting,
 failed observation coverage and independent status diagnosis after readiness503
 only(S). Both reviewed defective behaviors fail their targeted mutation oracle.
 They do not simulate the24h beta or establish deployment.
