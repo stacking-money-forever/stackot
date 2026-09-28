@@ -365,7 +365,7 @@ Receiver may use an optional private `openclawHookTokenFile` validated at startu
 and read before each forward. File failures are fail-closed with no retired-token
 fallback; prior/current secrets enter redaction before network. The B08 owner
 drill observed actual native hot rotation and supported durable intake on the
-selected Mac; production activation and row acceptance remain separate
+selected Mac and B08 is owner-accepted; production activation remains separate
 (`deploy/token-rotation.md`).
 
 S47 restoration preserves the genuine acknowledged pending delivery and observes
