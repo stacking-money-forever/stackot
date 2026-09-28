@@ -10,7 +10,7 @@
 
 ## 현재 상태 (2026-09-28 기준)
 
-- 원장 81행 중 **52행 수용, 29행 미완**. 마일스톤: **M1 36/36**, M2 6/14, M3 7/12, M4 0/4, M5 3/11, C 0/4.
+- 원장 81행 중 **53행 수용, 28행 미완**. 마일스톤: **M1 36/36**, M2 7/14, M3 7/12, M4 0/4, M5 3/11, C 0/4.
 - receiver 코드 기준선: `bun test` 346 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, CI 매 푸시 green.
 - 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. R 증거는 이 범위에 한정되며, 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **D(배포)·H(사람) 증거는 0건**. 근거: `docs/verification/wave-03.md`, `openclaw-contract.md`, `s23-owner-probe.md`.
 
@@ -35,7 +35,7 @@
 - [x] **S24** 고정 설치본의 실제 플러그인 schema·controller 정책 검증 통과. Discord/ACP 잘못된 설정 거부, 구 템플릿 판별 및 정확 SHA Linux CI 성공: `docs/verification/wave-03.md`. 실제 worker·Discord 전달·배포 증거와는 별도다.
 - [x] **S25** native managed-flow 상태의 실제 재시작 복원·revision 거부 및 로컬 keyed-store trust 경계 확인. `docs/contracts/task-state.md`, `wave-03.md`와 정확 SHA Linux CI 성공으로 수용. 실제 승인·worker·callback 통합은 후속 행이다.
 - [x] **S26** 요청자+plan hash/version+action+TTL pending 저장 — 실제 native 재시작 및 정확 SHA Linux CI 검증, `wave-03.md`.
-- [ ] **S27** actor·만료·변경 plan 승인 거부 및 consumption 매트릭스
+- [x] **S27** actor·만료·변경 plan 승인 거부 및 consumption 매트릭스 — 합성 guard·경합·응답 유실 테스트와 정확 SHA Linux CI, `wave-03.md`. 실제 callback actor 검증은 S28.
 - [ ] **S30** task당 worktree/branch 계보 하나(재시도 경로 동일, dirty 보존)
 - [ ] **S31** cancel/timeout 후 작업물 보존
 - [ ] **S29** 유효 승인 이후에만 ACP spawn (acpx 플러그인 + codex 로그인 선행)

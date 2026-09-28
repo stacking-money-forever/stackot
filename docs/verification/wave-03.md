@@ -238,8 +238,6 @@ S35 ACCEPT at row's synthetic external-dependency class, with bounded R native
 storage only. Live Discord auth/idempotency/deployment remain unproved. Count
 **52/81**, M2 **6/14**. S36 is dependency-ready; S27 has its separate CI gate.
 
-## Corrected prerequisite audit (current access facts)
-
 ## S36 brgr launch — backlink-only recovery
 
 Accepted S35 prerequisite; owner row checkout `codex/stackot-s36-20260928` at
@@ -259,7 +257,17 @@ live GitHub/Discord integration stays S49. No account, credential or host mutati
 One immediate status sanity check observed running. Inspect sealed result, decide,
 then implement and run the full oracle before separate product acceptance.
 
-## Corrected prerequisite audit (continued current access facts)
+### S27 — ACCEPT after exact-SHA Linux success
+
+Task evidence `ab82790`; pushed integration `25922933b44d8613f4f73541dbae3b2a2ee6c748`.
+CI [36371263030](https://github.com/stacking-money-forever/stackot/actions/runs/36371263030)
+completed success on that exact SHA, both jobs including 32 Gateway tests and three
+native restart regression oracles. Task/target hashes and new guard matrix against
+actual S26 and labelled mutants are recorded above. S27 ACCEPT at synthetic actor/
+decision class; actual Discord principal and execution remain S28/S29. Count
+**53/81**, M2 **7/14**. Full goal/deployment/human/release requirements remain open.
+
+## Corrected prerequisite audit (current access facts)
 
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 
