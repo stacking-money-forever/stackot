@@ -180,6 +180,10 @@ forward only) and answers `/readyz` 200 — then stop it and record the result.
   Caddy's own service.
 # Current host selection
 
+The B04 alert policy/one-shot monitor is in [../alerts.md](../alerts.md). Its
+current installer targets the selected Mac; no VM alert supervisor or live
+receipt is implied by these VM templates.
+
 On 2026-09-28 the user selected the local Mac and `stackot.justn.me` instead of
 provisioning a VM. See [macOS deployment](../macos/README.md). This runbook is
 retained for the VM alternative; none of its systemd/reboot receipts is implied

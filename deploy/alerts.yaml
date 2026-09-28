@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "statusUrl": "http://127.0.0.1:9377/status",
+  "pendingAgeThresholdMs": 300000,
+  "reminderMs": 1800000,
+  "pollSeconds": 60
+}
