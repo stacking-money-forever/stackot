@@ -17,10 +17,16 @@ Copy requires a new plan/approval without claiming a retry control exists.
 
 Server QA TTL supports new real-time expiry fixtures; default900000 preserves
 existing fingerprint. Invalid TTL denied, explicit TTL cannot reuse old fixture.
-No RPC actor/time parameters added. Gateway74tests/445assertions, typecheck/build
+No RPC actor/time parameters added. Gateway75tests/452assertions, typecheck/build
 passed after frozen install. New expiry-copy test against baseline29f31aa fails,
 proving the user-visible behavior distinguishes old code. S-only fixture evidence.
 
 Exact SHA Linux CI and independent review pending. No production plugin update,
 new Discord publication or actual expiry click yet. Full B06 still requires a
 usable fresh immutable re-request path and human understanding QA. Count57/81.
+
+Independent reviewf5fe9d4 identified late decision-ack expiry; corrected by a
+read-only exact-binding/pending reconciliation before specific guidance. New
+late-ack fixture preserves stored approved state and returns generic text;
+failed reconciliation exposes no error and leaves state unchanged. Staged
+privatef5fe9d4 package is inactive and retained; do not activate that old candidate.
