@@ -49,8 +49,8 @@
 - [x] **Discord**: 실제 봇/길드, 현재 승인 범위인 Stackot 저장소의 이슈·PR 포럼 2개 + `#ci-alerts` + `#stackot-admin` ID를 비공개 receiver 설정에 연결. `macos-discord-assets.json`; 다른 저장소 온보딩은 별도 범위.
 - [x] **`githubBacklinkLogin`**: `justn-hyeok`를 비공개 설정에 연결 (실제 역링크 쓰기는 S49)
 - [x] **`githubWebhookSecret`**: 비공개 설정 배치, 실제 공개 unsigned POST401
-- [ ] **GitHub 토큰**: repo:read 최소권한(공용), 원하면 **repo별 토큰**(B01에서 지원)
-- [ ] **GitHub push/PR 권한**: S33/S34/S49~S51을 위해 (worker가 자격을 쥐지 않도록 게이트에서만 사용)
+- [x] **GitHub 토큰**: configured token으로 실제 계정·Stackot repo 접근 readback. repo별 토큰 분리는 B01 계약 사용 가능.
+- [x] **GitHub push/PR 권한**: configured token의 Stackot permissions.push/admin 확인. S33/S34 승인된 쓰기 어댑터·실제 receipt는 미완; worker에는 토큰 전달하지 않음.
 - [ ] **`openclawHookToken`**: receiver에 배치했으나 Gateway hooks는 controller 검증 전 비활성화; 아직 연동 완료 아님
 - [x] **도메인 + HTTPS**: 사용자 지정 `stackot.justn.me`, Cloudflare DNS 터널과 edge TLS 검증. 현재 선택 경로는 직접 A/ACME 인증서 발급을 사용하지 않음.
 
