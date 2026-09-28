@@ -18,7 +18,8 @@ for the per-row decisions and `docs/atomic-completion.md` for the row DAG
 - `docs/verification/wave-*.md` — launch contracts, owner ACCEPT/REJECT decisions, residual risks.
 - `docs/verification/owner-state.md` — current continuation state and what is blocked on what.
 - `docs/spec.md` — product spec. `deploy/README.md` — receiver + gateway deployment. `deploy/vm/` — single-VM runtime artifacts and runbook.
-- `receiver/` — the only custom code so far: GitHub webhook ingress, durable outbox, routing, observability.
+- `receiver/` — GitHub webhook ingress, durable outbox, routing, observability.
+- `gateway/` — S26 native flow facade and pending approval persistence. Later callback/controller/worker guards remain separate checklist rows.
 
 ## Execution rules
 

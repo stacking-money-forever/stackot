@@ -181,6 +181,17 @@ live provider guarantees. Row S35 is still pending owner oracles/publication/CI.
 
 ## Corrected prerequisite audit (current access facts)
 
+### S26 — ACCEPT after exact-SHA Linux restart success
+
+Task evidence commit `281b93f` is retained on S26 branch. Integration SHA
+`7477852f6299918a8cbe9637bb7209d826e76051` was pushed; CI
+[36370375651](https://github.com/stacking-money-forever/stackot/actions/runs/36370375651)
+completed success on exactly that SHA. Both Receiver and runtime-config jobs passed,
+including Gateway typecheck/11-test/build, original native S25 restart and product
+S26 pending-record restart. Owner independently ran task/target oracles and hashes.
+S26 ACCEPT is pending storage only; count **51/81**, M2 **5/14**. Actual actor,
+expiry eligibility/decision/consumption, worker and deployment remain open.
+
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 
 Existing secrets are not copied into a worker checkout or recorded here. The missing runtime is being prepared in repository scope instead of being treated as a user-only prerequisite.
