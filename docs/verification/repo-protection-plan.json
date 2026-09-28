@@ -1,7 +1,7 @@
 {
   "plan_id": "b10-repo-protection",
   "repo": "stacking-money-forever/stackot",
-  "generated_at_utc": "2026-09-28T01:28:25Z",
+  "generated_at_utc": "2026-09-28T07:49:22.695349+00:00",
   "applied": false,
   "authorization_note": "Preparation only. Admin token access does not authorize these changes; apply only on an explicit owner order.",
   "basis": {
@@ -9,12 +9,20 @@
     "default_branch_sha": "fd5ff804a26931adb338b11a9a2e96e451772cb9",
     "branch_protected": false,
     "rulesets": [],
-    "check_run_contexts_on_main_head": ["receiver"],
-    "integration_only_jobs": ["runtime-config"],
+    "successful_repository_contexts": [
+      "receiver",
+      "runtime-config",
+      "ingress-contract"
+    ],
+    "checks_source_sha": "ea597eab1d3006f3b3c0dc72208a66a9ddb9fa52",
+    "checks_source_run": 36392824869,
+    "check_app_id": 15368,
+    "availability_rule": "Successful in this repository within seven days, not restricted to main HEAD",
     "security_and_analysis_disabled": [
       "secret_scanning",
       "secret_scanning_push_protection"
-    ]
+    ],
+    "open_main_prs": []
   },
   "requests": [
     {
@@ -24,20 +32,33 @@
       "body": {
         "required_status_checks": {
           "strict": true,
-          "contexts": ["receiver"]
+          "checks": [
+            {
+              "context": "receiver",
+              "app_id": 15368
+            },
+            {
+              "context": "runtime-config",
+              "app_id": 15368
+            },
+            {
+              "context": "ingress-contract",
+              "app_id": 15368
+            }
+          ]
         },
         "enforce_admins": true,
         "required_pull_request_reviews": null,
         "restrictions": null,
         "required_linear_history": null,
-        "allow_force_pushes": null,
-        "allow_deletions": null,
+        "allow_force_pushes": false,
+        "allow_deletions": false,
         "block_creations": null,
         "required_conversation_resolution": null,
         "lock_branch": null,
         "allow_fork_syncing": null
       },
-      "notes": "contexts re-derived from check-runs on main HEAD; 'receiver' is the only context that exists on main today. 'runtime-config' is integration-branch-only and must NOT be added until its check-run appears on a main SHA. strict and enforce_admins are explicit owner-reversible choices. All other fields null = no rule; nothing else is configured.",
+      "notes": "All three checks succeeded in this repository within7days on integration code. GitHubActions app binding rejects other status producers. Existing main-only workflow lacks two checks; future PRs must include the current reviewed workflow (integration already does). No main merge/push is authorized by this plan. Admins also need required checks. No review-count requirement is introduced.",
       "preserve": "No prior protection object exists (verified 404); nothing to merge."
     },
     {
@@ -46,27 +67,31 @@
       "path": "/repos/stacking-money-forever/stackot",
       "body": {
         "security_and_analysis": {
-          "secret_scanning": { "status": "enabled" },
-          "secret_scanning_push_protection": { "status": "enabled" }
+          "secret_scanning": {
+            "status": "enabled"
+          },
+          "secret_scanning_push_protection": {
+            "status": "enabled"
+          }
         }
       },
-      "notes": "Free on public repos; admin token confirmed. Non-provider patterns, validity checks and Dependabot deliberately omitted — out of scope, not denied as unsupported.",
+      "notes": "Free on public repos; admin token confirmed. Non-provider patterns, validity checks and Dependabot deliberately omitted \u2014 out of scope, not denied as unsupported.",
       "preserve": "Only the two named statuses are touched; other security_and_analysis keys are left as-is by PATCH semantics."
     }
   ],
   "stale_plan_conditions": [
-    "Required contexts are bound to check-runs on fd5ff804. If main's ci.yml gains or renames jobs (e.g. runtime-config after the integration merge), re-GET check-runs on the then-current main SHA and rebuild contexts before applying.",
-    "If a branch protection object or ruleset is created meanwhile, PUT protection overwrites whole-object — re-GET and merge into the existing rules instead of applying verbatim.",
+    "Reverify the three successful repository check names/app15368 within7days before apply. Required names need not have run on main, but candidate PR workflow must actually run all three.",
+    "If a branch protection object or ruleset is created meanwhile, PUT protection overwrites whole-object \u2014 re-GET and merge into the existing rules instead of applying verbatim.",
     "If the repo becomes private, secret scanning/push protection may need GitHub Advanced Security; a PATCH 403 then is a plan limit, not a payload bug.",
     "If org-level rulesets appear (re-run rulesets?includes_parents=true), org rules may already impose checks; reconcile before adding repo protection.",
-    "If the 'receiver' job is renamed, the stale context silently blocks all merges — detect via check-runs on a fresh main SHA.",
+    "If the 'receiver' job is renamed, the stale context silently blocks all merges \u2014 detect via check-runs on a fresh main SHA.",
     "strict:true presumes no merge queue; if the repo adopts a merge queue, switch to the merge-queue-aware protection fields instead."
   ],
   "post_apply_readback": [
     "GET /repos/.../branches/main -> protected must be true.",
-    "GET /repos/.../branches/main/protection -> required_status_checks.strict true, contexts ['receiver'], enforce_admins.enabled true.",
+    "GET /repos/.../branches/main/protection -> strict true, exactly receiver/runtime-config/ingress-contract from app15368, admins enforced, force pushes/deletions disallowed.",
     "GET /repos/... -> security_and_analysis.secret_scanning.status 'enabled' and secret_scanning_push_protection.status 'enabled' (enablement can be eventual; re-GET once if 'enabling').",
     "GET /repos/.../rulesets?includes_parents=true -> record any ruleset that appeared; reconcile with the protection object.",
-    "Enforcement proof still needs one real merge attempt on a PR missing 'receiver' — configuration GETs alone do not prove the gate."
+    "Enforcement proof still needs one real merge attempt on a PR missing 'receiver' \u2014 configuration GETs alone do not prove the gate."
   ]
 }
