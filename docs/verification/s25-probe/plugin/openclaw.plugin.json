@@ -1,0 +1,13 @@
+{
+  "id": "s25-probe",
+  "name": "S25 State Ownership Probe",
+  "description": "Synthetic S25 probe only: exercises native managed-flow and keyed-store durability across a real Gateway stop/restart. Contains no product approval logic.",
+  "activation": {
+    "onStartup": true
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

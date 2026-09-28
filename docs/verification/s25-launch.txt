@@ -1,0 +1,26 @@
+S25 — real native state ownership and restart contract
+
+One row, two flat Todos maximum, no subagents/MCP/browsing. You are not alone: preserve owner changes. Interactive Devin exact --model swe-2 --permission-mode dangerous. No commit/push/global configuration/auth access/doctor/service install/VM mutation/Discord connection/model call/worker turn. Use apply_patch for manual edits.
+
+Baseline bce6c43e10d9c3f9b59eb6758ce6875f85fb6253. S24 is accepted after Linux CI success. Primary artifact docs/contracts/task-state.md; supporting docs/verification/s25-receipt.md <=3000 bytes and a minimal reproducible probe plugin/runner under docs/verification/s25-probe/. No product controller/approval implementation yet; freeze its ownership/location after actual evidence. Do not edit checklist, owner-state, wave notes or Receiver source.
+
+Purpose: determine native task/run/flow ownership, durable product approval storage boundary and callback actor source. Records are not automatic resumption. Exercise real installed native storage across an actual local Gateway stop/restart without a model, worker or external account. Synthetic probe values must never be called real approvals or live Discord actor evidence.
+
+Reuse read-only installed Node/OpenClaw from:
+ /Users/justn/dev/.worktrees/stackot-s23-20260928/receiver/node_modules/.stackot-runtime/node-v24.21.0-darwin-arm64/bin
+ /Users/justn/dev/.worktrees/stackot-s23-20260928/receiver/node_modules/.stackot-runtime/packages/node_modules/.bin
+Your state/config/workspace belongs only under this checkout's ignored receiver/node_modules/.stackot-s25/. No user home auth/config or primary .env access. Start owned Gateway only on an unused loopback port (e.g. 28790), with a clearly synthetic token, no configured external channels, no hooks delivering messages and no model turns. Stop only your verified owned PID; never kill by generic name or port. Preserve state for restart/probe receipts. No general doctor repair or service installation.
+
+Actual public installed SDK pointers (avoid giant worker bundles):
+ openclaw/dist/runtime-api-CkahAQr_.d.ts: 44803-44905 keyed-store types; 45070-45212 managed-flow types; 45326-45370 asynchronous task APIs; 49303 registerGatewayMethod.
+ - api.runtime.tasks.async.managedFlows.bindSession({sessionKey,requesterOrigin?}) exposes createManaged, setWaiting, resume, get, etc. Creation params controllerId/goal/stateJson; mutations require flowId + expectedRevision. Use authoritative sessions/IDs, not invented task/run success. Do not link a child run: no child is actually executed in this row.
+ - api.runtime.state.openKeyedStore({namespace,maxEntries,...}) exposes register/registerIfAbsent/lookup/consume and observe/compareAndApply. This is an actual available storage option; product requester+plan hash+action checks still require S26/S27 code.
+ - api.registerGatewayMethod(name,handler,{scope:"operator.admin"}) can expose an isolated PROBE method. Use actual native SDK/SQLite, not a mocked store or manually fabricated ledger. Public gateway CLI calls supply synthetic authenticated operator context. Create a real native session through supported API when required; do not fake run/session identity to bypass ownership.
+
+Probe acceptance:
+1. Load a minimal trusted probe plugin into the real isolated Gateway; record version, plugin load and authenticated health.
+2. Through its actual SDK, create a managed flow bound to an actual session and write a clearly synthetic approval-shaped keyed value. Record real IDs/revision and declared owner. Stop Gateway, restart same state/config, and read both values from native APIs; require preservation. Show stale-revision transition denial where supported; no automatic-resume claim.
+3. Freeze authoritative task/run/flow IDs versus product approval state. Choose supported product module paths from evidence (likely a Gateway plugin using native stores; do not mandate Receiver-only storage without reason). Generic Discord callbacks/allowedUsers are not plan/action grants. Source-inspect trusted callback sender/origin fields narrowly from the pinned Discord plugin, but label live actor verification deferred to S28.
+4. Document exact commands, native observations, ownership decision, module boundary, future oracles and residuals in task-state.md. Keep probe repeatable so owner can rerun it. If a supported native API blocks, report its exact error; do not bypass native authority or expand into auth/model/service work.
+
+Budget <=18 scoped tool actions, one narrowed retry only; no exhaustive source scans or unrelated help. Keep readiness waits <=30 seconds with a concrete process/health condition. A running process or SQLite file alone is not the restart oracle: native reads must recover the observed IDs/value. Do not weaken evidence requirements to make a mock pass. Finish candidate artifacts and stop. Owner decides ACCEPT only after re-running, hash/diff review and publication/required CI.

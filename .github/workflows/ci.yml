@@ -24,6 +24,7 @@ jobs:
   # gateway, Discord connection, model call, worker, or real secrets.
   runtime-config:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,3 +33,5 @@ jobs:
       - run: npm install --global openclaw@2026.9.6 --allow-scripts=openclaw
       - run: openclaw --version
       - run: node deploy/verify-openclaw-template.mjs
+      # S25: real local Gateway/native SDK restart; synthetic values only.
+      - run: python3 docs/verification/s25-probe/run.py --output "$RUNNER_TEMP/s25-restart.json"

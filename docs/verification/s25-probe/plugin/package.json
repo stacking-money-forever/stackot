@@ -1,0 +1,13 @@
+{
+  "name": "s25-probe",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Synthetic S25 probe plugin (not a product approval implementation)",
+  "type": "module",
+  "main": "index.mjs",
+  "openclaw": {
+    "extensions": [
+      "./index.mjs"
+    ]
+  }
+}

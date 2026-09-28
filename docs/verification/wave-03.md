@@ -124,6 +124,18 @@ Supported migration shape is explicit: brgr produces read-only review/patch prop
 
 The inherited Herdr caller ID is stale. These brgr process runs omit only stale Herdr presentation variables for that invocation rather than targeting a focused/unrelated pane or changing global auto-pane settings. Owner binding remains the exact Codex thread (confirmed in task status). Workspaces/snapshots are created by brgr; inspect sealed results and explicitly accept/reject, then separately decide the product row. Existing product count remains 49/81.
 
+Migration policy was committed/pushed as `33d03d597ea87942a43b2d06e99e565bfc16fa09`; CI `36367146267` is in progress. Six requested snapshot files matched their preserved source hashes. Legacy owned idle panes `w6N:p1` and `w6P:p1` were closed after this handoff, without removing any worktree/evidence.
+
+B10 managed task reached a failed terminal result (`attempt deadline elapsed`) despite retaining a 3939-byte review artifact. Owner inspected the sealed result and acknowledged it; it was **not** accepted. Its report confirms disabled/unprotected settings but also overstates integration-only check rollout as a universal merge deadlock, which needs owner qualification. No product B10 acceptance or settings mutation occurred. S25 managed task remains running. Configured SWE-2 High was verified before admission, but this harness reports model/effort observation as unavailable; do not upgrade config evidence to observed per-task model evidence.
+
+## S25 owner oracle and contract — publication/CI pending
+
+Brgr S25 revision 1 was explicitly rejected: it delivered discovery text only after a noninteractive permission refusal. The one narrowed revision 2 produced a no-tool ownership proposal from supplied native facts; owner inspected it, scoped product guard implementation to later rows, qualified its broad trust/storage claims, and explicitly accepted the advisory task (decision `aab8a8b8-8b62-4743-8d78-385aceb6bb89`). This does not accept product S25.
+
+Owner assembled a reproducible real-native probe from the preserved plugin, with isolated state/workspace, reviewed local source confirmation, operator.admin method, no model/worker/account requests, new process groups, listener closure and actual server PID comparison. No native trust gate is bypassed. Task oracle recovered flow `bc309910-7c00-4a1c-ac39-a3cb5289c695` after actual Gateway PIDs `44313 → 44468`; target-worktree replay recovered new flow `3efcb30e-6e62-4ca2-bec2-3df7f8ebadec` after `46110 → 46360`. Both retained owner/revision 1/waiting/synthetic stateJson and rejected stale revisions before and after. Both actually refused native keyed store with PLUGIN_TRUST_REFUSED. No fake file/store is substituted.
+
+Seven source/contract/receipt/launch artifacts SHA-256 matched between retained task and integration checkouts. JS/Python syntax, workflow YAML and whitespace checks pass. The native source actor contract uses authenticated Discord interaction user/policy before plugin dispatch; actual two-user behavior remains S28. Product module/storage locations are now frozen in task-state.md, but product approval/controller code is not implemented by S25. The workflow adds the same real native restart oracle on Linux; no acceptance before exact-SHA success. Count stays 49/81.
+
 Herdr prepared the task worktree from the repository parent with `--no-focus`. Its automatically provisioned root pane is `w6J:p1`; no existing pane was split, moved, focused, or zoomed. The inherited caller ID does not resolve (`pane_not_found`), so it is not used as a callback target or substituted with the focused pane.
 
 ## Corrected prerequisite audit
