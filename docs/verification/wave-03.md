@@ -53,6 +53,20 @@ Task evidence commit: `c141e89087516a3d71e2381ab9479e001a60679f` on the retained
 
 Residual: no live ACP turn, approved publication, Discord callback/send, native state restart, deployed host or human result is claimed. These remain their own rows. The owned terminal/cancelled Devin pane `w6J:p1` was closed only after artifact integration and a fresh live done check. Its worktree, local task commit, launch prompt, receipt, and ignored installation/probe state are retained.
 
+## S24 launch contract — pinned runtime configuration compatibility
+
+Owner acceptance bookkeeping was published as `cb79eb02248652ada6bf8438a2969b27ec281bfd`; CI run `36362829425` also completed success on that exact SHA. S24 starts from that accepted baseline in `/Users/justn/dev/.worktrees/stackot-s24-20260928`, branch `codex/stackot-s24-20260928`, automatically provisioned non-focused Herdr root `w6M:p1`.
+
+S23 evidence fixes S24's exact scope: template per-agent sandbox/explicit Discord route and removal of the retired default marker; one public-CLI configuration oracle; a separate pinned Linux runtime-config CI job; Node bootstrap version in cloud-init; and the three required spec/runbook truth updates. This is one runtime-compatibility changeset. No task/approval controller, Receiver logic, account, provider/model selection, deployed host or worker execution is part of S24.
+
+Primary oracle: installed public CLI validates a synthetic substitution, and `sandbox explain` proves the Stackot channel controller is unsandboxed while the default non-main policy stays enabled for other agents. Owner already ran this public command against the old template: it reports `sandbox.sessionIsSandboxed: true`, discriminating the intended ACP compatibility fix even though old schema validation passes. Candidate must pass; old template must fail the same oracle. Linux CI must pass before acceptance. Fixtures do not become live worker/account/deployment evidence.
+
+Worker contract: interactive Devin `--model swe-2 --permission-mode dangerous`, one row, <=12 tool actions, at most two flat Todos, no subagents, one narrowed retry. S23 installed packages are reused read-only; S24 state/workspace must stay isolated. Launch prompt is retained in the task checkout; accepted count stays 48/81 until S24 is verified and published.
+
+Launch observation: Herdr's 5-second startup observation timed out. A subsequent exact `pane process-info` proved PID 86951 running the requested `devin --model swe-2 --permission-mode dangerous --prompt-file .../s24-launch.txt` in the task checkout. The agent name had not yet registered, so monitoring uses the exact existing `w6M:p1` instead of restarting or selecting a different pane/model. Timeout is not a terminal worker result.
+
+The same pane subsequently registered Devin/working and showed the bounded original-template public CLI probe. The process was not restarted. Host prerequisite refresh: local Tailscale reports Running, but no peer hostname identified as Stackot/Proxmox; the SSH aliases also supplied no such designation. This does not prove that no VM exists. Deployment still needs a designated reachable target; it does not block the independent local contract/approval/receipt work.
+
 Herdr prepared the task worktree from the repository parent with `--no-focus`. Its automatically provisioned root pane is `w6J:p1`; no existing pane was split, moved, focused, or zoomed. The inherited caller ID does not resolve (`pane_not_found`), so it is not used as a callback target or substituted with the focused pane.
 
 ## Corrected prerequisite audit

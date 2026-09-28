@@ -57,7 +57,7 @@ The predecessors column is the canonical directed acyclic graph; all predecessor
 | S21 | P0 | S19,S20,S09 | router.ts + routing.test.ts | 지원 event의 목적지 결정 | routing table replay | opened/followup/CI 목적지 일치 | repo 간 혼선 | S | - |
 | S22 | P0 | S21 | docs/spec.md + deploy/README.md | 지원하지 않는 check_suite/push/release 주장 제거 | source/event subscription comparison | 문서와 구독 목록 일치 | 미구현 지원 주장 | L | - |
 | S23 | P0 | - | docs/verification/openclaw-contract.md | 고정 OpenClaw/acpx 계약 조사 receipt | 실제 version/config/help probe | hook/task/ACP/worktree API 근거 존재 | 추정 API 또는 실행 불가 | R | I |
-| S24 | P0 | S23 | deploy/openclaw.json5.template | 실제 버전 config schema 일치 | openclaw config validate | template 치환본 validate 통과 | unknown field | R | I,E |
+| S24 | P0 | S23 | deploy/openclaw.json5.template + deploy/verify-openclaw-template.mjs + Node bootstrap/CI + spec/runbooks (wave-03 계약) | 고정 설치본 schema와 ACP controller sandbox 정책 일치 | public CLI config/policy verifier + old-template discrimination | 치환본 validate·controller 정책·정확 SHA Linux CI 통과 | unknown field 또는 channel controller ACP 차단 | R | I,E |
 | S25 | P0 | S23 | docs/contracts/task-state.md | task/approval/run 상태 소유자 확정 | native state restart probe | durability와 callback actor 출처 검증 | native 기능 추측 | R | I |
 | S26 | P0 | S25 | approval.ts + approval.test.ts (계약 확정 후 위치 고정) | requester+plan hash+TTL 승인 레코드 | approval persistence restart test | 새 process에서 승인 상태 복원 | 승인 유실 | S | - |
 | S27 | P0 | S26 | approval.ts + approval.test.ts | actor/expiry/plan version 승인 거부 | unauthorized callback matrix | 타인·만료·변경 plan 모두 거부 | 권한 우회 | S | - |

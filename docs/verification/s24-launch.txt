@@ -1,0 +1,31 @@
+S24 — pinned runtime configuration compatibility
+
+One bounded changeset, two flat Todo items max, no subagents/MCP/browsing. You are not alone: preserve owner preparation and other edits. Exact harness is interactive Devin --model swe-2 --permission-mode dangerous. No commits, pushes, external account changes, deployment, credentials, global install or worktree removal. Use apply_patch; exact executable if needed: /Users/justn/.codex/tmp/arg0/codex-arg0UIcHIw/apply_patch.
+
+Base cb79eb02248652ada6bf8438a2969b27ec281bfd; S23 is owner-accepted. Read its committed openclaw-contract.md. Do not rediscover upstream APIs or scan bundled worker files.
+
+Allowed product files only:
+- deploy/openclaw.json5.template
+- deploy/verify-openclaw-template.mjs (new bounded configuration oracle)
+- deploy/vm/cloud-init.yaml (Node bootstrap version only)
+- .github/workflows/ci.yml (separate pinned runtime-config verification job only)
+- docs/spec.md, deploy/README.md, deploy/vm/README.md (targeted contract/provisioning truth corrections)
+- docs/verification/s24-receipt.md (candidate <=3000 bytes)
+No Receiver logic, task/approval controller, skill workflow, CHECKLIST, wave or owner-state edits. Do not alter model/provider selection or tool authorization in this row.
+
+Implement:
+1. Remove retired stackot default:true. Keep global non-main sandbox for other agents, but add stackot's per-agent sandbox.mode=off so its channel-derived controller can issue ACP and Discord actions. Add an explicit Discord route binding for configured guild/account to agent stackot (installed binding match supports channel/accountId/guildId). State that unsandboxed controller/ACP is not worker containment and product approval/publication guards remain required. Never claim cwd is a security boundary or seed Discord/GitHub/publication secrets into workers via .worktreeinclude.
+2. Align runtime installation with S23 pins: Node 24.16+ on 24.x (verified 24.21.0) or 26.1+, OpenClaw 2026.9.6 and real official acpx/discord plugins 2026.9.6. Change VM NodeSource setup_22.x to setup_24.x only; no other cloud-init changes. Correct config filename to actual openclaw.json consistently. Per-call runTimeoutSeconds remains supported by the pinned release; do NOT remove it. ACP harness permissionMode/nonInteractivePermissions are separate from product push/PR approvals; document explicitly.
+3. Create one meaningful public-CLI oracle script using Node builtins, not private bundled module hashes. It must accept --template path (default current template) and use command-local isolated OPENCLAW_STATE_DIR/OPENCLAW_CONFIG_PATH and synthetic IDs/token. Run installed openclaw config validate, then openclaw sandbox explain --agent stackot --session agent:stackot:discord:channel:123456789012345680 --json. Require sandbox.sessionIsSandboxed=false for stackot and true for a non-main session of another/default agent, preserving the global default. Do not start Gateway, connect Discord, call a model or run a worker. Parse public CLI JSON robustly; errors must fail the oracle. Keep all synthetic workspace/state under an owned temp path, never user-global workspace. Do not import json5 or add Receiver dependencies. Optional --openclaw path may select the installed binary. A passing validation is config/policy evidence only, not deployed/worker evidence.
+4. Add a Linux CI job using actions/setup-node with Node 24.21.0 and pinned OpenClaw installation, installing real pinned acpx/discord plugins into its isolated test state if the public oracle needs them. Keep receiver CI unchanged. The schema/policy oracle must run on the same pushed SHA and need no real secrets. Avoid ambient Discord/provider session state. No shell bypass/unsafe install override.
+
+Local installed CLI to use read-only (do NOT change this S23 installation):
+ /Users/justn/dev/.worktrees/stackot-s23-20260928/receiver/node_modules/.stackot-runtime/node-v24.21.0-darwin-arm64/bin/node
+ /Users/justn/dev/.worktrees/stackot-s23-20260928/receiver/node_modules/.stackot-runtime/packages/node_modules/.bin/openclaw
+Add these dirs to command-local PATH. Your own probe state lives under this S24 checkout's ignored receiver/node_modules/.stackot-s24/. No access to primary .env, native auth or global config.
+
+Known public CLI shape (owner already verified): sandbox explain --json returns sandbox.mode and sandbox.sessionIsSandboxed. Original template: mode=non-main, sessionIsSandboxed=true for stackot's channel-derived session; that blocks ACP. Missing-plugin/migration warnings may appear on stderr in a fresh state; do not mistake these for a deployed or backend-ready result. CLI core schema can validate synthetic template values. Install actual pinned plugins only in isolated test state if needed, not S23's state. No exhaustive discovery.
+
+Oracle: run the public configuration verifier against candidate template, then against original template from git show HEAD:deploy/openclaw.json5.template in a disposable file. Candidate must pass; old must fail on the sandbox-controller assertion (schema alone passes both and proves no fix). Record outputs and failure discrimination. Syntax-check JS/workflow/cloud-init as applicable; no full Receiver suite rerun for unchanged Receiver logic.
+
+Bounded budget: <=12 tool actions; no upstream research. If an implementation question needs more, leave the precise question in the candidate receipt rather than exploring unrelated packages. Report changed files, oracle/old discrimination, residuals (live callback/worker/deployment/human all unproved), then stop. Candidate only; owner verifies and publishes.
