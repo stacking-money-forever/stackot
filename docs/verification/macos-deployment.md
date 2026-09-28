@@ -89,3 +89,10 @@ old f9c5aa7 fails with three GUI jobs absent; corrected script restores all four
 has no competing system supervisor and removes retry collisions while retaining
 three failure plists. Success fixture has four system jobs and four preserved
 disabled login plists. This is S-only; actual privileged installation remains open.
+
+Third review found concurrent login-plist changes could be disabled after
+preflight. Owner now compares captured preflight bytes and owner UID immediately
+before renaming, checks disabled-target collisions, and rejects changed rollback
+sources rather than loading unreviewed configuration. A concurrent-edit fixture
+preserves the modified login plist and restores the old GUI job; pre-recheck
+df24b7f fails that oracle. Native/privileged proof remains separate.
