@@ -1,5 +1,21 @@
 # Owner continuation state
 
+B08 ACCEPT: task26703cf CI36410587906 all3green, exact-commit review clean;
+integrationdf9c1f3 CI36411296403 all3green,17files byte-identical, owner351tests/
+1247assertions+typecheck/build. Selected-host native same-PID token rotation and
+durable controlled intake observed; no production activation/downstream/H claim.
+Current count57/81(M5 5/11). Earlier in-progress entries below are historical.
+
+B09 owned checkoutstackot-b09-20260928/rootw8Y:p1, launch9dceb72, collector
+candidatebc3abd9 pushed. brgrb82c6b0a attempt1 rejected incorrect degraded-oracle
+claim; narrowed798byte attempt2 accepted as advice only. Collector6Python tests
+pass,2 targeted mutants fail, short actual host observation passes. First24h
+run deliberately stopped after review; receipt retained. Fixed24h baseline
+session61836 at state/b09-baseline-fixed-20260928.jsonl is live. Final base9dceb72
+reviewb09-bc3abd9-review.log and exact Linux CI pending. B09 NOT ACCEPT: no
+representative beta delivery workload/SLO/recovery. Actual current outbox healthy,
+pending0/deadLetter3/delivered0; Gateway hooks disabled. Baseline is not beta.
+
 2026-09-28 latest continuation: user again ordered owner to perform S28 clicks.
 Actual serial Aside account-management dialog lists only justn_hyeok active
 plus Add account. Promotional-dialog obstruction was resolved; second principal

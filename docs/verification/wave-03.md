@@ -471,3 +471,23 @@ Agent-operated personal-session actions are R, not human QA. Genuine wrong actor
 534692447561842698 is still missing and cannot be fabricated; future fresh fixture
 must exercise wrong-actor-first while pending. S28/S44/S45 NOT ACCEPT, count54/81.
 All supporting receipts are retained; full worker/controller and H gates remain.
+
+## B08 ACCEPT — source-bound native rotation on selected host
+
+Source895cfbe and probe/test26703cf exact Linux CI36396368749/36410587906 passed.
+Owner native rerun b08-built-result.json built receiver from23recorded source/
+manifest hashes, recorded source Git SHA/bundle SHA, and verified no source drift.
+Actual native Gateway36477/receiver36910 listener PIDs unchanged through reload;
+retiredBearer401/currentBearer200/runId; exact delivery pending401 before file
+swap, then delivered. Three supported controlled signed intake rows each had
+ACK200+persisted DB row and ultimately drained. Tokens absent from logs/errors;
+owned listeners closed. Production Gateway untouched, no outbound/worker.
+
+Final exact-commit codex review found no actionable defect. Integrationfc311cd/
+df9c1f3 preserved17files byte-identically; owner351tests/1247assertions, typecheck,
+build passed. Exact integrationdf9c1f39a3c237c36a82783c294a1d17e4cfdb38 Linux
+CI36411296403 receiver/runtime-config/ingress-contract allgreen. Count57/81;
+M5 5/11. Brgr advice remains rejected; acceptance rests on owner source/oracles.
+Residual: selected-host native rotation admission/durable controlled intake only,
+not actual production activation, genuine GitHub event, downstream completion,
+exactly-once execution or H. Earlier weak/failed receipts retained.

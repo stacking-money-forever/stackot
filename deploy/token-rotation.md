@@ -1,4 +1,4 @@
-# B08 hook credential rotation — owner drill observed, acceptance pending CI
+# B08 hook credential rotation — owner drill ACCEPT
 
 Existing deployed receiver keeps ingress independent of Gateway forwarding.
 Optional `openclawHookTokenFile` points at an absolute operator-owned private

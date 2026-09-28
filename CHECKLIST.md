@@ -10,8 +10,8 @@
 
 ## 현재 상태 (2026-09-28 기준)
 
-- 원장 81행 중 **56행 수용, 25행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 8/12, M4 0/4, M5 4/11, C 0/4.
-- receiver 코드 기준선: `bun test` 346 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, CI 매 푸시 green.
+- 원장 81행 중 **57행 수용, 24행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 8/12, M4 0/4, M5 5/11, C 0/4.
+- receiver 코드 기준선: `bun test` 351 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, 수용 SHA의 Linux CI green.
 - 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **Mac 배포의 D 증거는 확보**, 전체 배포 행 수용과 H(사람) 증거는 아직 없다. 공개 HTTPS/서명 거부·외부 내부포트 차단·4개 서비스 crash recovery 근거: `docs/verification/macos-deployment.md`, `macos-recovery.json`, `macos-edge-receipt/stackot-edge.json`. 기존 R 계약 근거: `wave-03.md`, `openclaw-contract.md`.
 
 ## 0. 증거 등급 규칙 (먼저 읽을 것)
@@ -80,7 +80,7 @@
 - [ ] **B05** `status` 커맨드가 영속 상태와 일치
 - [ ] **B06** 만료 승인 재요청 안내 문구 + 사람 QA
 - [ ] **B07** 새 사용자 온보딩 문서 + 사람 QA
-- [ ] **B08** 토큰 교체 drill(무중단)
+- [x] **B08** 실제 선택 Mac의 native hook 토큰 교체 drill: 동일 Gateway/receiver PID, 구401/신200, 교체 중 지원 이벤트 ACK·영속화·drain 및 secret 비노출. 정확 소스·번들 연결과 Linux CI: `docs/verification/b08-owner-receipt.md`. 실제 production 활성화·모델/Discord/worker 완료와는 별도다.
 - [ ] **B09** 24h soak 관찰
 - [ ] **B10** required checks / secret scanning 설정 readback
 - [ ] **B11** 정확 SHA 릴리스 manifest + 릴리스 노트 (P0/P1 증거 전부 연결)
