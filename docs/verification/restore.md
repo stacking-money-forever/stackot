@@ -62,6 +62,13 @@ The first review command was issued after commit with --uncommitted and covered
 only an untracked duplicate failure receipt; owner did not treat it as code review.
 Correct independent review targets exact commitf3a7152. The duplicate failure
 receipt is represented by committed s47-first-failure.json, not a new oracle.
+Review found cleanup flag was set after writing receipt and CI did not exercise
+process lifecycle. Owner moved failure before receipt persistence, nonzero exits
+on surviving listener, and added portable s47-lifecycle-fixture.py: real receiver,
+SQLite backup/restore/restart/replay and process cleanup with explicitly fake
+Gateway. Its `--synthetic-provider-fixture` receipt is S/fakeProvider=true and
+never replaces live D proof. Configured Bun path is portable; live run records
+actual Node/OpenClaw versions, never fabricates provider/runtime versions.
 
 S47 is NOT ACCEPT until owner review and exact-code Linux CI pass. Snapshot and
 worktree must be retained. The production webhook remains inactive; this does not
