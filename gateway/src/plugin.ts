@@ -1,15 +1,18 @@
 import {registerApprovalCallbacks,type CallbackRoute,type InteractiveApi,type CallbackRegistry} from "./callback.ts";
 import {FlowCallbackRegistry} from "./callback-registry.ts";
 import {FlowStateStore,type ManagedFlows,type NativeFlow,type State} from "./state/flow-store.ts";
+import {registerActorQa,QA_SCHEMA} from "./qa.ts";
 export const STACKOT_CONTROLLER_ID="stackot";
 export interface GatewayApi extends InteractiveApi {
   registerGatewayMethod(name:string,handler:(input:{params:Record<string,unknown>;
     respond:(ok:boolean,value?:object,error?:object)=>void})=>Promise<void>,options:{scope:"operator.admin"}):void;
   config:Record<string,unknown>;pluginConfig?:Record<string,unknown>;
+  logger?:{info(message:string):void};
   runtime:{channel:{routing:{resolveAgentRoute(input:{cfg:Record<string,unknown>;channel:"discord";
     accountId:string;guildId:string;peer:{kind:"channel";id:string};parentPeer:{kind:"channel";id:string}}):
       {agentId:string;sessionKey:string;accountId:string}}};
-    tasks:{async:{managedFlows:{bindSession(input:{sessionKey:string}):ManagedFlows&{list():Promise<NativeFlow[]>}}}}};
+    tasks:{async:{managedFlows:{bindSession(input:{sessionKey:string}):ManagedFlows&{
+      list():Promise<NativeFlow[]>;createManaged?:(input:object)=>Promise<NativeFlow>}}}}};
 }
 function roleRouteAmbiguous(config:Record<string,unknown>,context:CallbackRoute){
   if(!Array.isArray(config.bindings))return false;
@@ -54,11 +57,12 @@ export function nativeCallbackRegistry(api:GatewayApi,agentId:string):CallbackRe
 }
 export default {
   id:"stackot-gateway",name:"Stackot Gateway guards",
-  configSchema:{type:"object",additionalProperties:false,properties:{agentId:{type:"string",minLength:1}},required:["agentId"]},
+  configSchema:{type:"object",additionalProperties:false,properties:{agentId:{type:"string",minLength:1},qa:QA_SCHEMA},required:["agentId"]},
   register(api:GatewayApi){
     const agentId=api.pluginConfig?.agentId;
     if(typeof agentId!=="string"||!/^[a-zA-Z0-9_-]{1,64}$/.test(agentId))throw new Error("STACKOT_AGENT_REQUIRED");
-    registerApprovalCallbacks(api,nativeCallbackRegistry(api,agentId));
+    registerApprovalCallbacks(api,nativeCallbackRegistry(api,agentId),event=>api.logger?.info(JSON.stringify(event)));
+    registerActorQa(api,agentId);
     // Read-only bootstrap diagnostics, never a context-injection/approval surface.
     api.registerGatewayMethod("stackotgateway.health",async({params,respond})=>{
       if(Object.keys(params).length){respond(false,undefined,{code:"INVALID_REQUEST",message:"No parameters accepted"});return;}

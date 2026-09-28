@@ -250,6 +250,13 @@ plugin 등록 엔트리와 native route/flow 조회 코드를 추가했고 실�
 재기동에서 plugin 등록을 확인했다. route/flow 선택은 합성 매트릭스로 확인했으며
 실제 component 발행과 두 사용자 검증이 남아 있어 S28은 아직 수용하지 않는다.
 
+승인 publisher는 저장된 전체 planText의 hash/version/requester/action을 확인해
+본문 전송 완료 뒤 승인 카드를 발행한다. receipt hook에서 두 token binding을
+저장한 뒤 native component가 등록된다. 알려진 메시지의 등록 실패는 같은 ID
+수정으로 복구하고, 불확실한 전송은 재생성하지 않는다. opt-in 실제 actor QA는
+고정 server config와 operator.admin의 무인자 RPC만 사용하며 실제 코딩을 실행하지
+않는다. 코드·설치본 렌더 계약은 검증했지만 실제 메시지/두 사용자 증거는 아직 없다.
+
 S35의 `gateway/src/thread-receipt.ts`는 thread 생성 intent와 receipt를 native
 state에 저장한다. inflight 재시도는 기존 operation의 신뢰된 marker 확인이
 먼저이며, 빈 조회나 시간 경과만으로 다시 생성하지 않는다. 확인 불가 시

@@ -30,7 +30,7 @@ export class FlowCallbackRegistry implements CallbackRegistry {
   constructor(private readonly store:StateStore,repository?:ApprovalRepository){
     this.repository=repository??new ApprovalRepository(store);
   }
-  async bind(input:BindingInput,token=randomUUID()):Promise<string>{
+  async bind(input:BindingInput,token:string=randomUUID()):Promise<string>{
     const data:BindingData={token,accountId:input.accountId,guildId:input.guildId,
       conversationId:input.conversationId,parentConversationId:input.parentConversationId,
       messageId:input.messageId,decision:input.decision,request:{requestId:input.request.requestId,

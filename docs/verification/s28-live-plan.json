@@ -1,0 +1,28 @@
+{
+  "scope": "S28 actual two-user native callback probe; no coding/push/PR/deploy",
+  "approvalState": "user-approved-thread-and-message; blocked-on-bot-channel-access",
+  "guildId": "1544592589666127953",
+  "parentChannelId": "1544593083587493898",
+  "parentChannelName": "claw-control",
+  "threadName": "stackot-qa-approval-20260928",
+  "threadType": 11,
+  "autoArchiveMinutes": 60,
+  "requesterId": "1112741808162734110",
+  "secondUserId": "534692447561842698",
+  "fixtureId": "6f028276-12ad-4d80-9418-614ecf8b9e50",
+  "botId": "1544612489981984818",
+  "oracle": [
+    "Both real human IDs may click SDK controls; actual native auth must authorize both",
+    "Second user clicks first: private handler audit shows actual native sender/auth=true and outcome=denied; grant remains pending",
+    "Requester clicks: actual native sender is requester, stored decision approved with matching decidedBy",
+    "Replay gives no second eligibility; workerDispatched stays false"
+  ],
+  "remainingPrerequisites": [
+    "Creation/publication authorized by user 2026-09-28; no repeat confirmation required",
+    "Actual GET /channels/1544593083587493898 returns 403/code50001 Missing Access; category/channel deny ViewChannel to everyone, bot role 스태콧 has no allow override",
+    "Owner may allow ViewChannel for 스태콧 in claw-control while retaining everyone denial; bot cannot edit ACL itself",
+    "Two genuine human client interactions; no forged-context RPC or bot impersonation"
+  ],
+  "forumDeployment": "Not proven by text-thread actor test. Guild currently has no Community feature/forums; bot lacks ManageChannels. Forum setup remains separate.",
+  "secrets": "Use owner-only existing credential input; never copy to worker or repository"
+}

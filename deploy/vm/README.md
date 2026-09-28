@@ -24,6 +24,11 @@ S28 callback/flow-binding helpers pass synthetic denial tests. They are not an
 fully verified production path. Native artifact/bootstrap now starts and survives
 an actual isolated Gateway restart; route/flow discovery has synthetic coverage.
 Actual component emission and real two-user principal verification remain unfinished.
+
+The publisher and opt-in no-op actor-QA paths now exist. Component delivery/token
+binding/known-message edit recovery have synthetic tests and installed SDK render
+contract checks. No actual Discord message or actor event was produced by those
+checks. Shared-channel writes need confirmation and native two-user evidence.
 Do not enable execution based solely on helper build/test success.
 
 S35 adds durable thread intent/receipt reconciliation. Its restart fixture uses a
