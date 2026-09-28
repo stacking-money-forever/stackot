@@ -164,6 +164,8 @@ def main():
         if not all(closed):result['passed'] = False
         print(json.dumps({k:result[k] for k in ['sourceDeliveryId','emptyRestoreEqual','ownedListenersClosed']}
                          | {'passed':result.get('passed',False),'errorType':result.get('errorType')}))
+        if not all(closed):
+            raise RuntimeError('Owned probe listener survived cleanup; receipt is not accepted')
 
 
 if __name__ == '__main__':main()
