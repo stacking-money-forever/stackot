@@ -1,0 +1,15 @@
+{
+  "id": 686936824,
+  "active": false,
+  "events": [
+    "issues",
+    "issue_comment",
+    "pull_request",
+    "pull_request_review",
+    "pull_request_review_comment",
+    "check_run"
+  ],
+  "url": "https://stackot.justn.me/stackot/webhook",
+  "scope": "Stackot only; kept inactive pending guarded controller integration",
+  "pingApiStatus": 204
+}

@@ -9,6 +9,7 @@ from pathlib import Path
 import plistlib
 import pwd
 import subprocess
+import uuid
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--user', required=True)
@@ -47,17 +48,50 @@ if args.plan:
     for label, source, target, config in planned:
         print('%s -> %s (UserName=%s)' % (label, target, account.pw_name))
     raise SystemExit(0)
-# Validate all targets before stopping any owned agent.
-for label, source, target, config in planned:
-    subprocess.run(['launchctl', 'bootout', 'gui/%d/%s' % (account.pw_uid, label)], check=True)
-    target.write_bytes(plistlib.dumps(config))
-    target.chmod(0o644)
-    os.chown(target, 0, 0)
-    subprocess.run(['launchctl', 'bootstrap', 'system', str(target)], check=True)
-    login_path = Path(account.pw_dir) / 'Library/LaunchAgents' / source.name
-    if login_path.exists():
-        if login_path.read_bytes() != source.read_bytes():
-            raise SystemExit('Unexpected login plist changed; retain it for owner review')
-        # Retain evidence, prevent duplicate login launches.
-        login_path.rename(login_path.with_suffix('.plist.disabled'))
+changed = []
+attempt = uuid.uuid4().hex
+try:
+    # Every collision/ownership check above finishes before stopping any job.
+    for label, source, target, config in planned:
+        subprocess.run(['launchctl', 'bootout', 'gui/%d/%s' % (account.pw_uid, label)], check=True)
+        step = dict(label=label, source=source, target=target, created=False, renamed=False,
+                    login=Path(account.pw_dir) / 'Library/LaunchAgents' / source.name)
+        changed.append(step)
+        with target.open('xb') as file:
+            step['created'] = True
+            file.write(plistlib.dumps(config))
+        target.chmod(0o644)
+        os.chown(target, 0, 0)
+        subprocess.run(['launchctl', 'bootstrap', 'system', str(target)], check=True)
+    # Disable duplicate login startup only after all system jobs load.
+    for step in changed:
+        step['login'].rename(step['login'].with_suffix('.plist.disabled'))
+        step['renamed'] = True
+except BaseException as failure:
+    rollback_errors = []
+    for step in reversed(changed):
+        try:
+            service = 'system/' + step['label']
+            # Failed bootstrap may still register a job. Query native state
+            # before restoring GUI, so two supervisors cannot compete.
+            check = subprocess.run(['launchctl', 'print', service],
+                                   capture_output=True, text=True, check=False)
+            if check.returncode == 0:
+                subprocess.run(['launchctl', 'bootout', service], check=True)
+            if step['renamed']:
+                if step['login'].exists():
+                    raise RuntimeError('Login path changed during rollback')
+                step['login'].with_suffix('.plist.disabled').rename(step['login'])
+            if step['created']:
+                archived = step['target'].with_name(step['target'].name + '.failed.' + attempt)
+                if archived.exists():
+                    raise RuntimeError('Rollback evidence collision')
+                step['target'].rename(archived)
+            subprocess.run(['launchctl', 'bootstrap', 'gui/%d' % account.pw_uid,
+                            str(step['source'])], check=True)
+        except Exception as error:
+            rollback_errors.append(step['label'] + ':' + type(error).__name__)
+    if rollback_errors:
+        raise RuntimeError('Migration failed; rollback incomplete: ' + ', '.join(rollback_errors)) from failure
+    raise RuntimeError('Migration failed; stopped login jobs restored; failed system plists retained') from failure
 print('Owned system jobs installed as non-root user; no reboot tested or requested.')
