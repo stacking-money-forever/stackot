@@ -13,7 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 
-def scenario(installer, fail):
+def scenario(installer, fail, mutate=False):
     with tempfile.TemporaryDirectory(prefix='stackot-migration-') as directory:
         base = Path(directory).resolve()
         root, login, system = base / 'runtime', base / 'home/Library/LaunchAgents', base / 'system'
@@ -48,6 +48,8 @@ def scenario(installer, fail):
                     system_jobs.add(name)  # partial registration before failure
                     if fail and count == 3:
                         rc = 5
+                    if mutate and count == 4:
+                        (login / (labels[0] + '.plist')).write_bytes(b'owner concurrent update')
                 else:
                     gui_jobs.add(name)
             else:
@@ -70,12 +72,15 @@ def scenario(installer, fail):
                 exec(compile(tree, installer, 'exec'), {'__name__': '__main__', '__file__': installer})
             except Exception as caught:
                 error = caught
-        if fail:
+        if fail or mutate:
             assert error is not None
             assert gui_jobs == set(labels), ('Stopped login jobs not restored', gui_jobs)
             assert not system_jobs, ('Competing system jobs remain', system_jobs)
             assert all(not (system / (label + '.plist')).exists() for label in labels), 'Retry blocked by system plist'
-            assert len(list(system.glob('*.failed.*'))) == 3, 'Failure artifacts not retained'
+            assert len(list(system.glob('*.failed.*'))) == (4 if mutate else 3), 'Failure artifacts not retained'
+            if mutate:
+                assert (login / (labels[0] + '.plist')).read_bytes() == b'owner concurrent update'
+                assert not list(login.glob('*.disabled')), 'Owner update was disabled'
         else:
             assert error is None, type(error).__name__
             assert not gui_jobs and system_jobs == set(labels)
@@ -87,4 +92,5 @@ parser.add_argument('--installer', default=str(Path(__file__).with_name('install
 args = parser.parse_args()
 scenario(args.installer, True)
 scenario(args.installer, False)
+scenario(args.installer, False, mutate=True)
 print('S fixture passed: third bootstrap failure restores GUI, permits retry, retains artifacts; success has one supervisor.')

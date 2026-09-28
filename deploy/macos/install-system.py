@@ -30,7 +30,8 @@ for name in ['receiver', 'gateway', 'ingress', 'tunnel']:
     source = root / ('launchd/' + label + '.plist')
     if source.stat().st_uid != account.pw_uid or source.stat().st_mode & 0o022:
         raise SystemExit('Unsafe service plist ownership/permissions')
-    config = plistlib.loads(source.read_bytes())
+    source_bytes = source.read_bytes()
+    config = plistlib.loads(source_bytes)
     if config.get('Label') != label or config.get('WorkingDirectory') != str(root):
         raise SystemExit('Unexpected service configuration')
     config['UserName'] = account.pw_name
@@ -39,22 +40,22 @@ for name in ['receiver', 'gateway', 'ingress', 'tunnel']:
     if target.exists():
         raise SystemExit('Existing system job collision; owner must inspect: ' + str(target))
     login_path = Path(account.pw_dir) / 'Library/LaunchAgents' / source.name
-    if not login_path.exists() or login_path.read_bytes() != source.read_bytes():
+    if not login_path.exists() or login_path.read_bytes() != source_bytes:
         raise SystemExit('Login job absent/changed; owner must reconcile: ' + str(login_path))
     if login_path.with_suffix('.plist.disabled').exists():
         raise SystemExit('Preserved login job already exists; do not overwrite it')
-    planned.append((label, source, target, config))
+    planned.append((label, source, target, config, source_bytes))
 if args.plan:
-    for label, source, target, config in planned:
+    for label, source, target, config, source_bytes in planned:
         print('%s -> %s (UserName=%s)' % (label, target, account.pw_name))
     raise SystemExit(0)
 changed = []
 attempt = uuid.uuid4().hex
 try:
     # Every collision/ownership check above finishes before stopping any job.
-    for label, source, target, config in planned:
+    for label, source, target, config, source_bytes in planned:
         subprocess.run(['launchctl', 'bootout', 'gui/%d/%s' % (account.pw_uid, label)], check=True)
-        step = dict(label=label, source=source, target=target, created=False, renamed=False,
+        step = dict(label=label, source=source, target=target, created=False, renamed=False, source_bytes=source_bytes,
                     login=Path(account.pw_dir) / 'Library/LaunchAgents' / source.name)
         changed.append(step)
         with target.open('xb') as file:
@@ -65,6 +66,10 @@ try:
         subprocess.run(['launchctl', 'bootstrap', 'system', str(target)], check=True)
     # Disable duplicate login startup only after all system jobs load.
     for step in changed:
+        if step['login'].stat().st_uid != account.pw_uid or step['login'].read_bytes() != step['source_bytes']:
+            raise RuntimeError('Login plist changed after preflight; preserve owner changes')
+        if step['login'].with_suffix('.plist.disabled').exists():
+            raise RuntimeError('Disabled-path collision after preflight')
         step['login'].rename(step['login'].with_suffix('.plist.disabled'))
         step['renamed'] = True
 except BaseException as failure:
@@ -87,6 +92,8 @@ except BaseException as failure:
                 if archived.exists():
                     raise RuntimeError('Rollback evidence collision')
                 step['target'].rename(archived)
+            if step['source'].read_bytes() != step['source_bytes']:
+                raise RuntimeError('Rollback source changed; preserve it for owner reconciliation')
             subprocess.run(['launchctl', 'bootstrap', 'gui/%d' % account.pw_uid,
                             str(step['source'])], check=True)
         except Exception as error:
