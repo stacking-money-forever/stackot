@@ -52,7 +52,8 @@ def save(path, state):
         os.close(descriptor)
 
 
-def evaluate(report, rules, state, now, channel, guild, send, persist):
+def evaluate(report, rules, state, now, channel, guild, send, persist, clock=None):
+    response_time = lambda: max(now, clock() if clock else now)
     validate_rules(rules)
     queue = report.get('queue')
     if not isinstance(queue, dict) or not integer(queue.get('pending')):
@@ -92,18 +93,21 @@ def evaluate(report, rules, state, now, channel, guild, send, persist):
         if not isinstance(receipt, dict) or receipt.get('channel_id') != channel or not str(receipt.get('id', '')).isdigit():
             raise RuntimeError('Invalid send acknowledgment')
     except RateLimited as error:
-        state.update(phase='retry', retryAt=now + error.delay_ms, observedAt=now)
+        at = response_time()
+        state.update(phase='retry', retryAt=at + error.delay_ms, observedAt=at)
         persist(state)
         return {'outcome': 'rate_limited'}
     except NotSent:
-        state.update(phase='retry', retryAt=now + 60000, observedAt=now)
+        at = response_time()
+        state.update(phase='retry', retryAt=at + 60000, observedAt=at)
         persist(state)
         raise RuntimeError('Alert send refused; retry recorded') from None
     except Exception:
         state.update(phase='uncertain', observedAt=now)
         persist(state)
         raise RuntimeError('Alert delivery acknowledgment uncertain; no blind resend') from None
-    state.update(phase='sent', lastSentAt=now, observedAt=now, messageId=receipt['id'])
+    at = response_time()
+    state.update(phase='sent', lastSentAt=at, observedAt=at, messageId=receipt['id'])
     persist(state)
     return {'outcome': 'sent', 'channelId': channel, 'messageId': receipt['id'], 'nonce': state['nonce']}
 
@@ -185,7 +189,8 @@ def main():
             with urllib.request.urlopen(rules['statusUrl'], timeout=10) as response:
                 report = json.load(response)
             result = evaluate(report, rules, state, int(time.time() * 1000), channel, guild,
-                              discord_sender(token, guild), lambda value: save(path, value))
+                              discord_sender(token, guild), lambda value: save(path, value),
+                              clock=lambda: int(time.time() * 1000))
             print(json.dumps(result))
         except Exception as error:
             # Only trusted exception class escapes; no HTTP response/body/token.
