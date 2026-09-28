@@ -1,0 +1,9 @@
+{
+  "number": 2,
+  "url": "https://github.com/stacking-money-forever/stackot/issues/2",
+  "marker": "b04-e20b55f4-c3e6-4bcd-85a7-b7500e1ff456",
+  "hookId": 686936824,
+  "testThresholdMs": 5000,
+  "source": "actual GitHub issues.opened",
+  "workerDispatched": false
+}
