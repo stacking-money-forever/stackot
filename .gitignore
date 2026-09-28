@@ -8,3 +8,5 @@ receiver/node_modules/
 .env.save
 *.sqlite
 *.sqlite-*
+deploy/__pycache__/
+deploy/macos/__pycache__/

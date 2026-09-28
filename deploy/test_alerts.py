@@ -15,6 +15,17 @@ rules = json.loads(Path(__file__).with_name('alerts.yaml').read_text())
 
 
 class Alerts(unittest.TestCase):
+    def test_cooldown_and_retry_start_when_response_arrives(self):
+        report = {'queue': {'pending': 1, 'oldestPendingAgeMs': 300000}}
+        state = {}
+        a.evaluate(report, rules, state, 1000000, '123', '234',
+                   lambda channel, *args: {'channel_id': channel, 'id': '345'}, lambda value: None,
+                   clock=lambda: 1010000)
+        self.assertEqual(state['lastSentAt'], 1010000)
+        state = {}
+        def limited(*args): raise a.RateLimited(90000)
+        a.evaluate(report, rules, state, 1000000, '123', '234', limited, lambda value: None, clock=lambda: 1010000)
+        self.assertEqual(state['retryAt'], 1100000)
     def exercise(self, report, state, now, send, persist=lambda value: None):
         return a.evaluate(report, rules, state, now, '123456789012345678', '234567890123456789', send, persist)
 
