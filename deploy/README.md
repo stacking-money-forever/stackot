@@ -81,6 +81,14 @@ binding을 S27에 연결한다. `python3 gateway/scripts/build-plugin.py`가 dev
 RPC는 parameter를 받지 않으며 actor/context injection 경로가 아니다.
 native bootstrap은 실제 기동·재기동으로 확인했고 route/flow 선택은 합성 검증했다.
 실제 승인 component producer 및 두 사용자 검증은 아직 미완이다.
+
+component producer 코드와 opt-in QA 준비 경로는 구현했다. 고정 QA 설정 없이는
+QA RPC가 등록되지 않는다. `docs/verification/s28-live-runbook.md`와 JSON 계획을
+따르며, `qa.info`가 돌려준 실제 sessionKey로 native session을 만들고 `qa.publish`를
+호출한다. 모든 QA RPC는 parameter를 거부하고 원격 coding/push/PR을 실행하지 않는다.
+공유 Discord 스레드/메시지 쓰기는 사용자가 승인했지만 지정 채널 bot 접근 403을
+해결해야 한다. 실제 두 사람의
+native interaction만 actor 증거로 인정한다. 기존 서버/계정 설정을 자동 변경하지 않는다.
 이 빌드를 VM에 복사하거나 합성 context를 호출해도 Discord 실승인 검증이 되지 않는다.
 
 S35 thread receipt 저장 모듈도 `gateway/`에서 함께 검증한다. 저장소 루트에서

@@ -51,3 +51,6 @@ jobs:
       # S28 bootstrap only: actual private plugin, no actor/Discord/model call.
       - run: python3 gateway/scripts/build-plugin.py
       - run: python3 docs/verification/s25-probe/run.py --plugin gateway/node_modules/stackot-plugin --plugin-agent stackot --method stackotgateway.health --expect-bootstrap --output "$RUNNER_TEMP/s28-bootstrap.json"
+      # Pinned installed-library render/parser contract; no provider/actor send.
+      - run: npm install --prefix "$RUNNER_TEMP/s28-sdk-contract" --ignore-scripts openclaw@2026.9.6 @openclaw/discord@2026.9.6
+      - run: node gateway/scripts/verify-prompt-contract.mjs "$RUNNER_TEMP/s28-sdk-contract/node_modules/@openclaw/discord/dist/.setup/components-yBEb75bB.mjs" "$RUNNER_TEMP/s28-sdk-contract/node_modules/openclaw/dist/interactive-registry-CopvmBe6.mjs"

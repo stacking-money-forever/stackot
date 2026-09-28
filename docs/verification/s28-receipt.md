@@ -1,5 +1,35 @@
 # S28 independent preparation — row NOT ACCEPT
 
+Publisher follow-on: complete stored-plan text is sent before the card (SDK may
+split full text; nothing is truncated). Native receipt hook persists both token
+bindings before native component registration. Card includes a link to the
+plan's first primary platform message. Unknown send/partial plan never resends
+or exposes an approval card; known card receipt repairs only by edit. Proven
+adapter-unavailable/not-sent is distinguished from generic ambiguous errors.
+Remaining uncertain partial delivery requires reconciliation, not silent success.
+
+Opt-in fixed-config QA methods require operator.admin, accept zero parameters,
+preserve fixture identity and never dispatch coding/push/PR. Both real user IDs
+may click controls in the fixture, leaving the actual native and per-task checks
+to prove denial. Safe numeric audit fields omit raw callback token/data/plan.
+Actual two-user probe is still pending; fake audits/contexts do not count.
+
+13 new tests, total 71/409; typecheck/build passed. Installed pinned Discord
+readDiscordComponentSpec/buildDiscordComponentMessage accepted actual producer
+output, yielding two reusable callback entries with requester allowlist. Native
+interactive matcher recognizes bare stackot-approval:UUID and rejects a fabricated
+plugin: prefix. This is installed-library contract evidence with synthetic state,
+not a sent message or authenticated actor. Blind-resend mutation fails three tests.
+
+Fresh owner-only read-only Discord preflight: bot authenticated, guild has two
+real human members and existing claw-control channel, but no Community/forums.
+Actual SDK permission-bit interpretation: bot can create public threads/send/read,
+but cannot manage channels and is not administrator. Channel-specific permission
+readback still required before any write. Shared-channel thread/message approval
+was authorized through user input. Exact claw-control GET returned actual 403;
+no write attempted. Channel access/alternate destination request is pending. Source plan/runbook
+names exact assets; forum deployment remains separate. No account setting changed.
+
 Base `d9de98c`, branch `codex/stackot-s28-20260928`. Owner inspected actual pinned
 native API/factory/Discord source (s28-installed-callback-contract.md). Factory
 does not prevent handler invocation for auth=false: explicit product denial is

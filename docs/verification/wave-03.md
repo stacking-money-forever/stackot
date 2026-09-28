@@ -316,6 +316,41 @@ and any synthetic test cannot accept this R/H row. Full goal stays active.
 
 ### S28 native bootstrap follow-on — still NOT ACCEPT
 
+### S28 publisher and actual-asset preparation — still NOT ACCEPT
+
+User-approved shared QA write now has a concrete access blocker: GET exact
+claw-control returns HTTP403/code50001 Missing Access. Actual parent category
+작업실 and channel overwrite deny ViewChannel to everyone; bot's only 스태콧 role
+has no channel allow and no management authority. Owner may allow ViewChannel
+for that role without exposing the category to everyone. No ACL/resource/message
+changed. Access/destination clarification is pending; prior publication approval
+persists and no repeat generic permission loop is needed. Genuine human client
+events and product forum deployment remain their actual gates.
+
+Bootstrap SHA b18a20fa5173292ce70177b41a092426158bea00 passed exact Linux run
+36374587248, including the fourth real plugin bootstrap oracle. Owner implemented
+complete-plan-first publication, receipt-before-component token binding, native
+outbound bridge and known-message edit repair; unknown sends never become new
+creates. Long full plans are delegated to SDK text splitting, never truncated.
+Fixed opt-in QA config creates only a synthetic no-op flow; admin methods reject
+all params and cannot inject alleged native principals or dispatch a worker.
+Numeric-only callback audits omit tokens/raw data/plan. QA is disabled by default.
+
+71 tests/409 assertions/typecheck/build pass. Installed pinned SDK component parser/
+builder and native interactive matcher accept actual producer output, two reusable
+callback entries/requester allowlist and bare namespace; fake plugin: prefix fails.
+This is installed-library/synthetic state, not a real message/actor proof. Mutation
+that allows uncertain-inflight resend fails three tests. Source artifacts and exact
+shared-channel plan/runbook are retained; target replay/publication/CI follow.
+
+Owner-only read-only live preflight: authenticated bot, one guild, two real human
+members, existing claw-control. Guild has no Community/forums; bot lacks ManageChannels
+but guild mask permits public-thread/send/read operations. Channel-specific readback
+must precede any write. Official Discord Forum FAQ requires Community. No guild
+setting/resource/message changed. User confirmation for the exact QA thread/message
+was requested; no answer yet. Genuine human interaction remains required. A text-thread
+actor probe does not complete product forum deployment or S49. Count remains 54/81.
+
 Final target replay: actual Gateway 71659→72023 loaded current artifact and served
 parameter-free native readonly health; listeners/groups stopped. Full target
 58 tests/348 assertions, typecheck/build and source hashes/Python/YAML checks pass.

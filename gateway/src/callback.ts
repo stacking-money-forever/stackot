@@ -21,10 +21,13 @@ const token=(v:unknown):v is string=>typeof v==="string"&&
 
 // Register a private handler only through the trusted native bootstrap API.
 // Never expose an HTTP/RPC endpoint accepting an alleged native context object.
-export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRegistry):void {
+export type CallbackAudit={event:"stackot.approval";senderId?:string;authorized:boolean;
+  guildId?:string;conversationId?:string;messageId?:string;outcome:"denied"|"approved"|"rejected"};
+export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRegistry,observe?:(event:CallbackAudit)=>void):void {
   api.registerInteractiveHandler({channel:"discord",namespace,handler:async raw=>{
     const ctx=raw as Partial<Context>|null;
     let text="이 승인 요청을 처리할 수 없습니다. 최신 요청을 확인해 주세요.";
+    let outcome:CallbackAudit["outcome"]="denied";
     try{
       if(!ctx||ctx.channel!=="discord"||ctx.auth?.isAuthorizedSender!==true||
           !snowflake(ctx.senderId)||typeof ctx.accountId!=="string"||!ctx.accountId||
@@ -47,8 +50,15 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
         planHash:request.planHash,planVersion:request.planVersion,action:request.action,
         actorId:ctx.senderId},binding.decision);
       text=binding.decision==="approve"?"승인했습니다.":"거부했습니다.";
+      outcome=binding.decision==="approve"?"approved":"rejected";
     }catch{
       // No grant metadata or provider/storage exception is exposed in the reply.
+    }
+    try{observe?.({event:"stackot.approval",senderId:snowflake(ctx?.senderId)?ctx.senderId:undefined,
+      authorized:ctx?.auth?.isAuthorizedSender===true,guildId:snowflake(ctx?.guildId)?ctx.guildId:undefined,
+      conversationId:typeof ctx?.conversationId==="string"&&/^channel:[1-9][0-9]{0,19}$/.test(ctx.conversationId)?ctx.conversationId:undefined,
+      messageId:snowflake(ctx?.interaction?.messageId)?ctx.interaction.messageId:undefined,outcome});}catch{
+      // An optional diagnostics sink cannot change committed decision/reply semantics.
     }
     if(ctx?.respond&&typeof ctx.respond.reply==="function")await ctx.respond.reply({text,ephemeral:true});
     return {handled:true};
