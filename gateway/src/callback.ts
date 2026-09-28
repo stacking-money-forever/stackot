@@ -28,7 +28,7 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
     const ctx=raw as Partial<Context>|null;
     let text="이 승인 요청을 처리할 수 없습니다. 최신 요청을 확인해 주세요.";
     let outcome:CallbackAudit["outcome"]="denied";
-    let verifiedRequester=false;
+    let verifiedBinding:CallbackBinding|undefined;
     try{
       if(!ctx||ctx.channel!=="discord"||ctx.auth?.isAuthorizedSender!==true||
           !snowflake(ctx.senderId)||typeof ctx.accountId!=="string"||!ctx.accountId||
@@ -47,7 +47,7 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
       // Binding contains server plan/action; actor is only the real native sender.
       const request=binding.request;
       if(request.requesterId!==ctx.senderId)throw new Error("CALLBACK_ACTOR_DENIED");
-      verifiedRequester=true;
+      verifiedBinding=binding;
       await binding.repository.decide({requestId:request.requestId,taskId:request.taskId,
         planHash:request.planHash,planVersion:request.planVersion,action:request.action,
         actorId:ctx.senderId},binding.decision);
@@ -55,8 +55,20 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
       outcome=binding.decision==="approve"?"approved":"rejected";
     }catch(error){
       // No grant metadata or provider/storage exception is exposed in the reply.
-      if(verifiedRequester&&error instanceof Error&&error.message==="APPROVAL_EXPIRED"){
-        text="이 승인 요청은 만료됐습니다. 기존 버튼은 재사용할 수 없습니다. 작업을 계속하려면 새 계획에 대한 승인 요청이 필요합니다.";
+      if(verifiedBinding&&error instanceof Error&&error.message==="APPROVAL_EXPIRED"){
+        // decide() can commit and then report expiry at the acknowledgement
+        // boundary. Reconcile instead of calling that stored decision pending.
+        try{
+          const request=verifiedBinding.request;
+          const current=await verifiedBinding.repository.get(request.requestId);
+          if(current?.status==="pending"&&current.requestId===request.requestId&&current.requesterId===ctx?.senderId&&
+              current.taskId===request.taskId&&current.planHash===request.planHash&&
+              current.planVersion===request.planVersion&&current.action===request.action){
+            text="이 승인 요청은 만료됐습니다. 기존 버튼은 재사용할 수 없습니다. 작업을 계속하려면 새 계획에 대한 승인 요청이 필요합니다.";
+          }
+        }catch{
+          // Unknown reconciliation is a generic reply, never an invented state.
+        }
       }
     }
     try{observe?.({event:"stackot.approval",senderId:snowflake(ctx?.senderId)?ctx.senderId:undefined,

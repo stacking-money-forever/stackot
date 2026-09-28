@@ -100,3 +100,17 @@ test("expiry is not disclosed for wrong requester, invalid binding or untrusted 
   await registration.handler(f.ctx);expect(f.replies[0]?.text).not.toContain("만료");
   expect(f.store.revision).toBe(1);
 });
+
+test("late decision acknowledgement expiry and failed reconciliation do not invent pending expiry",async()=>{
+  const f=await fixture();const commit=f.store.compareAndSwap.bind(f.store);
+  f.store.compareAndSwap=async(revision,state)=>{const applied=await commit(revision,state);if(applied)f.setClock(1100);return applied;};
+  await f.registration.handler(f.ctx);
+  expect((await f.repo.get(input.requestId))?.status).toBe("approved");expect(f.store.revision).toBe(2);
+  expect(f.replies[0]?.text).toBe("이 승인 요청을 처리할 수 없습니다. 최신 요청을 확인해 주세요.");
+  expect(f.replies[0]?.text).not.toContain("새 계획에 대한 승인 요청이 필요합니다");
+  const failed=await fixture();failed.setClock(1100);
+  failed.repo.get=async()=>{throw new Error("sensitive-reconciliation-error");};
+  await failed.registration.handler(failed.ctx);
+  expect(failed.replies[0]?.text).not.toContain("만료");
+  expect(failed.replies[0]?.text).not.toContain("sensitive-reconciliation-error");expect(failed.store.revision).toBe(1);
+});

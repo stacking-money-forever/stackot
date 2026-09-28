@@ -11,7 +11,7 @@ All other failures retain the generic denial. A lookup throwing that same error
 before requester verification does not reveal expiry. No IDs/hashes/tokens/raw
 provider errors enter replies. No approval is renewed, consumed or dispatched.
 
-Owner fixture oracle:8callback tests/58assertions, full gateway74tests/445assertions,
+Owner fixture oracle:9callback tests, full gateway75tests/452assertions,
 typecheck/build passed after frozen install. Same new test against original
 callback at29f31aa fails on expired requester guidance, distinguishing the fix.
 These are S fixtures, not native authentication/Discord response or human QA.
@@ -31,3 +31,9 @@ an explicit TTL changes the fingerprint and cannot reuse a previous fixture.
 The test proves old-default status lookup survives and changed TTL is denied
 without writes. New expiry probes use new fixture IDs and actual wall time.
 This preparation has not published a new Discord card or deployed the plugin.
+
+Review found a late persistence-ack boundary: decide may store approved before
+reporting expiry. Guidance now re-reads the exact matched request and selects
+the new-approval text only while it remains pending. Stored decisions or failed
+reconciliation retain the generic reply; no new eligibility is returned. The
+targeted late-ack fixture fails against the pre-reconciliationf5fe9d4 callback.
