@@ -1,0 +1,15 @@
+{
+  "samples": 78,
+  "terminalReceiptRecorded": false,
+  "wallElapsedThroughLastSampleSeconds": 45725.276972055435,
+  "monotonicElapsedThroughLastSampleSeconds": 4628.533935875,
+  "largestWallGapSeconds": 7116.7573001384735,
+  "largestMonotonicGapSeconds": 60.15322129099968,
+  "clockWentBackward": false,
+  "clockDivergenceIntervals": 13,
+  "wallCoverageContinuous": false,
+  "failedProbes": 0,
+  "betaAcceptance": false,
+  "evidenceScope": "baseline samples; gaps and clock divergence do not identify their cause",
+  "partialTrailingRecordIgnored": false
+}

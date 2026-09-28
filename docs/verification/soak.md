@@ -39,3 +39,19 @@ Fixed summaries distinguish elapsedWindowComplete/scheduleContinuous from
 hasSuccessfulStatusSample/allStatusProbesSucceeded. Actual missing diagnostics
 stay unavailable; queue=null retains other valid status fields without guessing.
 The fixed24h baseline will use a new receipt, never append to the old run.
+
+## Observed wall-clock gaps — 2026-09-29
+
+The fixed collector is still live. At77samples, recorded wall elapsed45665.23s
+versus monotonic elapsed4568.48s; largest wall gap7116.76s while largest monotonic
+gap60.15s. Thirteen intervals show clock divergence. Successful probes alone
+do not prove availability during those missing intervals. These observations
+identify timing/coverage gaps, not their cause.
+
+`deploy/analyze-soak.py --input <private receipt>` audits both timelines without
+changing/restarting the active collector. It distinguishes terminal-record
+presence from beta acceptance, rejects malformed/backwards clock assumptions,
+and reports wallCoverageContinuous=false for the actual receipt. Three targeted
+tests cover regular scheduling that conceals wall gaps, backward time and false
+terminal/clock data. Existing raw receipts stay intact. B09 remains NOT ACCEPT:
+this run is neither representative beta traffic nor continuous24h coverage.
