@@ -1,0 +1,17 @@
+B08 — token rotation without receiver intake downtime.
+Dedicated retained task base6821f1e, rootw8S:p1. Predecessor S47 accepted.
+Primary artifact deploy/token-rotation.md plus necessary code/probe/test.
+Choose actual native hook token (not user bot reset or credential-store extraction).
+Inspect pinned Gateway hot-reload contract first. Receiver must keep listening
+and persist valid intake while Gateway credential changes; old credential must
+be rejected, new credential admitted; pending drains with no loss/duplicate.
+No fake native provider or synthetic-to-D promotion. Controlled workload/source
+must be labeled honestly. No production Gateway hooks activation/full pipeline.
+All agent tools denied, ACP absent, deliver=false in owned native drill.
+Repository-local optional protected runtime credential reference may be needed;
+preserve legacy fail-closed startup and mask both old/new secrets in logs/outbox.
+No secret values in argv/repo/report/worker; no credential-store copying/reading.
+Actual code byte/source proof, appropriate Linux lifecycle CI and owner oracle
+required before row acceptance. Root/other-human blockers do not replace this row.
+Brgr bounded supplied-facts advice only, <=1200bytes, no tools/writes/delegation.
+Owner owns implementation/real runtime decisions. One narrowed advisory retry.
