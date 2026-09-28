@@ -1,0 +1,51 @@
+{
+  "privateRoot": "/Users/justn/Library/Application Support/Stackot/state/b08-60690a3dbe76",
+  "fakeProvider": false,
+  "trafficSource": "owner-controlled signed probes, not genuine GitHub-origin event",
+  "productionGatewayChanged": false,
+  "workerDispatched": false,
+  "outboundDelivery": false,
+  "gatewayProcessPid": 55065,
+  "receiverBundleSha256": "fd1f8e310333716a615fa2703c705034e8f5aa1f3529d168750a29d15ea89319",
+  "receiverProcessPid": 55468,
+  "bufferedOldTokenFailure": {
+    "state": "pending",
+    "attempts": 1,
+    "status": 401
+  },
+  "allIntakeRowsDelivered": true,
+  "passed": true,
+  "oldTokenAfterReload": 401,
+  "newTokenAfterReload": 200,
+  "newNativeRunId": "3df5d7dd-7f1f-4be3-9f6c-54264c8b8b70",
+  "continuousIntakeSamples": [
+    {
+      "atMs": 1790584745520,
+      "status": 200,
+      "deliveryId": "b08-intake-54580200bd956cb45881a0db",
+      "persistedAtAck": true
+    },
+    {
+      "atMs": 1790584747602,
+      "status": 200,
+      "deliveryId": "b08-intake-2f743c1046267ebb22af8649",
+      "persistedAtAck": true
+    },
+    {
+      "atMs": 1790584749755,
+      "status": 200,
+      "deliveryId": "b08-intake-fc65743ba09feb3d0ad1d26d",
+      "persistedAtAck": true
+    }
+  ],
+  "receiverRestarted": false,
+  "gatewayRestarted": false,
+  "actualGatewayPid": 55065,
+  "actualReceiverPid": 55468,
+  "listenerPidsUnchanged": true,
+  "bufferedDeliveryId": "b08-control-d553a21a4d40391f9952b5e0",
+  "bufferedState": "delivered",
+  "oldAndNewValuesAbsentFromLogs": true,
+  "oldAndNewValuesAbsentFromDatabaseErrors": true,
+  "ownedListenersClosed": true
+}

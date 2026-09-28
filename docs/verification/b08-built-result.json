@@ -1,0 +1,78 @@
+{
+  "privateRoot": "/Users/justn/Library/Application Support/Stackot/state/b08-b2db3d317a63",
+  "fakeProvider": false,
+  "trafficSource": "owner-controlled signed probes, not genuine GitHub-origin event",
+  "productionGatewayChanged": false,
+  "workerDispatched": false,
+  "outboundDelivery": false,
+  "receiverSourceSha256": {
+    "receiver/src/backup.ts": "685ed8cbb6817005301c642e097d8dafcedb7c2792434d5a2217ba9421a73352",
+    "receiver/src/config.ts": "7c28ebb48ec79642287ea4ab82e930b4fc56b294e033f3164d524762974e07f1",
+    "receiver/src/delivery.ts": "5c52e145232028ee661f70ca528b52ad32384325827d902ae1d390959f4c19d0",
+    "receiver/src/gateway.ts": "124bd1debc3b482bb641872231562f5c4c5b58c754a981710cce24380154418c",
+    "receiver/src/github-client.ts": "dac6a842af17fb9d5a5948851a601d555244aa944fa2f263f2b79690d9c98557",
+    "receiver/src/health.ts": "535f9f9c32c2ad6a5d50f0ec493e507e6ca0e4f15c6a3dfd940e18b01d6e1cf0",
+    "receiver/src/hook-token.ts": "536d8cbb1cf05cf4d6ed2529e246e4321d76ffd8f0d0520b00324a30d1f4e4ee",
+    "receiver/src/ingress.ts": "d12ea6303d4434aedae0517bda0de750332de90fd30ea297b673ba8821eb99b1",
+    "receiver/src/mapping.ts": "c99f1bdb54bb1f2c958a7e44006769281fac82362c66219d54c6c41dd08617fd",
+    "receiver/src/metrics.ts": "40d66986e065ff269377491e065370e151d0d034e6da62f78c4a3e4c5e1ff293",
+    "receiver/src/normalize.ts": "2dcb1a32b40956eee77984b4f93b09386893ba3b9bd7a696a770929a5b5410a6",
+    "receiver/src/outbox.ts": "193c43d3153dee587ac8dcac14458c7cbba92422c3d8b1016d0f2cd64fd293d1",
+    "receiver/src/redact.ts": "83604b42d997cc4c32341d8cb114d8475b1c8e2716d8a3936e9a020097dd072f",
+    "receiver/src/replay.ts": "ac2e2410e3b5f43fec6071ceec359229f054324f00330f8dc24862f617c77162",
+    "receiver/src/repo-policy.ts": "4efb1430d001323fb252f5a12face469698d85b79de30ba03b8aaa5993619a93",
+    "receiver/src/router.ts": "779da2e6316199e59edceac60b1beed0b723e2076f1cd1f4d1615f636211fcd8",
+    "receiver/src/scheduler.ts": "799c435894d43225c5806ad904796d310ccf4f7232990189f79f4fc83251a810",
+    "receiver/src/server.ts": "88cff33a6fcc537f535ef865f7045c9027c56321a6ed9f3a7348c41143ae3891",
+    "receiver/src/telemetry.ts": "98ca1d1705bf0d804a1277f873042713e6bd4425219e46b303e238eac7ed968e",
+    "receiver/src/verifier.ts": "e30bc723ac1ba64c7d7f05860a0dbe70176b2f7d9575038a3bc7d2775063a7ce",
+    "receiver/src/verify.ts": "eb320980000dc027b208306a3566a5596e31af7dc0cf503153d78a4fd424f51a",
+    "receiver/package.json": "4cc4f86e108d033f6a65756b7398a08f243b032327288e0bc65b7c5f4b2ec2ba",
+    "receiver/bun.lock": "8fac584848cdea647d58e4f74f1debcc4645f9f0ff1b9af631de75b0e22d5f8a"
+  },
+  "sourceRevision": "895cfbece1a8963ce6f23fd0e8f345d1e6eea5c3",
+  "receiverBuiltFromRecordedSource": true,
+  "gatewayProcessPid": 36477,
+  "receiverBundleSha256": "fd1f8e310333716a615fa2703c705034e8f5aa1f3529d168750a29d15ea89319",
+  "receiverProcessPid": 36910,
+  "bufferedOldTokenFailure": {
+    "state": "pending",
+    "attempts": 1,
+    "status": 401
+  },
+  "allIntakeRowsDelivered": true,
+  "passed": true,
+  "oldTokenAfterReload": 401,
+  "newTokenAfterReload": 200,
+  "newNativeRunId": "fbb64d5d-6567-447f-8c47-36155819378e",
+  "continuousIntakeSamples": [
+    {
+      "atMs": 1790591655564,
+      "status": 200,
+      "deliveryId": "b08-intake-1960ca794571aaf7e30c769a",
+      "persistedAtAck": true
+    },
+    {
+      "atMs": 1790591657702,
+      "status": 200,
+      "deliveryId": "b08-intake-2dc8b8a0d071427b8919a76f",
+      "persistedAtAck": true
+    },
+    {
+      "atMs": 1790591659732,
+      "status": 200,
+      "deliveryId": "b08-intake-5124a05086fa0d84fafb9c36",
+      "persistedAtAck": true
+    }
+  ],
+  "receiverRestarted": false,
+  "gatewayRestarted": false,
+  "actualGatewayPid": 36477,
+  "actualReceiverPid": 36910,
+  "listenerPidsUnchanged": true,
+  "bufferedDeliveryId": "b08-control-9c44421e07fa915473528ffd",
+  "bufferedState": "delivered",
+  "oldAndNewValuesAbsentFromLogs": true,
+  "oldAndNewValuesAbsentFromDatabaseErrors": true,
+  "ownedListenersClosed": true
+}
