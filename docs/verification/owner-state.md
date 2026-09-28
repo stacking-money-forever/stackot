@@ -1,5 +1,16 @@
 # Owner continuation state
 
+Latest B04 ACCEPT: actual GitHub edited delivery, receiver-computed real queue
+age, real ci-alerts message and native restart cooldown/no additional delivery.
+Production300s threshold additionally verified after supported genuine-delivery
+replay retained original received_at. Codee68fdaa CI36388625338 and integrated
+e3a960d CI36389522688 succeeded; owner12 tests/source-byte match passed. Count
+55/81 (M5 4/11). Monitor is deployed as own login job with immutable release,
+default300s/60s polling; hook remains inactive and own QA issue2 closed. Receiver
+evidence rows are retained. Actual pending snapshot is private
+Stackot/state/b04-genuine-pending.sqlite, ready for independent S47 restore/drain.
+S28 second real actor, S44 privileged install/reboot and full pipeline still open.
+
 Current user direction: deploy here on this Mac, domain stackot.justn.me.
 Dedicated macOS task artifacts and live receipts integrated; deployed receiver
 source4915f5b, dedicated Cloudflare tunnel and four login launchd jobs running.

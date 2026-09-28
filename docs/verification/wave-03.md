@@ -413,6 +413,27 @@ The earlier blanket environmental blocker is superseded by current observations:
 Existing secrets are not copied into a worker checkout or recorded here. The missing runtime is being prepared in repository scope instead of being treated as a user-only prerequisite.
 # Mac deployment / real requester continuation — 2026-09-28
 
+## B04 ACCEPT — genuine aged-pending operator notification
+
+Retained task stackot-b04-20260928/base38901cb. Brgr35d15b3a advice rejected
+twice for size/factual age+nonce errors; owner implements/tests, no worker-write
+claim or observed model upgrade. Source artifacts: deploy/alerts.yaml, alerts.py,
+macOS immutable installer and12 meaningful tests. Actual GitHub issue2 edited
+delivery reached deployed signed receiver; real queue age crossed5s drill bound;
+actual ci-alerts messages/readback and post-native-restart cooldown while pending
+passed. Final codee68fdaa SHA2561873641ce4dd3538e622a3947d18e6bce0f61403f8f427a3461646b6b9e7e867
+matches deployed program. Exact task CI36388625338 and integratione3a960d/
+CI36389522688 succeeded; target owner12 tests and hashes reverified.
+
+Default300s production threshold also passed using supported replay of genuine
+65cd5010-bb09-11f1-9c73-fb0e8f26c548 with original actual received_at preserved,
+not backdating/fixture insertion. Message1554026966481510456 readback confirms
+delivery. Source snapshot/maintenance is preserved; receiver restored public401.
+QA issue closed, original hook inactive/six events, production300s/poll60s restored.
+Known provider outage/uncertain ack and login dependency remain explicit; no
+system/reboot, human or full-worker claim. Full receipt b04-owner-receipt.md.
+Total accepted55/81 (M5 4/11); full goal remains active.
+
 User selected local Mac and stackot.justn.me; no VM provisioned. Source/task
 branches and receipts retained. Actual configured Discord forums/ops channels,
 Cloudflare HTTPS and loopback-only receiver/Caddy/Gateway are deployed. Four

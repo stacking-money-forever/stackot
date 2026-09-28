@@ -1,0 +1,29 @@
+{
+  "queueBefore": {
+    "pending": 1,
+    "deadLetter": 2,
+    "delivered": 0,
+    "oldestPendingAgeMs": 852975
+  },
+  "productionThresholdMs": 300000,
+  "source": "genuine GitHub delivery; supported replay retained original received_at; no backdating",
+  "monitorExit": 0,
+  "monitorOutput": "{\"outcome\": \"sent\", \"channelId\": \"1553999331198238840\", \"messageId\": \"1554026966481510456\", \"nonce\": \"16088393288307850137\"}",
+  "stateAfter": {
+    "target": {
+      "channelId": "1553999331198238840",
+      "guildId": "1544592589666127953",
+      "statusUrl": "http://127.0.0.1:9377/status"
+    },
+    "phase": "sent",
+    "active": true,
+    "observedAt": 1790579299427,
+    "nonce": "16088393288307850137",
+    "content": "Stackot \uc6b4\uc601 \uc54c\ub9bc: \ub300\uae30 \uc911 1\uac74, \uac00\uc7a5 \uc624\ub798\ub41c \uc694\uccad 853\ucd08. Receiver \uc0c1\ud0dc\uc640 Gateway \uc804\ub2ec \uc624\ub958\ub97c \ud655\uc778\ud558\uc138\uc694.",
+    "lastSentAt": 1790579299427,
+    "messageId": "1554026966481510456"
+  },
+  "actualMessageReadback": true,
+  "authorId": "1544612489981984818",
+  "messageUrl": "https://discord.com/channels/1544592589666127953/1553999331198238840/1554026966481510456"
+}

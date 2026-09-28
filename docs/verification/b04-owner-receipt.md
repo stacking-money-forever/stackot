@@ -56,6 +56,18 @@ Message1554023450291478633 readback matches; new log bytes after native job
 restart show cooldown while pending remains1; zero later bot alerts after that
 receipt. `b04-final-live.json` preserves the evidence. Production rules restored.
 
-Exact codee68fdaa Linux CI36388625338 must succeed before B04 owner acceptance.
+**Owner ACCEPT:** codee68fdaa Linux CI36388625338 succeeded; integrated
+e3a960d361c31e5aa9c937e94f6fc9486bf355b8 CI36389522688 succeeded in receiver,
+runtime-config and ingress-contract. Target owner re-ran12 tests; deployed
+immutable script equals owned source bytes. B04 accepted, total55/81.
+
+Production300s threshold also observed against genuine delivery65cd5010-bb09-11f1-9c73-fb0e8f26c548:
+supported replay retained its actual original received_at, no backdating or fixture
+seeding. Brief owned receiver maintenance yielded a consistent pending snapshot,
+then real `/status` age>=300000 produced message1554026966481510456 with actual
+author/content/channel readback. Root receiver returned to loopback listener and
+unsigned public401; production rules remain300s/poll60s. Evidence is
+`b04-production-threshold.json`; pending snapshot retained privately for S47.
+
 Receiver346 and Gateway71 baselines unchanged; alert12 tests are S and live
 delivery/restart/readback is D. No system/reboot or full pipeline proof claimed.

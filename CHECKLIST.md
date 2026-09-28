@@ -10,7 +10,7 @@
 
 ## 현재 상태 (2026-09-28 기준)
 
-- 원장 81행 중 **54행 수용, 27행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 7/12, M4 0/4, M5 3/11, C 0/4.
+- 원장 81행 중 **55행 수용, 26행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 7/12, M4 0/4, M5 4/11, C 0/4.
 - receiver 코드 기준선: `bun test` 346 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, CI 매 푸시 green.
 - 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **Mac 배포의 D 증거는 확보**, 전체 배포 행 수용과 H(사람) 증거는 아직 없다. 공개 HTTPS/서명 거부·외부 내부포트 차단·4개 서비스 crash recovery 근거: `docs/verification/macos-deployment.md`, `macos-recovery.json`, `macos-edge-receipt/stackot-edge.json`. 기존 R 계약 근거: `wave-03.md`, `openclaw-contract.md`.
 
@@ -76,7 +76,7 @@
 
 ## 5. 릴리스·운영 (8행)
 
-- [ ] **B04** 오래된 pending 알림(수신 대상 필요)
+- [x] **B04** 실제 GitHub delivery → 실제 receiver 나이 → `#ci-alerts` 알림·재시작 cooldown 검증. 기본300초 기준도 실제 수신시각을 보존한 replay로 확인. Owner 수용과 정확 SHA Linux CI: `docs/verification/b04-owner-receipt.md`, `wave-03.md`.
 - [ ] **B05** `status` 커맨드가 영속 상태와 일치
 - [ ] **B06** 만료 승인 재요청 안내 문구 + 사람 QA
 - [ ] **B07** 새 사용자 온보딩 문서 + 사람 QA
