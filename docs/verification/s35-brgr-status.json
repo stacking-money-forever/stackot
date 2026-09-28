@@ -1,0 +1,39 @@
+{
+  "state": "terminal",
+  "task": {
+    "acceptance_criteria": [
+      "No unsafe lease takeover/recreate; precise prepared/inflight/created CAS, owned-marker recovery and uncertainty, explicit provider limits and meaningful tests; no tools or claims."
+    ],
+    "artifact_contract": {
+      "max_bytes": 1048576,
+      "media_type": "text/plain"
+    },
+    "budget": {
+      "deadline_seconds": 180,
+      "max_attempts": 2
+    },
+    "create_request_id": "revise-90fcede4-2815-4213-b6ef-32662a22e0b9-2",
+    "instructions": {
+      "forward_criteria": true,
+      "role": [],
+      "scope": [
+        "stdout-only corrected S35 review"
+      ]
+    },
+    "objective": "No tools. Correct S35 advice within <=1200 words. Durable state machine is prepared -> inflight -> created with operationId/fingerprint stored before external call. Only CAS prepared->inflight winner may call create. Once inflight exists, expiry/crash alone NEVER permits a second create; lookup may recover a bot-authenticated marker receipt, otherwise return uncertain. A strongly consistent empty lookup still does not rule out an old in-flight request landing later. Only actually-proven durable provider idempotency can allow resubmission of the SAME operationId. Preserve capability gap explicitly; do not accept orphan detection as no-duplicate prevention. Provider adapter/live evidence stays future row; synthetic backend tests are S only. Return precise interfaces/tests and remaining impossible-to-infer outcomes for this design, no tools or changes.",
+    "owner_id": "codex:01a0e54a-250b-7882-b1c7-143cfc556e1d",
+    "required_capabilities": [
+      "completion"
+    ],
+    "revision": 2,
+    "route": {
+      "harness_id": "local.devin",
+      "requested_effort": null,
+      "requested_model": null
+    },
+    "schema": "brgr/v1",
+    "task_id": "90fcede4-2815-4213-b6ef-32662a22e0b9",
+    "workspace": "/Users/justn/Library/Application Support/brgr/worktrees/stackot/90fcede4-r2/"
+  },
+  "workspace_present": true
+}

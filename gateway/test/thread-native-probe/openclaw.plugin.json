@@ -1,0 +1,6 @@
+{
+  "id": "s35-probe",
+  "name": "S35 synthetic provider/native receipt restart fixture",
+  "activation": { "onStartup": true },
+  "configSchema": { "type": "object", "additionalProperties": false, "properties": {} }
+}

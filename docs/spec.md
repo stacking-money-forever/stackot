@@ -233,6 +233,13 @@ native managed-flow stateJson에 revision CAS로 저장한다. 같은 request ID
 거부와 consumption(S27), Discord callback(S28), 실행 게이트(S29 onward)는
 아직 구현·검증되지 않았다.
 
+S35의 `gateway/src/thread-receipt.ts`는 thread 생성 intent와 receipt를 native
+state에 저장한다. inflight 재시도는 기존 operation의 신뢰된 marker 확인이
+먼저이며, 빈 조회나 시간 경과만으로 다시 생성하지 않는다. 확인 불가 시
+uncertain을 반환한다. 실제 provider의 영속 idempotency가 입증된 경우에만
+같은 operation 재전송이 허용된다. 외부 provider 테스트는 합성이고 실제
+Discord marker 인증·thread 생성 어댑터는 후속 실연동 검증이 필요하다.
+
 ## 9. 관리
 
 Control UI로 커버되는 것 (커스텀 페이지 만들지 않음):

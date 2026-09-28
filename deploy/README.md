@@ -67,6 +67,12 @@ S26의 Gateway-side pending 승인 저장 모듈은 `gateway/`에 있다. 해당
 고정 OpenClaw/Node를 PATH에 둔 독립 재시작 오라클이다. probe는 합성 요청을
 저장할 뿐 production callback 등록이나 승인/worker 실행을 활성화하지 않는다.
 
+S35 thread receipt 저장 모듈도 `gateway/`에서 함께 검증한다. 저장소 루트에서
+`python3 gateway/scripts/build-thread-probe.py` 뒤 같은 restart runner에
+`--plugin gateway/node_modules/s35-native-plugin --method s35probe.state --expect-thread`를
+지정하면 합성 외부 생성 성공/receipt 저장 실패 후 실제 native Gateway 재시작
+복원을 검사한다. 외부 생성자는 fixture이며 Discord 전송·marker 인증 증거가 아니다.
+
 ## 3. Receiver 설정
 
 1. `receiver/config.json` 생성 — `receiver/config.example.json`을 복사하고 채운다.

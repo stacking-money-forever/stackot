@@ -179,9 +179,22 @@ Receipt fields alone are not authentication; the eventual trusted adapter must
 verify the marker's actual bot author/context. Synthetic backend tests cannot prove
 live provider guarantees. Row S35 is still pending owner oracles/publication/CI.
 
-## Corrected prerequisite audit (current access facts)
-
 ### S26 — ACCEPT after exact-SHA Linux restart success
+
+### S35 target candidate — publication pending
+
+Owner integrated ten owned files with SHA-256 matches, plus the unchanged S26
+facade input. Target typecheck, combined 22 tests / 87 assertions, both-module
+build, Python/YAML syntax and whitespace checks pass. Target actual Gateway
+`2714 → 2962` recovered flow `bec9906e-6283-4eba-adc1-3c1512cfb04c` from durable
+inflight revision 2 to created revision 3 via a synthetic external marker, then
+reused it. Total fake-provider create calls remained 1. First listener/process
+stopped before restart; owned cleanup completed. This proves native storage with
+a fake external dependency, not a live Discord guarantee. S35 remains pending
+exact-SHA Linux replay before product ACCEPT. S27 brgr advice is in its one
+narrowed revision after rejection of pending→consumed shortcut/metadata leakage.
+
+### S26 publication details
 
 Task evidence commit `281b93f` is retained on S26 branch. Integration SHA
 `7477852f6299918a8cbe9637bb7209d826e76051` was pushed; CI
@@ -191,6 +204,8 @@ including Gateway typecheck/11-test/build, original native S25 restart and produ
 S26 pending-record restart. Owner independently ran task/target oracles and hashes.
 S26 ACCEPT is pending storage only; count **51/81**, M2 **5/14**. Actual actor,
 expiry eligibility/decision/consumption, worker and deployment remain open.
+
+## Corrected prerequisite audit (current access facts)
 
 The earlier blanket environmental blocker is superseded by current observations: repository-local `.env` contains working Discord/GitHub credentials; the GitHub credential can read the Stackot repository and reports admin/push permission. These are access observations, not approval for remote writes. Receiver JSON configuration is absent, required Discord forums/operations channels are absent, and OpenClaw/acpx are not installed on the default PATH. GitHub protection/rulesets and repository secret-scanning settings are not enabled. Host/DNS and human QA evidence remain unestablished.
 

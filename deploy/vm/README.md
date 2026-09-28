@@ -15,6 +15,11 @@ a real isolated native Gateway restart with synthetic request data. The fixture
 is not installed by these VM units and does not register production callbacks
 or enable approved worker execution. Host rollout remains a separate gate.
 
+S35 adds durable thread intent/receipt reconciliation. Its restart fixture uses a
+synthetic external provider and the real native flow store; it does not provision
+Discord channels or prove live marker authentication/idempotency. These modules
+still need the trusted production controller/adapter before host activation.
+
 ## Topology
 
 ```

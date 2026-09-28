@@ -45,3 +45,6 @@ jobs:
         working-directory: gateway
       - run: python3 gateway/scripts/build-native-probe.py
       - run: python3 docs/verification/s25-probe/run.py --plugin gateway/node_modules/s26-native-plugin --method s26probe.state --expect-approval --output "$RUNNER_TEMP/s26-restart.json"
+      # S35: fake external marker + real native inflight/receipt across restart.
+      - run: python3 gateway/scripts/build-thread-probe.py
+      - run: python3 docs/verification/s25-probe/run.py --plugin gateway/node_modules/s35-native-plugin --method s35probe.state --expect-thread --output "$RUNNER_TEMP/s35-restart.json"

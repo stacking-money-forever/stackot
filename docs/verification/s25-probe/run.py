@@ -18,7 +18,9 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--plugin')
     parser.add_argument('--method', default='s25probe.state')
-    parser.add_argument('--expect-approval', action='store_true')
+    shape = parser.add_mutually_exclusive_group()
+    shape.add_argument('--expect-approval', action='store_true')
+    shape.add_argument('--expect-thread', action='store_true')
     args = parser.parse_args()
     output = Path(args.output).resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -119,7 +121,11 @@ def main():
         assert session.get('ok') and session.get('runStarted') is False
         key = session['key']
         initial = call(args.method, {'phase': 'init', 'sessionKey': key})
-        if args.expect_approval:
+        if args.expect_thread:
+            assert initial['crashInjected'] and initial['syntheticProvider']
+            assert initial['phase'] == 'inflight' and initial['revision'] == 2
+            assert initial['providerCalls'] == 1
+        elif args.expect_approval:
             assert initial['created'] and not initial['repeatedCreated']
             assert initial['record'] == initial['repeatedRecord']
             assert initial['record']['status'] == 'pending'
@@ -136,7 +142,18 @@ def main():
                                      'flowId': initial['flowId'],
                                      'staleRevision': initial.get('revisionAtCreate', 0)})
         assert initial['gatewayPid'] != read['gatewayPid'], 'same server served both phases'
-        if args.expect_approval:
+        if args.expect_thread:
+            assert read['flowId'] == initial['flowId']
+            assert read['result']['kind'] == 'thread' and read['result']['reused']
+            assert read['repeated'] == read['result']
+            ref = read['result']['receipt']
+            assert ref['operationId'] == initial['operationId']
+            assert ref['threadId'] == '345678901234567890'
+            assert ref['forumId'] == '123456789012345678' and ref['botId'] == '234567890123456789'
+            assert read['providerCalls'] == 1 and read['syntheticProvider']
+            assert read['revision'] == 3 and read['unrelated'] == {'keep': True}
+            flow = {'flowId': read['flowId'], 'revision': read['revision'], 'status': 'waiting'}
+        elif args.expect_approval:
             assert read['flowId'] == initial['flowId']
             assert read['record'] == initial['record']
             assert read['revision'] == initial['revision'] == 1
@@ -157,8 +174,9 @@ def main():
                    'status': flow['status'], 'stateRecovered': True,
                    'actualGatewayPids': [initial['gatewayPid'], read['gatewayPid']],
                    'approvalRecordRecovered': args.expect_approval,
-                   'staleDeniedBeforeAndAfterRestart': not args.expect_approval,
-                   'keyedStoreRefusal': None if args.expect_approval else 'PLUGIN_TRUST_REFUSED',
+                   'syntheticThreadReceiptRecovered': args.expect_thread,
+                   'staleDeniedBeforeAndAfterRestart': not (args.expect_approval or args.expect_thread),
+                   'keyedStoreRefusal': None if (args.expect_approval or args.expect_thread) else 'PLUGIN_TRUST_REFUSED',
                    'modelOrWorkerRun': False, 'externalChannels': []}
         output.write_text(json.dumps(receipt, indent=2))
         print(json.dumps(receipt))

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build": "bun build src/approval.ts --target=node --outdir dist"
+    "build": "bun build src/approval.ts src/thread-receipt.ts --target=node --outdir dist"
   },
   "devDependencies": {
     "@types/bun": "1.4.0",
