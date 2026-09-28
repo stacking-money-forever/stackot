@@ -1,5 +1,21 @@
 # Owner continuation state
 
+2026-09-28 latest continuation: user again ordered owner to perform S28 clicks.
+Actual serial Aside account-management dialog lists only justn_hyeok active
+plus Add account. Promotional-dialog obstruction was resolved; second principal
+authentication remains unavailable. No actor injection/reset/re-click of the
+approved grant. Receipt20e6f38 integrated as de84f95; S28 NOT ACCEPT.
+
+B08 native source-bound rerun passed in stackot-b08-20260928: real listener
+PIDs36477/36910 unchanged, old401/new200/runId, pending401 retry restored,
+three supported ACK200+persisted intake rows all delivered, no token values
+in logs/errors, owned cleanup passed. Source895cfbe exact CI36396368749 green.
+Added fake-Gateway S-only regression passes on current code and fails against
+pre-fix1a4bd38. Full suite351pass/1247assertions; typecheck/build clean.
+Evidence/procedure/test26703cf pushed; exact Linux CI36410587906 in progress.
+Final independent review b08-built-review.log still in progress. No integration
+or product acceptance/count increment before those gates. Count remains56/81.
+
 B10 refreshed concrete app-bound main3checks/admin enforcement/scanning plan
 retained in stackot-b10-20260928 branch175528a. Current main unprotected404,
 rulesets[], scanning disabled, no open main PRs. Official repo-wide7day check
