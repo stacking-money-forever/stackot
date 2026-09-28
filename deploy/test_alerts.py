@@ -5,6 +5,7 @@ import unittest
 import json
 import subprocess
 import sys
+from unittest.mock import patch
 
 spec = importlib.util.spec_from_file_location('alerts', Path(__file__).with_name('alerts.py'))
 a = importlib.util.module_from_spec(spec)
@@ -92,6 +93,27 @@ class Alerts(unittest.TestCase):
             self.assertEqual(script.read_text(), 'owner program')
             self.assertFalse((root / 'config/alerts.yaml').exists())
             self.assertFalse((root / 'config/alerts-target.json').exists())
+
+    def test_failed_install_retries_without_replacing_active_program(self):
+        spec = importlib.util.spec_from_file_location('installer', Path(__file__).parent / 'macos/install-alerts.py')
+        installer = importlib.util.module_from_spec(spec);spec.loader.exec_module(installer)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / 'runtime';login = Path(directory) / 'login'
+            for path in [root / 'config', root / 'bin', root / 'state', root / 'launchd', login]:path.mkdir(parents=True)
+            (root / 'config/receiver.json').write_text(json.dumps({'host':'127.0.0.1','port':9377,'ciAlertsChannelId':'123','discordGuildId':'234'}))
+            source = Path(__file__).parent
+            replace = installer.os.replace
+            def fail_once(src, dst):
+                if Path(dst) == login / 'me.justn.stackot.alerts.plist': raise OSError('login write failed')
+                return replace(src, dst)
+            with patch.object(installer.os, 'replace', side_effect=fail_once):
+                with self.assertRaises(OSError):installer.install(root, source, login)
+            self.assertFalse((root / 'bin/alerts.py').exists())
+            self.assertIn('pending', json.loads((root / 'state/alerts-install.json').read_text()))
+            installer.install(root, source, login)
+            installed = json.loads((root / 'state/alerts-install.json').read_text())
+            self.assertNotIn('pending', installed)
+            self.assertTrue((login / 'me.justn.stackot.alerts.plist').exists())
 
     def test_malformed_source_does_not_become_an_alert(self):
         for q in [{'pending': True, 'oldestPendingAgeMs': 900000}, {'pending': 1, 'oldestPendingAgeMs': None},
