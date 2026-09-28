@@ -1,0 +1,14 @@
+B09 — 24-hour beta observation receipt, NOT ACCEPT before real workload.
+Own primary artifact docs/verification/soak.md and a bounded read-only collector.
+Predecessors B02/B03/B04 accepted. Current deployed status is degraded:
+outboxReady true, pending0, deadLetter3, delivered0, Gateway last error404.
+Gateway hooks deliberately disabled; no actual model/worker/Discord loop.
+Implement observation preparation and retain baseline without pretending idle
+uptime or synthetic fixtures establish representative beta workload or SLO.
+No production settings/events/credentials/database changes. Only GET local
+readyz/status; parse allowlisted numeric/boolean state, discard raw errors/body.
+Private 24h receipt outside Git. Explicit elapsed monotonic duration, missing
+samples/gaps/revision linkage, no automatic acceptance and no invented SLO.
+brgr advisory stage: supplied-facts review, no tools/files/subagents, <=1200bytes.
+Return the one most consequential acceptance pitfall, without new requirements.
+Owner writes/verifies code and authentic receipts. One narrowed retry maximum.
