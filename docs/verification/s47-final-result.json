@@ -1,0 +1,53 @@
+{
+  "snapshotSha256": "42a61ce86ddc84203477dbb4f034959a6416a4d8d240b388f6919063779b8d18",
+  "sourceDeliveryId": "65cd5010-bb09-11f1-9c73-fb0e8f26c548",
+  "sourceRows": 3,
+  "privateProbeRoot": "/Users/justn/Library/Application Support/Stackot/state/s47-74ddf7c9e198",
+  "snapshotIntegrity": "ok",
+  "emptyRestoreEqual": true,
+  "fakeProvider": false,
+  "evidenceClass": "D",
+  "workerDispatched": false,
+  "outboundDelivery": false,
+  "productionGatewayChanged": false,
+  "actualRuntimeVersions": {
+    "node": "v24.21.0",
+    "openclaw": "OpenClaw 2026.9.6 (eb377ac)"
+  },
+  "nativeAuthenticatedHealth": true,
+  "nativeModelCatalogQueried": true,
+  "receiverBundleSha256": "a630c9f1acc5dbcdc5a2a7c5010ba34c3c0e84fc0e758276e7460dc8d7be373e",
+  "restoredRowDelivered": true,
+  "receivedAtPreserved": true,
+  "statusBeforeRestart": {
+    "status": "ok",
+    "outboxReady": true,
+    "outbox": {
+      "ok": true,
+      "lastError": null
+    },
+    "gateway": {
+      "reachable": true,
+      "lastError": null,
+      "lastSuccessAt": 1790580941067
+    },
+    "queue": {
+      "pending": 0,
+      "deadLetter": 2,
+      "delivered": 1,
+      "oldestPendingAgeMs": null
+    }
+  },
+  "actualNativeAdmission": {
+    "deliveryId": "65cd5010-bb09-11f1-9c73-fb0e8f26c548",
+    "status": 200,
+    "ok": true,
+    "runId": "8f0f0729-f8a6-4de9-9e88-5623566e3310",
+    "realNetworkResponse": true
+  },
+  "deliveredPreservedAfterRestart": true,
+  "replayRejectedForDelivered": true,
+  "admissionScope": "native hook run admission only; no model completion, Discord or worker claim",
+  "passed": true,
+  "ownedListenersClosed": true
+}

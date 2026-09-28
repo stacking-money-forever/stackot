@@ -70,6 +70,12 @@ Gateway. Its `--synthetic-provider-fixture` receipt is S/fakeProvider=true and
 never replaces live D proof. Configured Bun path is portable; live run records
 actual Node/OpenClaw versions, never fabricates provider/runtime versions.
 
+Final code260bb3b was replayed on the selected host; `s47-final-result.json`
+records evidenceClassD/fakeProvider=false, actual frozen runtime versions,
+unchanged source bundle, genuine empty restore and native admission, restart
+exclusion and both closed listeners. Linux source verification is CI36392488347;
+the added lifecycle fixture runs the orchestration path with explicit S receipt.
+
 S47 is NOT ACCEPT until owner review and exact-code Linux CI pass. Snapshot and
 worktree must be retained. The production webhook remains inactive; this does not
 activate the unfinished controller/worker pipeline.
