@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/Users/justn/dev/.worktrees/stackot-local-deploy-20260928/deploy/macos/probe.py", line 78, in <module>
+  File "/Users/justn/dev/.worktrees/stackot-local-deploy-20260928/deploy/macos/probe.py", line 62, in main
+    result['recovery'].append(dict(service=name, before=before, after=after))
+RuntimeError: owned service recovery failed: tunnel

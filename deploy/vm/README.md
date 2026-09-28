@@ -178,3 +178,9 @@ forward only) and answers `/readyz` 200 — then stop it and record the result.
 - The `stackot` user owns `/opt/stackot`, `/var/lib/stackot` and the gateway's
   home; nothing in this deployment should run as root except the backup unit and
   Caddy's own service.
+# Current host selection
+
+On 2026-09-28 the user selected the local Mac and `stackot.justn.me` instead of
+provisioning a VM. See [macOS deployment](../macos/README.md). This runbook is
+retained for the VM alternative; none of its systemd/reboot receipts is implied
+by a launchd deployment.

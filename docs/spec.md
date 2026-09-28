@@ -359,3 +359,10 @@ Control UI에 없어서 필요하면 P1 이후에 추가하는 것:
 - OpenClaw sandboxing: docs.openclaw.ai/gateway/sandboxing
 - OpenClaw Webhooks plugin (provider webhook 비수용 명시): docs.openclaw.ai/plugins/webhooks
 - Discord Forum Channel API, GitHub Webhooks 공식 문서
+# Selected deployment host
+
+The current user-selected host is the local Mac at `stackot.justn.me`
+(2026-09-28): dedicated Cloudflare HTTPS tunnel, exact webhook path, loopback
+Caddy/receiver/Gateway, user launchd supervision. See `deploy/macos/README.md`.
+Login-dependent supervision does not establish pre-login reboot availability;
+runtime, external boundary and human acceptance remain separate gates.
