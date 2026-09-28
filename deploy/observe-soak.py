@@ -119,7 +119,7 @@ def main():
             until = time.monotonic()+max(0, remaining)
             while not interrupted and time.monotonic() < until:
                 time.sleep(max(0, min(1, until-time.monotonic())))
-        emit({'kind': 'end', **summary(samples, time.monotonic()-started, args.duration, args.interval, interrupted)})
+        emit({'kind': 'end', 'wallTime': time.time(), **summary(samples, time.monotonic()-started, args.duration, args.interval, interrupted)})
     print(json.dumps({'receipt': str(out), 'betaAcceptance': False, 'interrupted': interrupted}))
 
 
