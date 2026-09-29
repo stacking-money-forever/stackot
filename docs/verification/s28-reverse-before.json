@@ -1,0 +1,13 @@
+{
+  "flowId": "7557d2e7-aabb-4add-83b4-25a7e4bd3c26",
+  "revision": 10,
+  "approval": {
+    "requestId": "qa-6d46f7eb-2e6b-4151-986d-706b49328113",
+    "requesterId": "534692447561842698",
+    "status": "pending",
+    "requestedAt": 1790648581145,
+    "expiresAt": 1790649481145,
+    "decidedBy": null
+  },
+  "syntheticPlan": true
+}

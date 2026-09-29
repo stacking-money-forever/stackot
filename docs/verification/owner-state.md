@@ -1,5 +1,15 @@
 # Owner continuation state
 
+S28 real pending wrong-requester denial is now observed: card1554317554305208441,
+requester534, actual authenticated sender111/auth=true/outcome=denied. Native
+flow7557d2e7-aabb-4add-83b4-25a7e4bd3c26 pending/revision10/TTL unchanged before,
+after and owned Gateway restart. Exact prior private QA config restored; PID9715.
+Six source48e92b5 safe receipts match integration: s28-reverse-actor.md and JSONs.
+First global button selection instead approved the prior B06 no-op renewal;
+revision22 and native approval are preserved/documented, not H or denial proof.
+Missing genuine secondary534 normal acceptance still prevents S28 acceptance;
+count57/81. S33 catalog integrated c9c5c1d, integration CI36512438494 live.
+
 S33 owner catalog source b4438273f79b3ffef7abf3c4d9e8b6828eb4cb6d pushed:
 106 tests/675 assertions, typecheck/build pass; old-code cleanup regressions
 fail as required. First review found cleanup errors replacing confirmed results;
@@ -9,7 +19,8 @@ typecheck/build pass. No production factory activation or S33 acceptance yet.
 User-authorized Aside original card replay at 2026-09-29 11:14 KST returned
 generic refusal; actual native S28 flow remains approved at revision10 by111.
 Profile/account-menu action timed out, no second-account switch occurred.
-Genuine pending wrong-actor534 event is still absent, count57/81.
+Genuine secondary534 event is still absent; later reverse-actor probe above
+adds real wrong-requester111 denial without satisfying full two-user acceptance.
 Detailed retained source receipt: stackot-s33-20260929/docs/verification/s33-owner-catalog.md.
 
 S33 attachment d76e7ad exact CI36506619644 all3green, final base2013425 review

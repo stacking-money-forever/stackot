@@ -1,5 +1,15 @@
 # Wave 03 — resume real runtime verification (2026-09-28)
 
+## S28 reversed requester live denial — partial R, NOT ACCEPT
+
+Source48e92b5 safe six receipts copied with matching SHA256; actual auth=true
+sender111 on requester534 card1554317554305208441 denied, pending flow revision10
+and TTL unchanged, including after owned Gateway restart/config restoration.
+This closes the native wrong-requester-denial evidence gap in one direction;
+normal acceptance by genuine secondary534 and full two-user oracle remain open.
+Erroneous earlier selection of B06 renewal and its no-op approval are recorded,
+not reverted/claimed as H. See s28-reverse-actor.md. Count57/81 unchanged.
+
 ## S33 owner catalog integration — preparation, NOT ACCEPT
 
 Source b4438273f79b3ffef7abf3c4d9e8b6828eb4cb6d: exact Linux CI36512006643

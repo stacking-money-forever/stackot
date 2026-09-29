@@ -39,7 +39,7 @@
 - [ ] **S30** task당 worktree/branch 계보 하나(재시도 경로 동일, dirty 보존)
 - [ ] **S31** cancel/timeout 후 작업물 보존
 - [ ] **S29** 유효 승인 이후에만 ACP spawn (acpx 플러그인 + codex 로그인 선행)
-- [ ] **S28** 승인 actor를 Discord UI 밖에서 강제 확인 — 아래 Discord 값 필요
+- [ ] **S28** 실제 auth=true 다른 요청자 거부와 pending 보존 확보(`s28-reverse-actor.md`). 두 번째 계정의 정상 승인 및 전체 two-user 검증은 미완.
 - [ ] **S33/S34** push·PR 쓰기 어댑터 — 아래 GitHub 권한 필요
 - [x] **S36** 기존 thread 유지·역링크 실패만 재개 — 합성 회복/marker 신뢰/중복 거부 및 정확 SHA Linux CI, `wave-03.md`. 실제 GitHub 쓰기는 S49.
 - [x] **S35** thread intent/receipt 영속화·실패 후 재사용 — 합성 외부 생성자 + 실제 native 저장 재시작·정확 SHA Linux CI. 실제 Discord 어댑터는 S49.
