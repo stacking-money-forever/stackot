@@ -227,6 +227,9 @@ intent를 결합하고 오너 broker에만 자격증명을 전달한다. 미승�
 계획은 자격증명 조회/전송 전 거부한다. 실제 callback/worker/원격 전송 연결과
 격리 검증은 미완이다. 환경 변수 필터만으로 같은 UID의 파일·키체인 격리를
 주장하지 않는다. 계약: `docs/contracts/push-authority.md`.
+오너 Git 전송 준비는 검증된 커밋 객체를 별도 bare 저장소에 고정하고 작업자
+설정·hook·URL 재작성을 사용하지 않는다. 실제 GitHub 연결·worker 격리 검증은
+여전히 별도이며, 현재 배포의 push 동작을 활성화하지 않는다.
 
 버튼은 components v2로 구현. `allowedUsers`에 요청자 Discord ID. TTL 24h. 만료된 승인은
 재요청(재시도 버튼)으로 처리.
