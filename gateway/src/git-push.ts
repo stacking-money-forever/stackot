@@ -1,5 +1,5 @@
 import {spawn} from "node:child_process";
-import {mkdtemp,mkdir,writeFile,realpath,stat} from "node:fs/promises";
+import {mkdtemp,mkdir,writeFile,realpath,stat,rm} from "node:fs/promises";
 import {join,isAbsolute} from "node:path";
 import type {PushTarget} from "./push.ts";
 
@@ -23,11 +23,24 @@ function environment(home:string,credential?:string,askpass?:string):Record<stri
     GIT_CONFIG_GLOBAL:'/dev/null',GIT_NO_REPLACE_OBJECTS:'1',GIT_TERMINAL_PROMPT:'0',
     ...credential===undefined?{}:{GIT_ASKPASS:askpass!,STACKOT_OWNER_PUSH_TOKEN:credential}};
 }
+async function transferPack(git:string,proxy:string,destination:string,cwd:string,env:Record<string,string>,sha:string):Promise<void>{
+  await new Promise<void>((resolve,reject)=>{
+    const source=spawn(git,['--git-dir',proxy,'pack-objects','--stdout','--revs'],{cwd,env,stdio:['pipe','pipe','pipe'],detached:true});
+    const sink=spawn(git,['--git-dir',destination,'index-pack','--stdin','--strict'],{cwd,env,stdio:['pipe','pipe','pipe'],detached:true});
+    let closed=0,failed=false;
+    const kill=()=>{failed=true;for(const child of [source,sink]){try{process.kill(-child.pid!,'SIGKILL');}catch{child.kill('SIGKILL');}}};
+    const timer=setTimeout(kill,30000);
+    const finish=(code:number|null)=>{if(code!==0)kill();if(++closed===2){clearTimeout(timer);if(failed)reject(new Error('OWNER_GIT_PACK_FAILED'));else resolve();}};
+    for(const child of [source,sink]){child.stderr.on('data',()=>{});child.on('error',kill);child.on('close',finish);child.stdin.on('error',kill);}
+    sink.stdout.on('data',()=>{});source.stdout.pipe(sink.stdin);source.stdin.end(sha+'\n');
+  });
+}
 type Options={source:string;ownerRoot:string;target:PushTarget;gitExecutable:string;
   verify:(target:PushTarget)=>Promise<boolean>;fixtureRemote?:string};
 
 /** Owner-held sealed Git objects, not a sandbox or native identity boundary. */
 export class OwnerGitPush {
+  private disposed=false;
   private constructor(private readonly git:string,private readonly root:string,private readonly repository:string,
     private readonly home:string,private readonly askpass:string,private readonly endpoint:string,private readonly pinned:PushTarget){}
   static async seal(options:Options):Promise<OwnerGitPush>{
@@ -40,7 +53,9 @@ export class OwnerGitPush {
       throw new Error('OWNER_GIT_ROOT_INVALID');
     let verified=false;try{verified=await options.verify({...options.target});}catch{}
     if(!verified)throw new Error('OWNER_REVISION_UNVERIFIED');
-    const root=await mkdtemp(join(owner,'push-'));const home=join(root,'home');await mkdir(home,{mode:0o700});
+    const root=await mkdtemp(join(owner,'push-'));
+    try{
+    const home=join(root,'home');await mkdir(home,{mode:0o700});
     const env=environment(home);const git=options.gitExecutable;
     await command(git,['check-ref-format','--branch',options.target.branch],root,env);
     // Only this initial path query touches worker Git config, before any token.
@@ -50,9 +65,8 @@ export class OwnerGitPush {
     const proxy=join(root,'reader.git'),repository=join(root,'sealed.git');
     await command(git,['init','--bare','--template=',proxy],root,env);
     await writeFile(join(proxy,'objects/info/alternates'),objectPath+'\n',{mode:0o600});
-    const pack=await command(git,['--git-dir',proxy,'pack-objects','--stdout','--revs'],root,env,Buffer.from(options.target.commitSha+'\n'));
     await command(git,['init','--bare','--template=',repository],root,env);
-    await command(git,['--git-dir',repository,'index-pack','--stdin','--strict'],root,env,pack);
+    await transferPack(git,proxy,repository,root,env,options.target.commitSha);
     const resolved=(await command(git,['--git-dir',repository,'rev-parse',options.target.commitSha+'^{commit}'],root,env)).toString().trim();
     if(resolved!==options.target.commitSha)throw new Error('OWNER_SEALED_REVISION_MISMATCH');
     const askpass=join(root,'askpass');
@@ -66,9 +80,12 @@ export class OwnerGitPush {
       endpoint=fixture;
     }
     return new OwnerGitPush(git,root,repository,home,askpass,endpoint,{...options.target});
+    }catch(error){await rm(root,{recursive:true,force:true});throw error;}
   }
+  /** Caller persists receipts first; only this instance's generated files are removed. */
+  async dispose():Promise<void>{this.disposed=true;await rm(this.root,{recursive:true,force:true});}
   allows(value:PushTarget):boolean{
-    return value.repo===this.pinned.repo&&value.branch===this.pinned.branch&&value.commitSha===this.pinned.commitSha;
+    return !this.disposed&&value.repo===this.pinned.repo&&value.branch===this.pinned.branch&&value.commitSha===this.pinned.commitSha;
   }
   async verifyRevision(value:PushTarget):Promise<boolean>{
     if(!this.allows(value))return false;

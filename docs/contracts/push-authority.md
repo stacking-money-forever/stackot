@@ -28,7 +28,10 @@ Transport pins one repo/branch/commit, uses canonical GitHub HTTPS with redirect
 disabled, owner askpass environment only, no token in argv/helper/source/state,
 and exact remote-ref readback. Main/master are rejected. Explicit owner-local
 fixture remotes are limited to test root; they do not prove GitHub delivery.
-Command output/errors stay private, bounded output/time and owner process group.
+Command output/errors stay private, bounded diagnostics/time and owner process group.
+Object packs stream with backpressure between export/import rather than a128MiB
+memory ceiling. Caller persists receipt then explicitly disposes generated owner
+storage; failed sealing also disposes it. Task worktrees/remote refs stay intact.
 Owner directories are not a same-UID sandbox; real worker isolation remains open.
 
 WorkerEnvironment minimizes inherited values and disables global Git-helper
@@ -36,11 +39,11 @@ inheritance. It is not a sandbox or same-UID filesystem/keychain boundary; HOME,
 coding-agent login, local Git config, gh/keychain and SSH state need actual S29
 worker isolation proof. Do not upgrade this map to unavailable credentials.
 
-Owner fixtures8push-gate tests/56assertions and full gateway96tests/597assertions pass,
+Owner fixtures8push-gate tests/56assertions and full gateway98tests/621assertions pass,
 typecheck/build clean. Real local Git bare-remote denial retains unchanged refs,
 zero credential lookups/transport calls. The approval/controller/broker are
 synthetic: evidence S only. Early-credential mutation fails the negative oracle.
-Two additional actual-Git tests seal a commit, modify worker content/config and
+Four additional actual-Git tests seal a commit, modify worker content/config and
 install a worker pre-push hook; push reaches only the intended local bare remote
 with the original pinned SHA, no worker hook/rewrite/later commit. Protected or
 wrong targets and failed owner verification do not push. These fixtures use fake
