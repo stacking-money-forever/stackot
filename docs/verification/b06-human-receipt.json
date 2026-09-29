@@ -1,0 +1,48 @@
+{
+  "flowId": "69392177-28cd-45e6-99f0-55b053867fba",
+  "revision": 22,
+  "original": {
+    "requestId": "qa-f0b577a0-d83d-4c0c-9a39-35dc44f13e4a",
+    "status": "pending",
+    "requesterId": "1112741808162734110",
+    "requestedAt": 1790667443012,
+    "expiresAt": 1790667453012,
+    "decidedBy": null
+  },
+  "renewed": {
+    "requestId": "renew-f8310f9b-62d6-424a-a5b3-e1570afae5fb",
+    "status": "approved",
+    "requesterId": "1112741808162734110",
+    "requestedAt": 1790667620580,
+    "expiresAt": 1790754020580,
+    "decidedBy": "1112741808162734110"
+  },
+  "cardMessageIds": [
+    "1554396666264682546",
+    "1554397411382919198"
+  ],
+  "nativeEvents": [
+    {
+      "senderId": "1112741808162734110",
+      "authorized": true,
+      "messageId": "1554396666264682546",
+      "outcome": "denied"
+    },
+    {
+      "senderId": "1112741808162734110",
+      "authorized": true,
+      "messageId": "1554396666264682546",
+      "outcome": "requested"
+    },
+    {
+      "senderId": "1112741808162734110",
+      "authorized": true,
+      "messageId": "1554397411382919198",
+      "outcome": "approved"
+    }
+  ],
+  "humanEvidence": "User reported approval; actually completed expired denial, retry request and fresh-card approval without agent clicks",
+  "syntheticPlan": true,
+  "workerDispatched": false,
+  "acceptanceScope": "B06 expired-approval guidance human next-action oracle only"
+}
