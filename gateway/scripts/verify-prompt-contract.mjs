@@ -31,7 +31,8 @@ let verified=false;
 const producer=new ApprovalPromptPublisher(store,{sendPlan:async()=>receipt('500'),editCard:async()=>{throw new Error('No edit expected');},
   sendCard:async(spec,check,record)=>{
     await check();const rendered=build({spec:parse(spec),accountId:'default'});
-    assert.equal(rendered.entries.length,2);assert.ok(rendered.components.length);
+    assert.equal(rendered.entries.length,3);assert.ok(rendered.components.length);
+    assert.deepEqual(spec.blocks[0].buttons.map(button=>button.label),['승인','거부','승인 재요청']);
     for(const entry of rendered.entries){
       assert.equal(entry.kind,'button');assert.equal(entry.reusable,true);assert.equal(entry.callbackDataKind,'callback');
       assert.deepEqual(entry.allowedUsers,[input.requesterId]);
@@ -42,5 +43,5 @@ const producer=new ApprovalPromptPublisher(store,{sendPlan:async()=>receipt('500
     await record(receipt('600'));verified=true;return receipt('600');
   }},()=>100);
 assert.equal((await producer.publish(route,input.requestId)).kind,'published');assert.equal(verified,true);
-console.log(JSON.stringify({installedSdkContract:true,buttons:2,reusable:true,callbackKind:'callback',
+console.log(JSON.stringify({installedSdkContract:true,buttons:3,reusable:true,callbackKind:'callback',
   namespaceMatched:true,wrongPrefixDenied:true,actualMessageSent:false,actualActorCallback:false}));
