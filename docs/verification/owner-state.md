@@ -2,6 +2,16 @@
 
 ## Resumed checklist —59/81
 
+S33 abrupt credential remnant risk now addressed in prepared transport: approved
+token lives only in memory, askpass receives private Unix socket path in env,
+config/proxy disabled and bounded curl. No plaintext credential file is created.
+Actual canary owner SIGKILL leaves only dead socket metadata, request fails<3s;
+Git wrapper validates auth correctness, no argv/env bytes and cleanup failure
+preserves confirmed receipt. Source128/889, integration135/922, typecheck/build
+and independent review pass. Default live factories inactive; full S33 still
+NOT ACCEPT/count59/81. Receipt s33-memory-broker-owner.md; final brgr advice
+rejected, owner code/oracles provide evidence. No host reboot or real token used.
+
 Verified catalog composition is now packaged as verifiedPushOwner(policy) for
 the code-only native callback owner parameter. Trusted lease task/requester/plan,
 observed execution ID, exited0 and confirmed cleanup must match current task;

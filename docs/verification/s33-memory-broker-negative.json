@@ -1,0 +1,8 @@
+{
+  "mutation": "persist credential in regular file",
+  "oracle": "SIGKILL leaves no regular credential file",
+  "exitCode": 1,
+  "canaryOnly": true,
+  "actualOwnerSIGKILL": true,
+  "fullS33Acceptance": false
+}

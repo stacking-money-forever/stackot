@@ -198,8 +198,9 @@ provided by default deployment/JSON configuration and no live push is enabled.
 The owner catalog composer checks persisted targets and owns lazy sealing and
 cleanup; real task/worktree catalog provisioning remains outstanding.
 Failed cleanup emits a fixed diagnostic and preserves confirmed transport results.
-Prepared Git credentials use per-operation private0600 owner files and are
-removed after success/failure; token bytes do not enter child argv/environment.
+Prepared Git credentials use a memory-only owner broker and private0600 Unix
+socket; no plaintext token file is created and broker closes after success/failure.
+Token bytes do not enter child argv/environment; dead broker requests fail boundedly.
 Actual Mac fixture process-env visibility is recorded separately from these
 Linux instructions. No VM/worker isolation or live push acceptance is inferred.
 The prepared owner-controlled Docker executor has fixed image/mount/privilege
