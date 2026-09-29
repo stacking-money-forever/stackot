@@ -62,3 +62,6 @@ PushAuthority then consumes/revalidates before credentials/transport. Sent and
 uncertain results have distinct private copy/audit, with no replay dispatch.
 Default plugin bootstrap supplies no factory and enables no push. Captured
 context/fake-broker tests are S, not native-origin authentication or live push.
+If owner lookup/dispatch rejects after approval storage, reply/audit explicitly
+say approval saved but push completion unconfirmed, rather than treating that
+exception as remote success or proven failure. Provider exceptions remain private.

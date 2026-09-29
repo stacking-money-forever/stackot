@@ -63,10 +63,16 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
       text=binding.decision==="approve"?"승인했습니다.":"거부했습니다.";
       outcome=binding.decision==="approve"?"approved":"rejected";
       if(binding.decision==="approve"&&request.action==="push"&&typeof binding.dispatchPush==="function"){
-        const result=await binding.dispatchPush({requestId:request.requestId,taskId:request.taskId,
-          planHash:request.planHash,planVersion:request.planVersion,action:"push",actorId:ctx.senderId});
-        text=result.kind==="sent"?"승인한 커밋의 원격 push를 확인했습니다.":"push 결과를 확인하고 있습니다. 같은 요청을 다시 보내지 않습니다.";
-        outcome=result.kind==="sent"?"push_sent":"push_uncertain";
+        text="승인은 저장됐지만 원격 push 완료를 확인하지 못했습니다. 상태 확인이 필요합니다. 같은 요청을 다시 보내지 않습니다.";
+        outcome="push_uncertain";
+        try{
+          const result=await binding.dispatchPush({requestId:request.requestId,taskId:request.taskId,
+            planHash:request.planHash,planVersion:request.planVersion,action:"push",actorId:ctx.senderId});
+          if(result.kind==="sent"){text="승인한 커밋의 원격 push를 확인했습니다.";outcome="push_sent";}
+        }catch{
+          // Approval storage succeeded; dispatch exceptions are never proof of
+          // remote success/failure and their provider text stays private.
+        }
       }
       }
     }catch(error){
