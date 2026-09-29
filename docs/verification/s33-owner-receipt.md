@@ -47,3 +47,12 @@ no full-pack buffering. Actual132MiB random blob commit seals successfully;
 failed seal and explicit disposal leave worker/remote fixtures intact. Targeted
 Git4tests/51assertions; full98tests/621assertions/typecheck/build pass. Previous
 272ef05 exact CI36504175668 green; corrected code still needs its exact CI/review.
+
+Native attachment continuation adds code-only lazy owner factory on approved
+push bindings after callback native principal/route/message/requester guards.
+S27 approval commits before factory; push gate consumes before auth/transport.
+No default factory/config/RPC injection or deployed push. Captured handler tests
+3pass/14assertions verify negative predicates never call owner factory, only
+approve+push can dispatch, consumption prevents replay and reply distinguishes
+remote sent/uncertain. Fake contexts/broker remain S. Actual NativePushOwnerFactory
+production instance, sealed verifier/broker/worker and GitHub proof still open.

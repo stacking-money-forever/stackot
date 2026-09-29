@@ -52,3 +52,13 @@ Switching the transport back to worker Git config fails the actual local-remote
 test, proving URL-rewrite exclusion is observed rather than a declared flag.
 S33 R oracle remains actual SDK/controller/worker boundary with real credential
 broker and remote readback; prepared code is not runtime acceptance.
+
+Native attachment preparation: nativeCallbackRegistry accepts an owner-code-only
+factory; no JSON config or RPC accepts broker/actor/function objects. Factory
+lookup is lazy: handler must pass native auth/account/guild/conversation/parent/
+message/requester predicates and commit its separate push approval first.
+Only approve+actionpush gains the dispatch closure; start/deny/PR do not.
+PushAuthority then consumes/revalidates before credentials/transport. Sent and
+uncertain results have distinct private copy/audit, with no replay dispatch.
+Default plugin bootstrap supplies no factory and enables no push. Captured
+context/fake-broker tests are S, not native-origin authentication or live push.

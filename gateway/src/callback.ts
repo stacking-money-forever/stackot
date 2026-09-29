@@ -1,10 +1,11 @@
-import type {ApprovalInput,ApprovalRepository} from "./approval.ts";
+import type {ApprovalInput,ApprovalRepository,ApprovalContext} from "./approval.ts";
 import {ApprovalExpiredError} from "./approval.ts";
 
 export type CallbackBinding={token:string;accountId:string;guildId:string;conversationId:string;
   parentConversationId:string;messageId:string;request:ApprovalInput;decision:"approve"|"deny"|"retry";
   repository:ApprovalRepository;retryAvailable?:boolean;
-  renew?:(actorId:string)=>Promise<{kind:string}>};
+  renew?:(actorId:string)=>Promise<{kind:string}>;
+  dispatchPush?:(context:ApprovalContext)=>Promise<{kind:"sent"|"uncertain"}>};
 // Resolver is server-owned and must recover bindings/native ownership durably.
 // This interface alone is not production registry or actor-authentication proof.
 export type CallbackRoute={accountId:string;guildId:string;conversationId:string;parentConversationId:string};
@@ -24,7 +25,7 @@ const token=(v:unknown):v is string=>typeof v==="string"&&
 // Register a private handler only through the trusted native bootstrap API.
 // Never expose an HTTP/RPC endpoint accepting an alleged native context object.
 export type CallbackAudit={event:"stackot.approval";senderId?:string;authorized:boolean;
-  guildId?:string;conversationId?:string;messageId?:string;outcome:"denied"|"approved"|"rejected"|"requested"};
+  guildId?:string;conversationId?:string;messageId?:string;outcome:"denied"|"approved"|"rejected"|"requested"|"push_sent"|"push_uncertain"};
 export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRegistry,observe?:(event:CallbackAudit)=>void):void {
   api.registerInteractiveHandler({channel:"discord",namespace,handler:async raw=>{
     const ctx=raw as Partial<Context>|null;
@@ -61,6 +62,12 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
         actorId:ctx.senderId},binding.decision);
       text=binding.decision==="approve"?"승인했습니다.":"거부했습니다.";
       outcome=binding.decision==="approve"?"approved":"rejected";
+      if(binding.decision==="approve"&&request.action==="push"&&typeof binding.dispatchPush==="function"){
+        const result=await binding.dispatchPush({requestId:request.requestId,taskId:request.taskId,
+          planHash:request.planHash,planVersion:request.planVersion,action:"push",actorId:ctx.senderId});
+        text=result.kind==="sent"?"승인한 커밋의 원격 push를 확인했습니다.":"push 결과를 확인하고 있습니다. 같은 요청을 다시 보내지 않습니다.";
+        outcome=result.kind==="sent"?"push_sent":"push_uncertain";
+      }
       }
     }catch(error){
       // No grant metadata or provider/storage exception is exposed in the reply.

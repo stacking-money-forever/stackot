@@ -185,6 +185,8 @@ S33 push-authority preparation is in
 isolation or live push transport is implied.
 The separate owner transport prepares sealed Git objects/config; no VM or
 GitHub activation is implied by its actual local-Git fixture tests.
+The native callback owner-factory attachment is preparation only; no factory is
+provided by default deployment/JSON configuration and no live push is enabled.
 
 The expired approval guidance is documented in
 [b06-expired-approval.md](../../docs/verification/b06-expired-approval.md).

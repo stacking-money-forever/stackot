@@ -230,6 +230,9 @@ intent를 결합하고 오너 broker에만 자격증명을 전달한다. 미승�
 오너 Git 전송 준비는 검증된 커밋 객체를 별도 bare 저장소에 고정하고 작업자
 설정·hook·URL 재작성을 사용하지 않는다. 실제 GitHub 연결·worker 격리 검증은
 여전히 별도이며, 현재 배포의 push 동작을 활성화하지 않는다.
+Native 연결 준비는 push approve callback의 실제 요청자 검사·승인 저장 뒤에만
+오너 코드 factory를 조회한다. 기본 bootstrap에는 factory가 없으며 JSON/RPC로
+주입할 수 없다. 작업 시작·거부·PR callback은 push를 실행하지 않는다.
 
 버튼은 components v2로 구현. `allowedUsers`에 요청자 Discord ID. TTL 24h. 만료된 승인은
 재요청(재시도 버튼)으로 처리.
