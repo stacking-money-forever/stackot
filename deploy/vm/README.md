@@ -1,5 +1,13 @@
 # Stackot runtime VM — artifacts and runbook
 
+The optional approval ingress described in [../README.md](../README.md)
+uses a private plugin route `/stackot/hooks/agent`. Provision its owner-owned
+0600 versioned token file and fixed approval-control thread/repo/requester
+configuration before choosing receiver `openclawIngressMode: approval`.
+It persists native input/pending approval and the card before ACK, with no
+generic model/ACP/Git/PR dispatch. This code is not VM activation evidence;
+normal native hooks may remain disabled. Full worker/forum E2E gates remain.
+
 **What this is.** The repository-local preparation for running Stackot on a
 single Proxmox KVM guest: a cloud-init file, systemd units, a Caddy ingress
 config, a backup script plus timer, and an environment template.

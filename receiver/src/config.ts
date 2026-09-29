@@ -30,6 +30,8 @@ export type ReceiverConfig = {
   githubWebhookSecret: string;
   /** OpenClaw Gateway hooks endpoint, e.g. http://127.0.0.1:18789/hooks */
   openclawHooksUrl: string;
+  /** native (legacy agent hook) or approval (Stackot durable approval admission). */
+  openclawIngressMode?: "native" | "approval";
   /** hooks.token configured in openclaw.json (sent as Bearer). */
   openclawHookToken: string;
   /** Optional absolute private {version:1,token} JSON, validated at startup and per-forward. */
@@ -66,6 +68,7 @@ export async function loadConfig(): Promise<ReceiverConfig> {
     throw new Error(`config not found: ${path}`);
   }
   const cfg = JSON.parse(await file.text()) as ReceiverConfig;
+  if(cfg.openclawIngressMode!==undefined&&!['native','approval'].includes(cfg.openclawIngressMode))throw new Error('config invalid: openclawIngressMode');
   const required = ["openclawHooksUrl", "openclawHookToken", "githubToken", "ciAlertsChannelId", "adminChannelId", "agentId"] as const;
   for (const key of required) {
     if (!cfg[key]) throw new Error(`config missing: ${key}`);

@@ -1,5 +1,13 @@
 # macOS host deployment
 
+Approval ingress can be enabled separately from generic native hooks. Use the
+private plugin configuration and token file in [../README.md](../README.md),
+then set receiver `openclawIngressMode: approval`. Only the existing loopback
+Gateway route `/stackot/hooks/agent` changes; the public tunnel still exposes
+only the signed receiver webhook. Preserve prior package/config/current
+symlink and verify actual pending-flow/card/restart receipts before activation
+is described as working. Generic model and worker execution stays separate.
+
 The owner selected this Mac and `stackot.justn.me` on 2026-09-28. This is an
 alternative to `deploy/vm`, not evidence of a Linux systemd installation.
 

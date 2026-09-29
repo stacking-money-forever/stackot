@@ -84,6 +84,7 @@ jobs:
       # ordering can mask plugin/QA cyclic-initialization failures.
       - run: bun test test/qa.test.ts
         working-directory: gateway
+      - run: python3 gateway/scripts/verify-ingress-native.py --output "$RUNNER_TEMP/stackot-ingress-native.json"
       - run: python3 gateway/scripts/build-native-probe.py
       - run: python3 docs/verification/s25-probe/run.py --plugin gateway/node_modules/s26-native-plugin --method s26probe.state --expect-approval --output "$RUNNER_TEMP/s26-restart.json"
       # S35: fake external marker + real native inflight/receipt across restart.

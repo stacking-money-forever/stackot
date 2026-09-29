@@ -1,0 +1,40 @@
+{
+  "runtime": "2026.9.6",
+  "root": "/Users/justn/Library/Application Support/Stackot/state/stackot-ingress-native-cb5afpzi",
+  "gatewayPids": [
+    30692,
+    31371
+  ],
+  "flowId": "3894b4a1-6a19-4b84-9fd2-982020f8430f",
+  "before": {
+    "sends": 2,
+    "runs": 0,
+    "flows": [
+      {
+        "flowId": "3894b4a1-6a19-4b84-9fd2-982020f8430f",
+        "revision": 11,
+        "phase": "ready",
+        "approvalCount": 1
+      }
+    ]
+  },
+  "after": {
+    "sends": 0,
+    "runs": 0,
+    "flows": [
+      {
+        "flowId": "3894b4a1-6a19-4b84-9fd2-982020f8430f",
+        "revision": 11,
+        "phase": "ready",
+        "approvalCount": 1
+      }
+    ]
+  },
+  "wrongTokenStatus": 401,
+  "changedPayloadStatus": 409,
+  "injectedActorStatus": 400,
+  "nativeFlowRestartReused": true,
+  "modelWorkerRunCount": 0,
+  "discordTransport": "synthetic",
+  "evidence": "real isolated Gateway/native state, synthetic input/provider; not deployed Discord or H"
+}

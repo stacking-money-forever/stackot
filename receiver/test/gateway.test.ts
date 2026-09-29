@@ -21,6 +21,13 @@ function cfgFor(port: number): ReceiverConfig {
 }
 
 describe("forwardToGateway", () => {
+  test("approval mode sends structured input without caller-selected actor or execution",async()=>{
+    let captured:unknown,path:string|undefined;const server=Bun.serve({port:0,async fetch(req){path=new URL(req.url).pathname;captured=await req.json();return Response.json({ok:true,approvalStatus:'pending',workerDispatched:false});}});
+    try{expect((await forwardToGateway({...cfgFor(server.port!),openclawIngressMode:'approval'},ev,'delivery-structured')).ok).toBe(true);
+      expect(captured).toEqual({schemaVersion:1,deliveryId:'delivery-structured',agentId:'stackot',event:ev});
+      expect(path).toBe('/stackot/hooks/agent');
+    }finally{server.stop(true);}
+  });
   test("sends framed message with idempotency key", async () => {
     const { promise: capturedReady, resolve: captureDone } = Promise.withResolvers<void>();
     let captured: { headers: Headers; body: string } | null = null;
