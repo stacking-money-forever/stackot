@@ -1,0 +1,98 @@
+{
+  "observedAt": "2026-09-29T08:07:05.576738+00:00",
+  "host": "macOS",
+  "serviceUser": "justn",
+  "uid": 501,
+  "rebootTested": false,
+  "credentialsCaptured": false,
+  "systemServices": [
+    {
+      "label": "me.justn.stackot.receiver",
+      "domain": "system",
+      "plistOwnerUid": 0,
+      "plistMode": "0o644",
+      "configuredUser": "justn",
+      "configuredGroup": "staff",
+      "pid": 67352,
+      "processUid": 501,
+      "oldLoginPlistPresent": false,
+      "preservedLoginPlist": true,
+      "keepAlive": true
+    },
+    {
+      "label": "me.justn.stackot.gateway",
+      "domain": "system",
+      "plistOwnerUid": 0,
+      "plistMode": "0o644",
+      "configuredUser": "justn",
+      "configuredGroup": "staff",
+      "pid": 67366,
+      "processUid": 501,
+      "oldLoginPlistPresent": false,
+      "preservedLoginPlist": true,
+      "keepAlive": true
+    },
+    {
+      "label": "me.justn.stackot.ingress",
+      "domain": "system",
+      "plistOwnerUid": 0,
+      "plistMode": "0o644",
+      "configuredUser": "justn",
+      "configuredGroup": "staff",
+      "pid": 67697,
+      "processUid": 501,
+      "oldLoginPlistPresent": false,
+      "preservedLoginPlist": true,
+      "keepAlive": true
+    },
+    {
+      "label": "me.justn.stackot.tunnel",
+      "domain": "system",
+      "plistOwnerUid": 0,
+      "plistMode": "0o644",
+      "configuredUser": "justn",
+      "configuredGroup": "staff",
+      "pid": 67721,
+      "processUid": 501,
+      "oldLoginPlistPresent": false,
+      "preservedLoginPlist": true,
+      "keepAlive": true
+    }
+  ],
+  "bootTime": "{ sec = 1790516222, usec = 443738 } Sun Sep 27 22:37:02 2026",
+  "fileVaultEnabled": true,
+  "migrationHelperHash": "b21d730af635ee1fffbdbd34435ebc0c5d392e6d1d284d1a5e564346550ac5be",
+  "installedRelease": "7987f9483c2a54deb8c2c808ba8f77977bc711cd",
+  "receiverStatus": {
+    "status": "ok",
+    "outboxReady": true,
+    "outbox": {
+      "ok": true,
+      "lastError": null
+    },
+    "gateway": {
+      "reachable": true,
+      "lastError": null,
+      "lastSuccessAt": null
+    },
+    "queue": {
+      "pending": 0,
+      "deadLetter": 3,
+      "delivered": 1,
+      "oldestPendingAgeMs": null
+    }
+  },
+  "gatewayIngressStatus": {
+    "ingressPath": "/stackot/hooks/agent",
+    "workerDispatchEnabled": false,
+    "modelWorkerRunCount": 0,
+    "flows": [
+      {
+        "flowId": "5f5ff5b0-cac3-42aa-bba6-71b5db31f7b9",
+        "revision": 12,
+        "deliveryId": "approval-connection-77e854e47c664ef1bc50413808e393cc",
+        "phase": "ready"
+      }
+    ]
+  }
+}

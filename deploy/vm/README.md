@@ -184,3 +184,6 @@ On 2026-09-28 the user selected the local Mac and `stackot.justn.me` instead of
 provisioning a VM. See [macOS deployment](../macos/README.md). This runbook is
 retained for the VM alternative; none of its systemd/reboot receipts is implied
 by a launchd deployment.
+The selected Mac now has four system LaunchDaemons running as `justn` with
+actual crash recovery receipts (2026-09-29). Its real reboot drill remains
+unperformed, with FileVault enabled. These are Mac receipts, not VM evidence.

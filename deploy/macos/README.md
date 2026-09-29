@@ -22,8 +22,8 @@ secrets in `config/receiver.json`. Missing assets block activation; do not
 substitute text channels or fake IDs. Bootstrap-only Gateway has hooks disabled
 until the reviewed live controller configuration is ready.
 
-Owned labels: `me.justn.stackot.{receiver,gateway,ingress,tunnel}`. Install
-plists under `~/Library/LaunchAgents` for login startup, then use
+Owned labels: `me.justn.stackot.{receiver,gateway,ingress,tunnel}`. Initial login
+installation puts plists under `~/Library/LaunchAgents`, then uses
 `launchctl bootstrap gui/$(id -u) <absolute-plist>`.
 Inspect `launchctl print gui/$(id -u)/me.justn.stackot.<service>`.
 KeepAlive and ThrottleInterval=10 supervise crashes. GUI-domain LaunchAgents
@@ -44,3 +44,26 @@ installation requires local administrator authentication and runs each job as
 `--user justn`, never as root. It neither reboots nor changes other services.
 Then use `probe.py --domain system` for owned crash recovery. A real reboot drill
 and any FileVault unlock requirement remain separate evidence.
+
+## Current system installation and pending reboot drill
+
+On 2026-09-29 the administrator-authenticated installer completed. All four
+root-owned 0644 plists are under `/Library/LaunchDaemons`, registered in the
+`system` domain with `UserName=justn`, and actually run with uid501. Old login
+plists were preserved as `.plist.disabled`; there are no duplicate GUI jobs.
+The owner's `probe.py --domain system` killed and observed recovery of each
+service. Public unrelated paths returned404 and unsigned webhook POST401.
+The bound approval flow stayed at revision12, with model/worker runs0.
+See `docs/verification/s44-system-owner.md` and its JSON receipts.
+
+The real reboot oracle is still pending. Before an explicitly scheduled reboot,
+preserve the baseline boot time, installed release, approval flow/revision and
+queue counts from `s44-system-installed.json`. After reboot, require a changed
+`sysctl -n kern.boottime`, four running system jobs with uid501, receiver ready,
+Gateway reachable, unchanged persisted flow and a working public route. Observe
+the public route from an independent machine while this Mac is at the login
+screen if claiming pre-login availability. Record whether FileVault unlock or
+user login was needed; success after login alone cannot prove unattended boot.
+Do not reset grants, requeue old dead letters, enable worker dispatch or change
+FileVault for this drill. Preserve any failure and recover only these owned jobs
+using their installed plists; retain the `.disabled` originals.

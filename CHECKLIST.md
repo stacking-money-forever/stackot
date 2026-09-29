@@ -61,7 +61,7 @@
 - [x] 사용자 선택 호스트: 현재 Mac. Proxmox VM 생성 대신 `deploy/macos/README.md` 경로 사용.
 - [x] 비공개 secrets·실제 채널 설정 → 전용 Caddy/tunnel/Gateway/receiver launchd 설치·기동. 배포 receiver SHA4915f5b.
 - [x] 공개 확인: `https://stackot.justn.me/stackot/webhook` unsigned POST **401**, 다른 경로404. 독립 GitHub Linux 러너 증거 확보.
-- [ ] **S44** 4개 서비스 SIGKILL 후 자동 복구 통과; 실제 reboot 무개입 복귀는 미검증. 현재 GUI LaunchAgents는 사용자 로그인 필요.
+- [ ] **S44** 관리자 인증 후 system LaunchDaemons로 4개 서비스 전환, justn 계정 실행·SIGKILL 자동 복구 검증. 실제 reboot 무개입 복귀는 미검증; FileVault 활성. 증거: s44-system-owner.md.
 - [ ] **S45** Cloudflare edge HTTPS만 공개; 독립 러너에서 origin9377·9378·18789 도달 불가 검증. S44 선행 수용은 미완.
 - [ ] **S47** 스냅샷으로 빈 환경에서 pending 복원 drill (`backup.ts` + `replay.ts`)
 - [ ] **S48** 이전 바이너리 + 현재 DB로 rollback drill
