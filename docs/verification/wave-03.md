@@ -1,5 +1,16 @@
 # Wave 03 — resume real runtime verification (2026-09-28)
 
+## Gateway approval admission repair — scoped R/D, not full product acceptance
+
+User-prioritized disabled connection repaired from source7987f94, exact Linux
+CI36531396769 all3green and clean final review. Dedicated checkout/brgr decisions,
+negative tests, native restart proof and live deployment are documented in
+gateway-ingress-owner.md. Actual public signed controlled input reaches native
+pending approval and real Discord card; same revision11/card after restart and
+replay, actual bound model/worker count0. Receiver statusok; original deadLetter3
+retained. Not GitHub-origin E2E or H, no worker/push/PR enabled. Integration
+113tests/708checks/typecheck/build, receiver6/18 pass; count57/81 unchanged.
+
 ## S28 reversed requester live denial — partial R, NOT ACCEPT
 
 Source48e92b5 safe six receipts copied with matching SHA256; actual auth=true

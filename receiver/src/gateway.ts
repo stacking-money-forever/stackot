@@ -22,7 +22,8 @@ export async function forwardToGateway(cfg: ReceiverConfig, ev: NormalizedEvent,
     ev.summary,
   ].join("\n");
 
-  const res = await fetch(`${cfg.openclawHooksUrl}/agent`, {
+  const endpoint=cfg.openclawIngressMode==='approval'?new URL('/stackot/hooks/agent',cfg.openclawHooksUrl).toString():`${cfg.openclawHooksUrl}/agent`;
+  const res = await fetch(endpoint, {
     signal: AbortSignal.timeout(opts.timeoutMs ?? GATEWAY_TIMEOUT_MS),
     method: "POST",
     headers: {
@@ -30,7 +31,7 @@ export async function forwardToGateway(cfg: ReceiverConfig, ev: NormalizedEvent,
       "Content-Type": "application/json",
       "Idempotency-Key": `stackot-${deliveryId}`,
     },
-    body: JSON.stringify({
+    body: JSON.stringify(cfg.openclawIngressMode==='approval'?{schemaVersion:1,deliveryId,agentId:cfg.agentId,event:ev}:{
       message,
       name: `stackot ${ev.repo} ${ev.item}`,
       agentId: cfg.agentId,

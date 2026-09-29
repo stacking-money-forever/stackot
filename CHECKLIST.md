@@ -51,7 +51,7 @@
 - [x] **`githubWebhookSecret`**: 비공개 설정 배치, 실제 공개 unsigned POST401
 - [x] **GitHub 토큰**: configured token으로 실제 계정·Stackot repo 접근 readback. repo별 토큰 분리는 B01 계약 사용 가능.
 - [x] **GitHub push/PR 권한**: configured token의 Stackot permissions.push/admin 확인. S33/S34 승인된 쓰기 어댑터·실제 receipt는 미완; worker에는 토큰 전달하지 않음.
-- [ ] **`openclawHookToken`**: receiver에 배치했으나 Gateway hooks는 controller 검증 전 비활성화; 아직 연동 완료 아님
+- [x] **승인 대기 수신 연결 / `openclawHookToken`**: 실제 Mac의 보호된 토큰 파일로 receiver→Gateway native pending→디코 승인 카드 연결 및 재시작 replay 검증. `gateway-ingress-live.json`. 일반 모델 시작 hook·worker·push·PR 실행은 별도 미완.
 - [x] **도메인 + HTTPS**: 사용자 지정 `stackot.justn.me`, Cloudflare DNS 터널과 edge TLS 검증. 현재 선택 경로는 직접 A/ACME 인증서 발급을 사용하지 않음.
 
 ## 3. 호스트 배포 (5행) — 사용자 선택 Mac + `stackot.justn.me`

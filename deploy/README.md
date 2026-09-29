@@ -3,6 +3,24 @@
 봇 자격(앱·권한·초대) 준비는 [bot-setup.md](bot-setup.md)를 먼저 끝낸다. 이 문서는
 Gateway·Receiver·GitHub webhook 연결을 다룬다.
 
+### 승인 대기 수신 연결
+
+기본 native `/hooks/agent`는 모델 run을 접수한다. 승인 가드 수신을 사용할
+때는 receiver에 `openclawIngressMode: "approval"`을 지정한다. 기존
+`openclawHooksUrl`의 origin을 유지하고 경로는 `/stackot/hooks/agent`로 고정된다.
+Gateway 플러그인의 `config.ingress`에는 enabled/tokenFile/accountId/guildId/
+threadId/parentChannelId/requesterId/allowedRepos를 오너 설정으로 지정한다.
+threadId는 승인용 제어 스레드, parentChannelId는 그 부모 채널이다.
+본문은 이 값이나 actor/session을 덮어쓸 수 없다.
+
+tokenFile은 오너 소유0600 `{version:1,token}` JSON이다. receiver의
+`openclawHookTokenFile`도 같은 파일을 사용할 수 있으며 기존 필수 토큰은
+유지한다. 누락·symlink·잘못된 권한은 거부한다. 인증 실패401, 입력 오류400,
+같은 delivery의 다른 내용409, 저장/발행 불확실503이다. 입력과 pending 승인,
+카드 binding 영속화 후200을 반환한다. Native 일반 hooks를 활성화할 필요는 없다.
+이 경로는 worker/push/PR을 호출하지 않는다. 실제 실행 및 제품 포럼 E2E는
+남은 행 검증이며, 승인 카드 수신만으로 완료를 주장하지 않는다.
+
 ## 0. 사전 준비
 
 - 서버: Linux/macOS, Docker 설치 (sandbox backend), Node 24.16+ on 24.x (S23 검증 24.21.0) 또는 26.1+

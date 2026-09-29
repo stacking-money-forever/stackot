@@ -1,5 +1,28 @@
 # Owner continuation state
 
+## User-prioritized Gateway connection repaired
+
+User explicitly prioritized the receiver/Gateway connection on2026-09-29.
+Source7987f9483c2a54deb8c2c808ba8f77977bc711cd CI36531396769 all3green,
+final basec13 review clean. Dedicated source checkout stackot-gateway-ingress-
+20260929 (Herdrw93:p1); brgrdab677b3 advice rejected twice, owner implementation.
+Installed Gateway14files and receiver bundle match exact reviewed build.
+Private prior package/config/current backups retained; no other services or
+Cloudflare settings changed. Receiver approval mode uses private guarded plugin
+route, persists native pending approval and real Discord card before ACK, with
+model/worker dispatch disabled. Existing generic agent hook stays disabled.
+
+Actual signed controlled input (not GitHub-origin) delivered via publicHTTPS,
+flow5f5ff5b0-cac3-42aa-bba6-71b5db31f7b9 pending/revision11/card
+1554382562971885601 preserved after owned Gateway restart and replay. Native
+bound model/worker run count0; current receiver statusok/Gateway reachable,
+pending0/delivered1/original deadLetter3 retained. Safe receipts in
+gateway-ingress-live.json/gateway-ingress-owner.md. Fifteen initial source files
+matched integration; latest two receipts matched; integrated113tests/708checks,
+typecheck/build and receiver6transport tests/18checks pass. Full code source
+Linux succeeded; integration publication follows this receipt. Count57/81.
+Two-principal/H/admin/GitHub-protection and full worker/forum/PR E2E gates remain.
+
 ## Blocked audit after verified CI completion
 
 Latest receipt integration5f1546f1fe98c02237d33af0214acbc48c343134 exact

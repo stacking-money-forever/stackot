@@ -1,0 +1,42 @@
+{
+  "sourceSha": "7987f9483c2a54deb8c2c808ba8f77977bc711cd",
+  "deliveryId": "approval-connection-77e854e47c664ef1bc50413808e393cc",
+  "inputOrigin": "owner-signed controlled fixture; not GitHub-origin",
+  "publicIntakeStatus": 200,
+  "native": {
+    "flowId": "5f5ff5b0-cac3-42aa-bba6-71b5db31f7b9",
+    "revision": 11,
+    "phase": "ready",
+    "approvalStatus": "pending",
+    "requesterId": "1112741808162734110",
+    "planMessageId": "1554382559885004960",
+    "cardMessageId": "1554382562971885601"
+  },
+  "afterRestart": {
+    "flowId": "5f5ff5b0-cac3-42aa-bba6-71b5db31f7b9",
+    "revision": 11,
+    "phase": "ready",
+    "approvalStatus": "pending",
+    "requesterId": "1112741808162734110",
+    "planMessageId": "1554382559885004960",
+    "cardMessageId": "1554382562971885601"
+  },
+  "cardUrl": "https://discord.com/channels/1544592589666127953/1554001284066189343/1554382562971885601",
+  "buttonLabels": [
+    "승인",
+    "거부",
+    "승인 재요청"
+  ],
+  "modelWorkerRunCount": 0,
+  "workerDispatchEnabled": false,
+  "receiverStatus": "ok",
+  "gatewayReachable": true,
+  "queue": {
+    "pending": 0,
+    "deadLetter": 3,
+    "delivered": 1,
+    "oldestPendingAgeMs": null
+  },
+  "normalWorkerPushPrE2E": false,
+  "humanQa": false
+}

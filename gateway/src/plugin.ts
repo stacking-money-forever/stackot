@@ -6,8 +6,10 @@ import {STACKOT_CONTROLLER_ID} from "./controller.ts";
 import {ApprovalRenewal} from "./renewal.ts";
 import {discordPromptTransport,type NativePromptApi} from "./discord-prompt.ts";
 import {attachNativePush,type NativePushOwnerFactory} from "./native-push.ts";
+import {registerIngress,INGRESS_SCHEMA,type HttpRoute} from "./ingress.ts";
 export {STACKOT_CONTROLLER_ID} from "./controller.ts";
 export interface GatewayApi extends InteractiveApi {
+  registerHttpRoute?:(route:HttpRoute)=>void;
   registerGatewayMethod(name:string,handler:(input:{params:Record<string,unknown>;
     respond:(ok:boolean,value?:object,error?:object)=>void})=>Promise<void>,options:{scope:"operator.admin"}):void;
   config:Record<string,unknown>;pluginConfig?:Record<string,unknown>;
@@ -15,7 +17,7 @@ export interface GatewayApi extends InteractiveApi {
   runtime:{channel:{routing:{resolveAgentRoute(input:{cfg:Record<string,unknown>;channel:"discord";
     accountId:string;guildId:string;peer:{kind:"channel";id:string};parentPeer:{kind:"channel";id:string}}):
       {agentId:string;sessionKey:string;accountId:string}}};
-    tasks:{async:{managedFlows:{bindSession(input:{sessionKey:string}):ManagedFlows&{
+    tasks:{async:{runs?:{bindSession(input:{sessionKey:string}):{list():Promise<unknown[]>}};managedFlows:{bindSession(input:{sessionKey:string}):ManagedFlows&{
       list():Promise<NativeFlow[]>;createManaged?:(input:object)=>Promise<NativeFlow>}}}}};
 }
 function roleRouteAmbiguous(config:Record<string,unknown>,context:CallbackRoute){
@@ -68,12 +70,13 @@ export function nativeCallbackRegistry(api:GatewayApi,agentId:string,pushOwner?:
 }
 export default {
   id:"stackot-gateway",name:"Stackot Gateway guards",
-  configSchema:{type:"object",additionalProperties:false,properties:{agentId:{type:"string",minLength:1},qa:QA_SCHEMA},required:["agentId"]},
+  configSchema:{type:"object",additionalProperties:false,properties:{agentId:{type:"string",minLength:1},qa:QA_SCHEMA,ingress:INGRESS_SCHEMA},required:["agentId"]},
   register(api:GatewayApi){
     const agentId=api.pluginConfig?.agentId;
     if(typeof agentId!=="string"||!/^[a-zA-Z0-9_-]{1,64}$/.test(agentId))throw new Error("STACKOT_AGENT_REQUIRED");
     registerApprovalCallbacks(api,nativeCallbackRegistry(api,agentId),event=>api.logger?.info(JSON.stringify(event)));
     registerActorQa(api,agentId);
+    registerIngress(api,agentId);
     // Read-only bootstrap diagnostics, never a context-injection/approval surface.
     api.registerGatewayMethod("stackotgateway.health",async({params,respond})=>{
       if(Object.keys(params).length){respond(false,undefined,{code:"INVALID_REQUEST",message:"No parameters accepted"});return;}

@@ -1,5 +1,20 @@
 # Stackot 기능 명세서 v0.2
 
+## Gateway 승인 대기 수신 경로
+
+`openclawIngressMode: "approval"`은 기존 Gateway origin의
+`/stackot/hooks/agent`로 정규화 이벤트와 delivery ID를 보낸다. 오너가 고정한
+저장소·요청자·승인 제어 스레드를 사용하며 입력으로 actor/session/tool을
+선택할 수 없다. 비공개 토큰 파일 인증 뒤 native managed flow에 입력과
+pending 승인을 저장하고 전체 입력 계획·승인 카드를 발행한 뒤에만 ACK한다.
+동일 delivery ID의 다른 내용은409, 재전송과 재시작은 같은 flow와 카드를
+재사용한다. 기본 모드는 기존 native `/hooks/agent`이며 opt-in 없이는 변경되지 않는다.
+
+이 수신 단계는 모델·ACP worker·Git·PR을 실행하지 않는다. 승인 뒤 실행
+연결은 S29/S30/S31, push/PR 연결은 S33/S34, 제품 포럼·역링크는 S49의
+독립 검증 대상이다. 승인 제어 스레드와 원래 이슈/PR 목적지는 별도이며
+원래 목적지 정보는 native 입력에 보존한다. HTTP200을 작업 완료로 해석하지 않는다.
+
 ## 0. v0.1 대비 변경 요약
 
 v0.1은 "OpenClaw를 Gateway로 사용하는 별도 Orchestrator 구축"을 가정했다. 문서 검증 결과
