@@ -45,3 +45,6 @@ therefore does not activate worker execution in the deployment. The interface
 is local owner code, not a claimed OpenClaw API. Actual pinned ACP binding,
 isolated coding authentication, live before/after approval and Linux CI remain
 separate evidence before S29 ACCEPT. S28's user waiver does not waive these.
+The pinned dependency-only worker image lives under gateway/scripts/worker-image.
+Its metadata oracle confirms native binary/version availability without a model
+turn; source receipt s29-codex-image-owner.md keeps that separate from real ACP.

@@ -2,6 +2,15 @@
 
 ## Resumed checklist —59/81
 
+S29 dependency-only Docker coding image prepared with locked Node24.21.0/
+Codex0.153.4/codex-acp1.11.0/acpx0.19.0. Actual nonroot/read-only/offline native
+binary/version probe succeeds, login absent, only CLI tmp shims created and
+workspace unchanged. Full synthetic Docker isolation/lifecycle/snapshot probe
+also passes; final image-scope review clean. Private coding-homes/primary700
+created without personal auth copy; pinned CLI device login awaits user in
+w6Y:p1. Question pending. Actual duplex transport/live start still required;
+S29 NOT ACCEPT/count59accepted/1skip/21required. s29-codex-image-owner.md.
+
 Actual Mac acpx backend now native-installed/registered after isolated preflight
 and exact40a52f0 Linux36569957914 all4green. Scoped launcher first restarted
 67366→79221, then private validated backend config79221→82475. Native health/

@@ -65,6 +65,10 @@ jobs:
       # Public fixture image only. Executor runs the inspected immutable ID;
       # no real Codex account, GitHub token or live worker is mounted.
       - run: docker build --file gateway/scripts/fixtures/Dockerfile.worker --tag stackot-worker-fixture gateway/scripts/fixtures
+      - run: docker build --file gateway/scripts/worker-image/Dockerfile --tag stackot-codex-acp gateway/scripts/worker-image
+      - run: |
+          TASK_CODEX_IMAGE_ID="$(docker image inspect --format '{{.Id}}' stackot-codex-acp)"
+          bun gateway/scripts/verify-codex-image.ts "$TASK_CODEX_IMAGE_ID" > "$RUNNER_TEMP/stackot-codex-image.json"
       - run: |
           TASK_WORKER_IMAGE_ID="$(docker image inspect --format '{{.Id}}' stackot-worker-fixture)"
           bun gateway/scripts/verify-docker-worker.ts "$TASK_WORKER_IMAGE_ID" > "$RUNNER_TEMP/stackot-worker-isolation.json"
@@ -72,6 +76,10 @@ jobs:
         with:
           name: stackot-worker-isolation
           path: ${{ runner.temp }}/stackot-worker-isolation.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stackot-codex-image-metadata
+          path: ${{ runner.temp }}/stackot-codex-image.json
 
   receiver:
     runs-on: ubuntu-latest

@@ -1,0 +1,25 @@
+{
+  "imageId": "sha256:47a995270cc11974b3d485000445bf2044e6a1b9f6bb3b04aa6412af05bb391d",
+  "node": "v24.21.0",
+  "codex": "0.153.4",
+  "codexAcp": "1.11.0",
+  "acpx": "0.19.0",
+  "nativeBinaryAvailable": true,
+  "loginPresent": false,
+  "scopedHomeOnlyTmp": true,
+  "workspaceUnchanged": true,
+  "realDockerEngine": true,
+  "ownedContainerRemoved": true,
+  "actualAcpSession": false,
+  "modelTurn": false,
+  "realCredentials": false,
+  "fullS29Acceptance": false,
+  "dockerIsolation": {
+    "timeout": "timed-out",
+    "cancel": "cancelled",
+    "workspacePreserved": true,
+    "codingSessionPreserved": true,
+    "linkedWorktreeVerified": true,
+    "failingOwnerTestsRejected": true
+  }
+}
