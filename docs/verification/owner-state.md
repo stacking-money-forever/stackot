@@ -1,5 +1,16 @@
 # Owner continuation state
 
+S33 native attachment reviewe6edfa1 found dispatch rejection after stored
+approval could retain approval-success wording. Corrected d76e7ada6fd9c0cc08a317e60d7950fddc5ecda0
+sets approved-but-unconfirmed copy and push_uncertain audit before invoking
+owner dispatch, upgrades only confirmed result to push_sent, hides provider
+errors and prevents replay. New fixture fails pre-fixe6edfa1 callback.
+Owner102tests/643assertions/typecheck/build pass; native attachment4tests/22checks
+S only. Exact CI36506619644 and final base2013425 review s33-native-final-review.log
+live. No production owner factory/GitHub write activated, no R/H acceptance.
+Only earlier sealed transport is integrated and its integration CI is green;
+current attachment remains on s33 branch pending exact checks. Count57/81.
+
 S33 native callback attachment preparation sourcee6edfa100fbba0f6c932bbf42666cc096be993b6:
 code-only optional NativePushOwnerFactory, no JSON/RPC broker/actor injection.
 Lazy factory runs only after native auth+route/message/requester+plan gates and
