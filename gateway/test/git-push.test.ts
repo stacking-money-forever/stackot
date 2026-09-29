@@ -1,6 +1,7 @@
 /** Actual Git sealing/push/readback with local remotes; synthetic authority, S. */
 import {test,expect} from "bun:test";
-import {mkdtemp,mkdir,writeFile,readFile,rm,realpath,readdir} from "node:fs/promises";
+import {mkdtemp,mkdir,writeFile,readFile,rm,realpath,readdir,open} from "node:fs/promises";
+import {randomFillSync} from "node:crypto";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {OwnerGitPush} from "../src/git-push.ts";
@@ -30,6 +31,8 @@ test('owner push uses sealed objects and ignores worker URL rewrites, hooks and 
       if(!dir.startsWith('push-'))continue;
       const helper=await readFile(join(f.owner,dir,'askpass'),'utf8');expect(helper).not.toContain('synthetic-owner-token');
     }
+    await transport.dispose();expect((await readdir(f.owner)).filter(x=>x.startsWith('push-'))).toHaveLength(0);
+    expect(await transport.verifyRevision(f.target)).toBe(false);
   }finally{await rm(f.root,{recursive:true,force:true});}
 },30000);
 test('unverified revision, wrong target or protected branch cannot use owner transport',async()=>{
@@ -39,5 +42,28 @@ test('unverified revision, wrong target or protected branch cannot use owner tra
     const transport=await OwnerGitPush.seal({source:f.worker,ownerRoot:f.owner,target:f.target,gitExecutable:f.git,verify:async()=>true,fixtureRemote:f.remote});
     await expect(transport.push({...f.target,branch:'other'},'synthetic-owner-token')).rejects.toThrow('OWNER_GIT_AUTHORITY_DENIED');
     expect(f.run(['--git-dir',f.remote,'show-ref']).stdout.toString()).toBe('');
+    await transport.dispose();await transport.dispose();
   }finally{await rm(f.root,{recursive:true,force:true});}
 },30000);
+
+test('failed sealing removes only generated owner storage',async()=>{
+  const f=await fixture();try{
+    await expect(OwnerGitPush.seal({source:f.worker,ownerRoot:f.owner,target:{...f.target,commitSha:'f'.repeat(40)},gitExecutable:f.git,verify:async()=>true,fixtureRemote:f.remote})).rejects.toThrow();
+    expect((await readdir(f.owner)).filter(x=>x.startsWith('push-'))).toHaveLength(0);
+    expect(await Bun.file(join(f.worker,'file.txt')).exists()).toBe(true);
+    expect(f.run(['--git-dir',f.remote,'show-ref']).stdout.toString()).toBe('');
+  }finally{await rm(f.root,{recursive:true,force:true});}
+},30000);
+
+test('object packs exceeding the former 128MiB limit are streamed and sealed',async()=>{
+  const f=await fixture();try{
+    const file=await open(join(f.worker,'large.bin'),'w');const chunk=Buffer.alloc(4*1024*1024);
+    try{for(let n=0;n<33;n++){randomFillSync(chunk);await file.write(chunk);}}finally{await file.close();}
+    expect(f.run(['-C',f.worker,'add','large.bin']).exitCode).toBe(0);
+    expect(f.run(['-C',f.worker,'commit','-m','large streamed fixture']).exitCode).toBe(0);
+    const target={...f.target,commitSha:f.run(['-C',f.worker,'rev-parse','HEAD']).stdout.toString().trim()};
+    const transport=await OwnerGitPush.seal({source:f.worker,ownerRoot:f.owner,target,gitExecutable:f.git,verify:async()=>true,fixtureRemote:f.remote});
+    expect(await transport.verifyRevision(target)).toBe(true);await transport.dispose();
+    expect((await readdir(f.owner)).filter(x=>x.startsWith('push-'))).toHaveLength(0);
+  }finally{await rm(f.root,{recursive:true,force:true});}
+},60000);

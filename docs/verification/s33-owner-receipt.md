@@ -39,3 +39,11 @@ using worker Git config instead of sealed repository fails that oracle. Full
 96tests/597assertions/typecheck/build pass. Synthetic authority/credential and
 local remotes remain S only. New code/CI/review pending, no real GitHub push or
 native controller/worker connection enabled.
+
+Review272ef05 found unbounded retained sealed repositories and a128MiB pack
+ceiling. Added explicit idempotent disposal of only generated owner storage and
+cleanup on sealing failure; pack export/import now streams with backpressure,
+no full-pack buffering. Actual132MiB random blob commit seals successfully;
+failed seal and explicit disposal leave worker/remote fixtures intact. Targeted
+Git4tests/51assertions; full98tests/621assertions/typecheck/build pass. Previous
+272ef05 exact CI36504175668 green; corrected code still needs its exact CI/review.
