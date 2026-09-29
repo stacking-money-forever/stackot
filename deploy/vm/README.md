@@ -207,6 +207,10 @@ policy, actual-container timeout/cancel reconciliation and preserved task files;
 see [docker-worker.md](../../docs/contracts/docker-worker.md). Real model auth,
 approved native task/Git lineage and worker activation remain separate gates.
 The Linux CI shell fixture is not a VM deployment or an actual Codex run.
+The prepared isolated verifier runs Git/tests offline through that executor,
+requires unchanged clean revision/branch, and matches the owner push verify
+interface. See [isolated-verifier.md](../../docs/contracts/isolated-verifier.md).
+Actual VM/task/model/push wiring remains separate from this source preparation.
 
 The expired approval guidance is documented in
 [b06-expired-approval.md](../../docs/verification/b06-expired-approval.md).

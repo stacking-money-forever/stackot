@@ -1,0 +1,37 @@
+{
+  "artifacts": [
+    {
+      "reference": {
+        "bytes": 398,
+        "digest": "sha256:619d62bd077e41cca2d8c257ec73821ce27b2ef595d54e05eddd86243037adb1",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/61/9d62bd077e41cca2d8c257ec73821ce27b2ef595d54e05eddd86243037adb1"
+      },
+      "text": "Pitfall: worker picks its own test scope (e.g. only the new -run filter or one package), so breakage elsewhere never surfaces and 'green' covers less than the row. Negative oracle: new tests must FAIL on the pre-fix SHA in a disposable copy; passing there proves nothing. Owner freezes command+SHA+branch, runs in credential-free Docker, requires clean/unchanged repo before+after, confirmed exit.\n"
+    }
+  ],
+  "result": {
+    "artifacts": [
+      {
+        "bytes": 398,
+        "digest": "sha256:619d62bd077e41cca2d8c257ec73821ce27b2ef595d54e05eddd86243037adb1",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/61/9d62bd077e41cca2d8c257ec73821ce27b2ef595d54e05eddd86243037adb1"
+      }
+    ],
+    "attempt_id": "f089b663-10bf-4642-a326-be811b7b7a42",
+    "error": null,
+    "outcome": "candidate",
+    "result_id": "674e64b6-1d56-41be-89d2-649ac9e37ef7",
+    "revision": 2,
+    "schema": "brgr/v1",
+    "task_id": "b556bd4c-9024-4529-b0d5-f2b6ab090f5e",
+    "unresolved_effects": []
+  },
+  "route_observation": {
+    "effort": null,
+    "effort_source": "unavailable",
+    "model": null,
+    "model_source": "unavailable"
+  }
+}

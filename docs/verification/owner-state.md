@@ -2,6 +2,16 @@
 
 ## Resumed checklist —59/81
 
+Independent S33 verification preparation now routes accepted S32 observations
+through credential-free/offline Docker, with owner-fixed tests and pinned target.
+Owner exports target/base objects into clean self-contained snapshots using
+vetted common Git metadata, not worker config/hooks/files; original workspace is
+not mounted, including linked worktrees. Snapshot/source refs are checked before/
+after; actual test exit/cleanup required. Source121/851, integration128/884,
+typecheck/build and final review pass; real Linux Docker oracle accompanies
+publication. Default factories remain inactive, full S33 NOT ACCEPT/count59/81.
+Contract: isolated-verifier.md; receipt: s33-docker-verifier-owner.md.
+
 User asked what can proceed now and said go. Owner corrected the prior blocked
 judgment: independent S33 execution transport can be implemented while its final
 R oracle remains blocked. DockerWorker now has owner-fixed image/mount/security
