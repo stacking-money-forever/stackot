@@ -1,5 +1,19 @@
 # Owner continuation state
 
+Latest B06 retry sourceb9cc8d7d74e5d1cdbf367b0eb4c0576bea3f5563 fixes review:
+running push/PR renewal allowed with unchanged actor/plan gates; running start
+still denied. Owner86tests/514assertions/typecheck/build pass, pre-fixfa06592
+fails targeted running-action test. Exact CI36500727714 and final serial review
+b06-running-renewal-review.log live. Package10files staged at releases/
+stackot-gateway-b9cc8d7; new real-time10second fixture/config prepared privately
+in state/b06-retry-plan.json, inactive. Gateway remains priorb52524c. No native
+retry/H acceptance yet; do not activate until exact CI/review/hash checks pass.
+
+B09 final bd01c12 gap analyzer review is clean;12Python tests pass including
+future collector terminal wall timestamp. Exact CI36500470123 live:
+receiver/ingress-contract passed, runtime-config pending. No integration yet;
+actual interrupted coverage/raw legacy receipts preserved, B09 NOT ACCEPT.
+
 B06 retry control now implemented in retained b06 checkout, source9876474/fa06592
 (fa065921921466778e861a863c7ec66f45cf4b81). New card intents have approve/deny/
 승인 재요청; old bound intents preserved. Native sender/route/message/requester
