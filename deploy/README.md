@@ -197,6 +197,11 @@ Owner catalog verification can use
 owner-fixed test command run offline without coding auth inside Docker. It
 requires a clean pinned revision before/after tests and confirmed cleanup;
 no direct host fallback or live catalog activation is added.
+The packaged `verifiedPushOwner(policy)` can be supplied only by trusted owner
+bootstrap code with a real task-lease resolver; it composes the native push
+factory and isolated verifier. Missing/mismatched lease data fails closed and
+does not resolve credentials. Default registration is inactive. See
+[verified-push-catalog.md](../docs/contracts/verified-push-catalog.md).
 
 Expired approval copy preparation and outstanding native/re-request/human QA
 are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).

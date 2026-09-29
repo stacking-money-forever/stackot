@@ -1,0 +1,16 @@
+[
+  {
+    "mutation": "observed execution identity must match",
+    "targetedOracle": "wrong plan/requester/execution, nonzero exit or unknown cleanup",
+    "exitCode": 1,
+    "syntheticLease": true,
+    "fullS33Acceptance": false
+  },
+  {
+    "mutation": "cleanup must be confirmed",
+    "targetedOracle": "wrong plan/requester/execution, nonzero exit or unknown cleanup",
+    "exitCode": 1,
+    "syntheticLease": true,
+    "fullS33Acceptance": false
+  }
+]
