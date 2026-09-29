@@ -2,6 +2,13 @@
 
 ## Resumed checklist —59/81
 
+B09 current baseline audit confirms the same PID54300 live and receiverstatusok,
+Gateway reachable with queue0/3/1. Wall elapsed now exceeds24hours; monotonic
+coverage is only roughly12.8hours,13 divergent intervals and large wall gaps.
+No terminal/representative workload/recovery measurement: B09 NOT ACCEPT.
+Current safe receipt b09-current-baseline-audit.json; stale degraded wording in
+soak.md corrected. Legacy raw collector state and dead letters retained.
+
 Selected-Mac Docker oracle now passes after user helper authentication:
 actual Docker29.4.1, exact inspected fixture image, isolation, timeout/cancel
 cleanup, retained task/session files, clean pinned verification, linked-worktree

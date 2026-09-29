@@ -1,5 +1,12 @@
 # Wave 03 — resume real runtime verification (2026-09-28)
 
+2026-09-29 B09 owner coverage revalidation: read-only analyzer and live PID/status
+confirm baseline-only collection, elapsed wall24h but roughly12.8h monotonic
+coverage with13 divergent intervals. Actual Gateway connection is healthy;
+initial degraded-state wording is now historical. No representative workload,
+terminal or recovery measurement, so B09 remains NOT ACCEPT/count59/81.
+Receipt b09-current-baseline-audit.json; original JSONL unchanged.
+
 ## B10 and B06 owner acceptance —59/81
 
 Explicit ap-checklist/go order covers the prepared B10 configuration task.

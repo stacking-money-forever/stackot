@@ -1,0 +1,35 @@
+{
+  "observedAt": "2026-09-29T11:01:52.169391+00:00",
+  "analyzerRevision": "bd01c12dbcfbe8269c1038b685200e3819c12ce8",
+  "collectorPid": 54300,
+  "collectorProcessObserved": true,
+  "receiver": {
+    "status": "ok",
+    "gatewayReachable": true,
+    "pending": 0,
+    "deadLetter": 3,
+    "delivered": 1
+  },
+  "coverage": {
+    "samples": 769,
+    "terminalReceiptRecorded": false,
+    "wallElapsedThroughLastSampleSeconds": 87241.22671294212,
+    "monotonicElapsedThroughLastSampleSeconds": 46144.589956209,
+    "largestWallGapSeconds": 7116.7573001384735,
+    "largestMonotonicGapSeconds": 60.154082833003486,
+    "clockWentBackward": false,
+    "clockDivergenceIntervals": 13,
+    "wallCoverageContinuousThroughLastSample": false,
+    "wallCoverageContinuousThroughTerminal": null,
+    "terminalWallGapSeconds": null,
+    "terminalMonotonicGapSeconds": null,
+    "failedStatusProbes": 0,
+    "failedReadinessProbes": 0,
+    "betaAcceptance": false,
+    "evidenceScope": "baseline samples; gaps and clock divergence do not identify their cause",
+    "partialTrailingRecordIgnored": false
+  },
+  "representativeWorkload": false,
+  "recoveryTimeMeasured": false,
+  "rowAccepted": false
+}
