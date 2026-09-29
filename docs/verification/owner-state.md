@@ -2,6 +2,15 @@
 
 ## Resumed checklist —59/81
 
+Actual Mac acpx backend now native-installed/registered after isolated preflight
+and exact40a52f0 Linux36569957914 all4green. Scoped launcher first restarted
+67366→79221, then private validated backend config79221→82475. Native health/
+owned log confirm registration, current ingress5f5ff5b0 stays approved/ready at
+revision12 and workerRuns0. Receiverok/Gateway reachable/queue0,3,1. No auth file,
+Codex/model/push/PR/reboot. ACP dispatch remains false, command denied; actual
+contained transport/login/new start approval still required. Full S29 NOT ACCEPT.
+Receipts s29-acpx-live.json/s29-acpx-live-owner.md. Counts59accepted/1skip/21required.
+
 S29 sourcea275a8d and exact-SHA integration CI36566027445/36566984576 all4green.
 Live Mac inventory shows ACP absent from deployment (S23 was isolated). Pinned
 @openclaw/acpx2026.9.6/acpx0.19.0 now installed privately with scripts disabled;

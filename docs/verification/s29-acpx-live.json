@@ -1,0 +1,39 @@
+{
+  "priorGatewayPid": 79221,
+  "currentGatewayPid": 82475,
+  "gatewayPidChanged": true,
+  "healthOk": true,
+  "loadedPlugins": [
+    "acpx",
+    "discord",
+    "stackot-gateway"
+  ],
+  "receiverStatus": "ok",
+  "gatewayReachable": true,
+  "queue": {
+    "pending": 0,
+    "deadLetter": 3,
+    "delivered": 1
+  },
+  "sourceHomeAuthCreated": false,
+  "pluginAuthCreated": false,
+  "workerDispatchEnabled": false,
+  "backendRegisteredLogObserved": true,
+  "retainedIngressFlow": {
+    "flowId": "5f5ff5b0-cac3-42aa-bba6-71b5db31f7b9",
+    "revision": 12,
+    "approvalStatus": "approved",
+    "phase": "ready",
+    "workerRuns": 0
+  },
+  "fullS29Acceptance": false,
+  "rebootPerformed": false,
+  "sourceRevision": "40a52f0cfbd9e9a0f0d3ce52187020da8766c701",
+  "sourceLinuxRun": 36569957914,
+  "packageVersions": {
+    "openclaw": "2026.9.6",
+    "plugin": "2026.9.6",
+    "acpx": "0.19.0"
+  },
+  "evidenceScope": "Actual Mac backend installation/registration and preserved ingress; no Codex worker, auth login or push/PR."
+}
