@@ -423,6 +423,10 @@ No worker or model starts from the monitor.
 
 The current user-selected host is the local Mac at `stackot.justn.me`
 (2026-09-28): dedicated Cloudflare HTTPS tunnel, exact webhook path, loopback
-Caddy/receiver/Gateway, user launchd supervision. See `deploy/macos/README.md`.
-Login-dependent supervision does not establish pre-login reboot availability;
-runtime, external boundary and human acceptance remain separate gates.
+Caddy/receiver/Gateway, launchd supervision. On 2026-09-29 administrator-authenticated
+installation migrated all four jobs to system LaunchDaemons running as `justn`.
+Owner-observed SIGKILL recovery passed for all four; the existing approval flow
+remained at revision 12 with worker dispatch disabled. See `deploy/macos/README.md`.
+Actual reboot recovery remains untested; FileVault is enabled. System registration
+does not establish unattended cold-boot availability. Runtime, external boundary
+and human acceptance remain separate gates.

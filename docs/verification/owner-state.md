@@ -30,8 +30,17 @@ Sourcef60ac8d receipts matched integration; no S49 full acceptance inferred.
 User explicitly reports secondary account access unavailable. S28 remains
 blocked honestly; new no-op card1554394105457549353 stayed pending/revision10,
 no decision by secondary534. That missing two-principal oracle still blocks
-S29 and dependent worker stages. Administrator authentication/reboot, full
+S29 and dependent worker stages. Real reboot, full
 real GitHub/forum/worker/push/PR E2E and remaining H/soak gates stay open.
+
+S44 partial D (2026-09-29): user completed local administrator authentication;
+all four jobs migrated to system LaunchDaemons, root-owned0644 plists but actual
+uid501/justn processes. Old login plists preserved as .disabled, no GUI duplicates.
+Owner killed all four and observed automatic recovery and health. Native ingress
+flow5f5ff5b0 remained ready/revision12; model/worker runs0, queue0/3/1 unchanged.
+FileVault is enabled. Actual reboot oracle remains untested; S44 NOT ACCEPT,
+S45/S48 predecessor still blocked, count59/81. Safe before/after/recovery receipts
+and scheduled reboot procedure: s44-system-owner.md and deploy/macos/README.md.
 
 ## User-prioritized Gateway connection repaired
 

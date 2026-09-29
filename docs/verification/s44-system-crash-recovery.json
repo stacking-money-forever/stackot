@@ -1,0 +1,37 @@
+{
+  "host": "macOS",
+  "domain": "stackot.justn.me",
+  "uid": 501,
+  "rebootTested": false,
+  "independentOffHostProbe": false,
+  "recovery": [
+    {
+      "service": "receiver",
+      "before": 57462,
+      "after": 67352
+    },
+    {
+      "service": "gateway",
+      "before": 57465,
+      "after": 67366
+    },
+    {
+      "service": "ingress",
+      "before": 57468,
+      "after": 67697
+    },
+    {
+      "service": "tunnel",
+      "before": 57471,
+      "after": 67721
+    }
+  ],
+  "publicPathsFromDeploymentHost": {
+    "/": 404,
+    "/healthz": 404,
+    "/hooks": 404,
+    "/stackot/webhook/extra": 404,
+    "/stackot/webhookX": 404
+  },
+  "unsignedWebhookPost": 401
+}

@@ -540,3 +540,21 @@ M5 5/11. Brgr advice remains rejected; acceptance rests on owner source/oracles.
 Residual: selected-host native rotation admission/durable controlled intake only,
 not actual production activation, genuine GitHub event, downstream completion,
 exactly-once execution or H. Earlier weak/failed receipts retained.
+
+## S44 NOT ACCEPT — authenticated system installation and crash recovery
+
+2026-09-29 user completed administrator authentication in owned deployment
+pane w6Y:p1. Owner verified four root-owned0644 system LaunchDaemon plists,
+UserName justn, actual uid501, preserved disabled login plists and no duplicate
+GUI registrations. Owner ran the real system-domain SIGKILL probe: all four
+PIDs changed and service health returned. Public other paths404/unsigned401
+were observed from this host. Native approval flow remained ready/revision12,
+model/worker runs0 and receiver queue0/3/1 preserved. Receipts:
+s44-admin-readiness.json (historical pre-auth), s44-system-installed.json,
+s44-system-crash-recovery.json and s44-system-owner.md.
+
+Installed receiver remains reviewed release7987f948; this change records actual
+deployment evidence and truthful runbooks, with no executable code change.
+FileVault enabled; no real reboot or unattended startup observation. S44 stays
+open, S45/S48 predecessor gates remain, count59/81. Real second principal remains
+unavailable for S28; no approval or worker execution fabricated.

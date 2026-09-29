@@ -222,3 +222,7 @@ configured ci-alerts channel. Runtime delivery is required before B04 acceptance
 The user selected deployment on this Mac at `stackot.justn.me`.
 See [macOS deployment](macos/README.md) for launchd and the dedicated Cloudflare
 tunnel. The VM instructions below remain an alternative, not the current host.
+On 2026-09-29 the four Mac jobs were migrated to system LaunchDaemons, each
+running as `justn`; owner-observed crash recovery passed. Existing login plists
+were preserved as `.disabled`. Actual reboot recovery is still unverified and
+FileVault remains enabled; S44 is not accepted.

@@ -1,0 +1,35 @@
+{
+  "observedAt": "2026-09-29T08:00:57.311179+00:00",
+  "host": "macOS",
+  "serviceUser": "justn",
+  "authPane": "w6Y:p1",
+  "authWorkspace": "stackot-local-deploy",
+  "administratorPromptReady": true,
+  "fileVaultEnabled": true,
+  "migrationHelperHash": "b21d730af635ee1fffbdbd34435ebc0c5d392e6d1d284d1a5e564346550ac5be",
+  "services": [
+    {
+      "label": "me.justn.stackot.receiver",
+      "target": "/Library/LaunchDaemons/me.justn.stackot.receiver.plist",
+      "systemRegistered": false
+    },
+    {
+      "label": "me.justn.stackot.gateway",
+      "target": "/Library/LaunchDaemons/me.justn.stackot.gateway.plist",
+      "systemRegistered": false
+    },
+    {
+      "label": "me.justn.stackot.ingress",
+      "target": "/Library/LaunchDaemons/me.justn.stackot.ingress.plist",
+      "systemRegistered": false
+    },
+    {
+      "label": "me.justn.stackot.tunnel",
+      "target": "/Library/LaunchDaemons/me.justn.stackot.tunnel.plist",
+      "systemRegistered": false
+    }
+  ],
+  "rebootTested": false,
+  "credentialsCaptured": false,
+  "evidenceScope": "actual plan/preflight and authentication wait; not system installation or reboot success"
+}
