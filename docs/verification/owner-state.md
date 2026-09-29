@@ -1,5 +1,16 @@
 # Owner continuation state
 
+S33 owner transport2013425 exact CI36504643590 all3green; final base4fe review
+clean. Integrated b1d34f6/aedee7036a830a94b0290eb4255736483a642450;8transport
+files byte-identical, owner98tests/621assertions/typecheck/build pass. Integration
+CI36505167115 live. Preparation code only: native callback/real credential
+broker/independent sealed-revision verification/real worker isolation remain
+unwired/unproved. No GitHub push/PR by this adapter, no S33 R acceptance.
+Known user-exclusive gates freshly revalidated: sudo-n needs local admin auth;
+mainfd5ff80 still unprotected. B06 H response and B10 exact settings approval
+remain unanswered; S28 real second-user pending-grant event unavailable. Native
+retry R proof retained, total57/81 unchanged. Do not manufacture approvals or H.
+
 S33 sealed transport review272ef05 identified retained full-object snapshots and
 128MiB pack ceiling. Corrected source2013425d5fcffbccb5607413eed46cc53c0ce90f
 streams pack export→index with backpressure; explicit idempotent dispose and
