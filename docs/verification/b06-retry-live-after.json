@@ -1,0 +1,18 @@
+{
+  "flowId": "d0fdd78b-dfdf-4e76-a253-3bd79708833e",
+  "revision": 21,
+  "oldStatus": "pending",
+  "oldExpiresAtUnchanged": true,
+  "newRequestId": "renew-30250ba4-b26e-41fe-946f-bab099887b0d",
+  "newStatus": "pending",
+  "newPlanHash": "f09e3ce7566bc635957c500ec9ecdea455190a6d85f5ffb51ecd5808286e6627",
+  "newPlanVersion": 1,
+  "newRequestedAt": 1790640626999,
+  "newExpiresAt": 1790727026999,
+  "boundCardIds": [
+    "1554283887801274379",
+    "1554284192773447811"
+  ],
+  "workerDispatched": false,
+  "syntheticPlan": true
+}

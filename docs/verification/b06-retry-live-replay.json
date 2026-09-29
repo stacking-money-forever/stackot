@@ -1,0 +1,10 @@
+{
+  "flowId": "d0fdd78b-dfdf-4e76-a253-3bd79708833e",
+  "revision": 21,
+  "requestCount": 2,
+  "renewedRequestCount": 1,
+  "sameRenewedRequestId": true,
+  "sameExpiry": true,
+  "sameBoundCards": true,
+  "workerDispatched": false
+}
