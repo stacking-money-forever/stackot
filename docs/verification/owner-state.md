@@ -1,5 +1,19 @@
 # Owner continuation state
 
+B06 finalb9cc8d7 review clean, but exact CI36500727714 FAILED at installed-SDK
+oracle's obsolete rendered.entries.length==2 assertion. No retry package was
+activated. Fixed oracle5aa7d51b4936cb2882be51f8d09fdd48f0cf1174 checks3labels/
+entries plus existing callback namespace/wrong-prefix/audience predicates.
+Pinned installed renderer/parser local oracle passes; same producer with old
+oracle fails, confirming failure cause. Exact CI36501125563 live. Package source
+b9cc8d7 stays inactive; verify source delta contains only oracle/docs before using
+that stage after5aa7d51 green. Native retry/H NOT ACCEPT, count57/81 unchanged.
+
+B09 gap analysis codebd01c12 CI36500470123 allgreen and review clean, now integrated
+through099afa6; owner12Python tests passed. Actual legacy collector untouched,
+large wall gaps retained; no representative/continuous beta acceptance. Native
+terminal2sec smoke proves future end.wallTime emitted/analyzed, not24h evidence.
+
 Latest B06 retry sourceb9cc8d7d74e5d1cdbf367b0eb4c0576bea3f5563 fixes review:
 running push/PR renewal allowed with unchanged actor/plan gates; running start
 still denied. Owner86tests/514assertions/typecheck/build pass, pre-fixfa06592
