@@ -1,0 +1,11 @@
+[
+  {
+    "event": "stackot.approval",
+    "senderId": "1112741808162734110",
+    "authorized": true,
+    "guildId": "1544592589666127953",
+    "conversationId": "channel:1554001284066189343",
+    "messageId": "1554317554305208441",
+    "outcome": "denied"
+  }
+]
