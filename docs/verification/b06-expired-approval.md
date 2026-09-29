@@ -71,3 +71,11 @@ Issuer now follows the durable expired lineage to a fresh pending request,
 without changing prior grants, and checks expiry again after publication before
 reporting success. Replays share the latest recorded generation. Cycles/deep
 corrupt lineage are rejected rather than looping or blindly issuing requests.
+
+Native SDK CI onb9cc8d7 failed in the contract oracle's obsolete two-button
+assertion, not bootstrap/typecheck/86tests. Fixed oracle5aa7d51 validates all
+three labels, reusable callback entries, requester audience and native namespace
+parsing against the pinned installed libraries. Local exact installed-library
+oracle passes; old oracle on the same three-button producer fails. This is
+render/parser contract evidence only, with actualMessageSent/actualActorCallback
+false. Exact5aa7d51 Linux CI must pass before the inactive retry package is used.
