@@ -1,5 +1,23 @@
 # Wave 03 — resume real runtime verification (2026-09-28)
 
+## B10 and B06 owner acceptance —59/81
+
+Explicit ap-checklist/go order covers the prepared B10 configuration task.
+Actual service readback proves3 app-bound strict required checks/admin
+enforcement/no force-delete and both secret protection statuses enabled, no
+main SHA change. A422 overlapping contexts/checks request was preserved and
+corrected to checks-only. B10 ACCEPT at its canonical D settings oracle;
+details/safe before-after in b10-applied-owner.md and JSONs.
+
+User then completed expired approval→request fresh card→approve new card.
+Actual auth=true native events and both stored grants prove human next-action
+comprehension, with original expiry unmodified and no automated clicks/model/
+worker. B06 ACCEPT H for its specific UI oracle, not full product H/E2E.
+Details: b06-human-owner.md/b06-human-receipt.json. Both owned source receipts
+match integration; source branches are pushed. Count59/81;22 rows remain.
+Forum tags15 also verified, while the user's secondary-account-unavailable
+reply leaves S28 and all dependent actual worker work incomplete.
+
 ## Gateway approval admission repair — scoped R/D, not full product acceptance
 
 User-prioritized disabled connection repaired from source7987f94, exact Linux

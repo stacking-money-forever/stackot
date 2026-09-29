@@ -1,0 +1,42 @@
+{
+  "observedAt": "2026-09-29T07:27:13.606775+00:00",
+  "guildId": "1544592589666127953",
+  "channels": [
+    {
+      "channelId": "1553998789675843594",
+      "name": "stackot-issues",
+      "type": 15,
+      "tagNames": [
+        "bug",
+        "feature",
+        "question",
+        "triage",
+        "in-progress",
+        "blocked",
+        "resolved",
+        "wont-fix"
+      ],
+      "moderated": false,
+      "emojiConfigured": false
+    },
+    {
+      "channelId": "1553999143997935767",
+      "name": "stackot-prs",
+      "type": 15,
+      "tagNames": [
+        "draft",
+        "review",
+        "changes-requested",
+        "ci-failed",
+        "approved",
+        "merged",
+        "closed"
+      ],
+      "moderated": false,
+      "emojiConfigured": false
+    }
+  ],
+  "evidence": "authenticated Discord channel API readback after authorized Aside settings",
+  "productRowAcceptanceChanged": false,
+  "canonicalAcceptedRows": 57
+}

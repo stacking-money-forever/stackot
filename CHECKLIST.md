@@ -10,7 +10,7 @@
 
 ## 현재 상태 (2026-09-28 기준)
 
-- 원장 81행 중 **57행 수용, 24행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 8/12, M4 0/4, M5 5/11, C 0/4.
+- 원장 81행 중 **59행 수용, 22행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 8/12, M4 0/4, M5 7/11, C 0/4.
 - receiver 코드 기준선: `bun test` 351 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, 수용 SHA의 Linux CI green.
 - 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **Mac 배포의 D 증거는 확보**, 전체 배포 행 수용과 H(사람) 증거는 아직 없다. 공개 HTTPS/서명 거부·외부 내부포트 차단·4개 서비스 crash recovery 근거: `docs/verification/macos-deployment.md`, `macos-recovery.json`, `macos-edge-receipt/stackot-edge.json`. 기존 R 계약 근거: `wave-03.md`, `openclaw-contract.md`.
 
@@ -46,7 +46,7 @@
 
 ## 2. 사용자 자산 (값이 없으면 위 행들이 시작조차 못 한다)
 
-- [x] **Discord**: 실제 봇/길드, 현재 승인 범위인 Stackot 저장소의 이슈·PR 포럼 2개 + `#ci-alerts` + `#stackot-admin` ID를 비공개 receiver 설정에 연결. `macos-discord-assets.json`; 다른 저장소 온보딩은 별도 범위.
+- [x] **Discord**: 실제 봇/길드, Stackot의 이슈·PR 포럼·알림·관리 채널 설정 완료. 포럼 태그15개 저장 및 API readback: `forum-tags-live.json`; 다른 저장소 온보딩은 별도 범위.
 - [x] **`githubBacklinkLogin`**: `justn-hyeok`를 비공개 설정에 연결 (실제 역링크 쓰기는 S49)
 - [x] **`githubWebhookSecret`**: 비공개 설정 배치, 실제 공개 unsigned POST401
 - [x] **GitHub 토큰**: configured token으로 실제 계정·Stackot repo 접근 readback. repo별 토큰 분리는 B01 계약 사용 가능.
@@ -78,11 +78,11 @@
 
 - [x] **B04** 실제 GitHub delivery → 실제 receiver 나이 → `#ci-alerts` 알림·재시작 cooldown 검증. 기본300초 기준도 실제 수신시각을 보존한 replay로 확인. Owner 수용과 정확 SHA Linux CI: `docs/verification/b04-owner-receipt.md`, `wave-03.md`.
 - [ ] **B05** `status` 커맨드가 영속 상태와 일치
-- [ ] **B06** 만료 승인 재요청 안내 문구 + 사람 QA
+- [x] **B06** 만료 안내 사람 QA: 실제 사용자가 만료 거부→새 승인 요청→새 카드 승인을 완료. `b06-human-owner.md`, `b06-human-receipt.json`; worker/전체 E2E와 별도.
 - [ ] **B07** 새 사용자 온보딩 문서 + 사람 QA
 - [x] **B08** 실제 선택 Mac의 native hook 토큰 교체 drill: 동일 Gateway/receiver PID, 구401/신200, 교체 중 지원 이벤트 ACK·영속화·drain 및 secret 비노출. 정확 소스·번들 연결과 Linux CI: `docs/verification/b08-owner-receipt.md`. 실제 production 활성화·모델/Discord/worker 완료와는 별도다.
 - [ ] **B09** 24h soak 관찰
-- [ ] **B10** required checks / secret scanning 설정 readback
+- [x] **B10** main의 app-bound 필수 검사3개·관리자 강제·force/deletion 금지 및 secret scanning/push protection 실제 설정 readback. `b10-applied-owner.md`; main 코드 변경·merge 시험 없음.
 - [ ] **B11** 정확 SHA 릴리스 manifest + 릴리스 노트 (P0/P1 증거 전부 연결)
 
 ## 6. 포스트릴리스 (4행, MVP 비차단)

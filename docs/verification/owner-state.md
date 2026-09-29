@@ -1,5 +1,38 @@
 # Owner continuation state
 
+## Resumed checklist —59/81
+
+User selected the ap81-row checklist as goal and said go. Existing goal was
+resumed through the verified owning Codex pane's supported /goal resume user
+control; objective, original creation/accounting and budget were preserved.
+Direct app-server proxy initialization attempts timed out without a mutation;
+no new goal was fabricated. An interruption later paused native goal scheduling;
+current user feedback continues the authorized human-QA verification.
+
+B10 ACCEPT: real GitHub main protected, strict receiver/runtime-config/
+ingress-contract checks from app15368, admins enforced, force/deletion false,
+secret_scanning/push protection enabled. Mainfd5ff804 unchanged. Initial422
+was corrected by removing overlapping legacy contexts; before/failed/after
+receipts preserved. Source8812fa4 in retained B10 checkout; actual configuration
+oracle, not a merge or secret-injection test. Count58/81 at that decision.
+
+B06 ACCEPT H: user actually clicked expired card1554396666264682546, requested
+renewal and approved fresh card1554397411382919198. Native auth=true events
+denied/requested/approved and real flow69392177 revision22 prove next-action
+understanding. Original10s grant unchanged, renewed grant distinct/approved,
+no agent clicks/worker/model execution. Source d5ddcb0 human receipt, count59/81.
+Prior QA configuration restored while preserving real approval ingress.
+
+Discord forum tags15 completed via authorized Aside; real channel API matches
+all8 issue and7 PR names, no moderation/emoji/permission/message changes.
+Sourcef60ac8d receipts matched integration; no S49 full acceptance inferred.
+
+User explicitly reports secondary account access unavailable. S28 remains
+blocked honestly; new no-op card1554394105457549353 stayed pending/revision10,
+no decision by secondary534. That missing two-principal oracle still blocks
+S29 and dependent worker stages. Administrator authentication/reboot, full
+real GitHub/forum/worker/push/PR E2E and remaining H/soak gates stay open.
+
 ## User-prioritized Gateway connection repaired
 
 User explicitly prioritized the receiver/Gateway connection on2026-09-29.
