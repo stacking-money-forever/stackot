@@ -1,5 +1,18 @@
 # Owner continuation state
 
+S33 native callback attachment preparation sourcee6edfa100fbba0f6c932bbf42666cc096be993b6:
+code-only optional NativePushOwnerFactory, no JSON/RPC broker/actor injection.
+Lazy factory runs only after native auth+route/message/requester+plan gates and
+separate push approval commits. PushAuthority consumes/revalidates before auth/
+transport; only approve+push attaches, start/deny/PR excluded. Sent/uncertain
+private text/audits differ; replay dispatch denied. Default bootstrap has NO
+factory, live Gateway unchanged/no GitHub push enabled. Captured-context/fake
+broker3tests/14assertions S only; full101tests/635assertions/typecheck/build pass.
+Exact CI36506063830 and s33-native-attachment-review.log live. Not integrated/
+accepted; real production verifier/owner factory/worker isolation and GitHub R
+remain. Previous transport integrationaedee70 CI36505167115 all3green.
+No full completion; count57/81, human/root/second-actor/G approvals pending.
+
 S33 owner transport2013425 exact CI36504643590 all3green; final base4fe review
 clean. Integrated b1d34f6/aedee7036a830a94b0290eb4255736483a642450;8transport
 files byte-identical, owner98tests/621assertions/typecheck/build pass. Integration
