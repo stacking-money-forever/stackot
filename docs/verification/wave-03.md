@@ -558,3 +558,30 @@ deployment evidence and truthful runbooks, with no executable code change.
 FileVault enabled; no real reboot or unattended startup observation. S44 stays
 open, S45/S48 predecessor gates remain, count59/81. Real second principal remains
 unavailable for S28; no approval or worker execution fabricated.
+
+## S33 NOT ACCEPT — token-in-environment hardening
+
+User prohibited reboot and requested independent remaining work. Actual fixture
+Mac Seatbelt denies owner files/network/inherited descriptors/descendant reads,
+but expanded KERN_PROCARGS2 oracle reads the separate fixture owner's env. The
+kernel boundary verdict is unsafe/exit2, not actual worker isolation. No real
+auth store or host process credential environment was inspected.
+
+OwnerGitPush now passes only a private credential-file path to child processes;
+actual token bytes are written into a per-operation0600 file, original descriptor
+truncated and storage removed after dispatch. A forced cleanup failure preserves
+confirmed ref receipt, disables the instance and emits a fixed diagnostic.
+Actual local-Git wrapper/askpass test passes60assertions; pre-fix b443827 fails
+on env exposure and a truncate-omission mutant fails on retained fake bytes.
+Source107tests/735assertions, integration114/768, typecheck/build pass. First
+independent review identified confirmation lost on cleanup error; fixed and
+final review clean. Linux validates fixture controls/unsupported platform refusal
+plus real local Git transport; Mac kernel observations remain separately labeled.
+
+brgr d335768b local.devin read-only advice timed out with no artifact and was
+acknowledged. Unsupported workspace_write admission produced no implementation
+task; no silent harness/capability substitution. Full safe receipts:
+s33-credential-environment-owner.md, s33-isolation-brgr-failed.json,
+s33-token-env-negative.json, s33-token-wipe-negative.json and the two native
+isolation JSONs. Actual worker/task lineage/filesystem isolation/approved GitHub
+push remain unproved, default factory inactive, S33 NOT ACCEPT/count59/81.

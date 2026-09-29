@@ -25,7 +25,8 @@ objects through an owner-configured reader into a fresh sealed bare repository.
 The sealed repository has no worker alternates/config/hooks; replacements and
 global/system config are disabled. Worker source/config is not used for push.
 Transport pins one repo/branch/commit, uses canonical GitHub HTTPS with redirects
-disabled, owner askpass environment only, no token in argv/helper/source/state,
+disabled, owner askpass reads a per-operation private0600 credential file,
+only the file path in environment, no token in argv/environment/helper/source/state,
 and exact remote-ref readback. Main/master are rejected. Explicit owner-local
 fixture remotes are limited to test root; they do not prove GitHub delivery.
 Command output/errors stay private, bounded diagnostics/time and owner process group.
@@ -33,6 +34,17 @@ Object packs stream with backpressure between export/import rather than a128MiB
 memory ceiling. Caller persists receipt then explicitly disposes generated owner
 storage; failed sealing also disposes it. Task worktrees/remote refs stay intact.
 Owner directories are not a same-UID sandbox; real worker isolation remains open.
+Credential files are deleted after success or failure. The transport truncates
+the original credential descriptor before removal. If cleanup fails,
+the transport is disabled and a fixed diagnostic is emitted; a confirmed remote
+receipt is preserved. Abrupt process/host termination can retain private files;
+startup reconciliation remains required before production activation. The
+real Mac fixture probe
+found other same-UID process environment bytes readable despite the tested
+Seatbelt profile. Removing token bytes from Git subprocess environments closes
+that specific leak; it does not prove worker filesystem/Keychain isolation.
+`gateway/scripts/probe-worker-isolation.py` returns a failing boundary verdict
+for that expanded native probe. Linux `--control-only` never claims native proof.
 
 WorkerEnvironment minimizes inherited values and disables global Git-helper
 inheritance. It is not a sandbox or same-UID filesystem/keychain boundary; HOME,

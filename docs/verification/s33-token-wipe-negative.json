@@ -1,0 +1,8 @@
+{
+  "mutant": "omit original credential descriptor truncate",
+  "targetedOracle": "Git auth keeps",
+  "mutantExitCode": 1,
+  "discriminatingFailure": "retained synthetic credential expected empty after forced cleanup failure",
+  "fixtureSecrets": true,
+  "productionPushPerformed": false
+}

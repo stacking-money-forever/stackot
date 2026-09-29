@@ -2,6 +2,20 @@
 
 ## Resumed checklist —59/81
 
+User explicitly prohibited reboot and requested remaining work (2026-09-29).
+S44 reboot oracle is deferred; do not reboot or repeat a reboot approval request.
+Independent S33 hardening now removes Git credential bytes from child argv/env,
+using per-operation0600 owner files removed on successful/failed transport.
+An actual fixture-only Mac kernel probe found another same-UID process's env
+readable despite the tested Seatbelt profile; expanded verdict unsafe/exit2.
+Do not confuse file-denial checks with whole worker isolation. New local-Git
+auth oracle passes and fails pre-fix b443827 specifically on env token exposure;
+source107tests/735assertions, integration114/768, typecheck/build pass. Final
+independent review found no actionable regression; exact Linux CI accompanies
+publication. S33 remains
+NOT ACCEPT, no production push factory or worker enabled. Details and brgr
+failed/acknowledged advice: s33-credential-environment-owner.md.
+
 User selected the ap81-row checklist as goal and said go. Existing goal was
 resumed through the verified owning Codex pane's supported /goal resume user
 control; objective, original creation/accounting and budget were preserved.

@@ -1,0 +1,8 @@
+{
+  "preFixGitSha": "b4438273f79b3ffef7abf3c4d9e8b6828eb4cb6d",
+  "targetedOracle": "Git auth keeps credential bytes out of child argv/env and removes private files on success or failure",
+  "preFixExitCode": 1,
+  "discriminatingFailure": "row.envContainsCredential expected false, received true",
+  "fixtureSecrets": true,
+  "productionPushPerformed": false
+}

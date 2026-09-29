@@ -198,6 +198,11 @@ The code-only owner catalog composer validates the persisted push intent,
 seals objects lazily and disposes generated storage after callback execution.
 It still requires trusted real task/worktree lineage and is not activated here.
 Cleanup errors emit a fixed diagnostic without replacing a confirmed push result.
+Prepared Git auth puts only a private credential-file path in child environment;
+askpass reads token bytes from a0600 per-operation owner file, removed after
+success/failure. The actual Mac fixture found same-UID process environment
+visibility despite the tested Seatbelt profile. This closes the token-in-env
+channel; actual Codex/ACP filesystem/Keychain isolation remains unverified.
 
 Expired approval copy preparation and outstanding native/re-request/human QA
 are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).
