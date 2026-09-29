@@ -189,6 +189,7 @@ The native callback owner-factory attachment is preparation only; no factory is
 provided by default deployment/JSON configuration and no live push is enabled.
 The owner catalog composer checks persisted targets and owns lazy sealing and
 cleanup; real task/worktree catalog provisioning remains outstanding.
+Failed cleanup emits a fixed diagnostic and preserves confirmed transport results.
 
 The expired approval guidance is documented in
 [b06-expired-approval.md](../../docs/verification/b06-expired-approval.md).

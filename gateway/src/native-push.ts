@@ -16,6 +16,9 @@ export function attachNativePush(binding:CallbackBinding,store:StateStore,factor
     const prepared=await factory(store,binding);
     if(!prepared)throw new Error("OWNER_PUSH_NOT_PREPARED");
     try{return await new PushAuthority(store,prepared.broker).execute(context,prepared.operationId);}
-    finally{await prepared.dispose?.();}
+    finally{
+      try{await prepared.dispose?.();}
+      catch{console.warn("stackot.owner_push.cleanup_failed");}
+    }
   };
 }

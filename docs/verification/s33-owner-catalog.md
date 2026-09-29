@@ -8,17 +8,21 @@ execution disposes generated storage on both success and rejection. No catalog
 is installed in default bootstrap or the deployed QA plugin; no real GitHub push
 or worker credential isolation is claimed.
 
-Owner verification: gateway 105 tests / 671 assertions, typecheck and build pass.
-The seven composer/native tests pass 50 assertions. New cleanup regression fails
+Owner verification: gateway 106 tests / 675 assertions, typecheck and build pass.
+The eight composer/native tests pass 54 assertions. New cleanup regression fails
 against pre-change native-push.ts (HEAD d76e7ad): expected disposed 1, observed 0.
 Retained disposable fixture: /var/folders/zx/s5045rsj1c95h7s0qw937gpm0000gn/T/stackot-s33-before-eqseygy1.
 Local Git processes are real, but authority/catalog/verifier inputs are synthetic:
-S evidence only. Exact Linux CI and independent review remain pending.
+S evidence only. First review found cleanup failure replaced confirmed outcomes;
+corrected by a fixed secret-free diagnostic that preserves the transport result.
+The cleanup-failure regression fails against 495b41f (confirmed push becomes
+uncertain). Retained fixture: /var/folders/zx/s5045rsj1c95h7s0qw937gpm0000gn/T/stackot-s33-cleanup-before-cl883msi.
+Exact Linux CI and final independent review remain pending.
 
 ## Authorized original card click, 2026-09-29 11:14 KST
 
 User instructed the owner to perform the card clicks. Aside, non-isolated,
-authenticated Huang/황준혁 session clicked original message 1554001810652536853
+authenticated 황준혁 session clicked original message 1554001810652536853
 in thread 1554001284066189343. Actual ephemeral reply:
 “이 승인 요청을 처리할 수 없습니다. 최신 요청을 확인해 주세요.”
 Read-only native SQLite lookup after the click preserves flow
