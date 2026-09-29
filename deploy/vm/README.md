@@ -180,7 +180,11 @@ forward only) and answers `/readyz` 200 — then stop it and record the result.
   Caddy's own service.
 # Current host selection
 
-Expired approval guidance preparation is documented in
+S33 push-authority preparation is in
+[push-authority.md](../../docs/contracts/push-authority.md); no worker credential
+isolation or live push transport is implied.
+
+The expired approval guidance is documented in
 [b06-expired-approval.md](../../docs/verification/b06-expired-approval.md).
 No VM/native delivery, re-request control or human QA is implied by that source.
 Retry-control source preparation is still separate from its native deployment
