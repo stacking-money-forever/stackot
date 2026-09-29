@@ -222,6 +222,12 @@ Gateway 재시작 시에도 작업 기록은 SQLite에 보존되므로 재개 �
 | PR merge | 금지 | 구현하지 않음 |
 | 배포 | 금지 | 구현하지 않음 |
 
+S33 준비 코드 `gateway/src/push.ts`는 별도 push 승인과 검증된 repo/branch/commit
+intent를 결합하고 오너 broker에만 자격증명을 전달한다. 미승인·만료·변경된
+계획은 자격증명 조회/전송 전 거부한다. 실제 callback/worker/원격 전송 연결과
+격리 검증은 미완이다. 환경 변수 필터만으로 같은 UID의 파일·키체인 격리를
+주장하지 않는다. 계약: `docs/contracts/push-authority.md`.
+
 버튼은 components v2로 구현. `allowedUsers`에 요청자 Discord ID. TTL 24h. 만료된 승인은
 재요청(재시도 버튼)으로 처리.
 

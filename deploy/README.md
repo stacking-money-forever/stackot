@@ -169,6 +169,10 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
   (dirty/unpushed 보존 정책). `openclaw worktrees list`로 확인.
 # Selected host (2026-09-28)
 
+S33 owner-only push gate preparation is in
+[push-authority.md](../docs/contracts/push-authority.md). It is not wired to the
+deployed callback/worker/GitHub transport; no live push authority is enabled.
+
 Expired approval copy preparation and outstanding native/re-request/human QA
 are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).
 This copy does not renew approvals or enable worker/push/PR actions.
