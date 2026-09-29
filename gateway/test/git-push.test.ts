@@ -35,7 +35,7 @@ test('owner push uses sealed objects and ignores worker URL rewrites, hooks and 
     expect(await transport.verifyRevision(f.target)).toBe(false);
   }finally{await rm(f.root,{recursive:true,force:true});}
 },30000);
-test('Git auth keeps credential bytes out of child argv/env and removes private files on success or failure',async()=>{
+test('Git auth keeps credential bytes out of child argv/env/disk and closes private broker on success or failure',async()=>{
   for(const {fail,cleanupFailure} of [{fail:false,cleanupFailure:false},{fail:true,cleanupFailure:false},{fail:false,cleanupFailure:true}]){
     const f=await fixture(),warnings:string[]=[],originalWarn=console.warn;
     console.warn=(...args)=>{warnings.push(args.map(String).join(' '));};try{
@@ -46,13 +46,14 @@ import {appendFileSync,statSync,chmodSync} from 'node:fs';
 import {dirname} from 'node:path';
 const args=process.argv.slice(2),token=${JSON.stringify(token)};
 if(args.includes('push')||args.includes('ls-remote')){
-  const file=process.env.STACKOT_OWNER_PUSH_TOKEN_FILE;
+  const file=process.env.STACKOT_OWNER_PUSH_SOCKET;
   const password=Bun.spawnSync([process.env.GIT_ASKPASS,'Password'],{env:process.env,stdout:'pipe',stderr:'pipe'});
   const username=Bun.spawnSync([process.env.GIT_ASKPASS,'Username'],{env:process.env,stdout:'pipe',stderr:'pipe'});
   appendFileSync(${JSON.stringify(trace)},JSON.stringify({
     envContainsCredential:Object.values(process.env).some(value=>value?.includes(token)),
     argvContainsCredential:args.some(value=>value.includes(token)),
-    privateFile:file!==undefined&&(statSync(file).mode&0o777)===0o600,
+    privateSocket:file!==undefined&&statSync(file).isSocket()&&(statSync(file).mode&0o777)===0o600,
+    socketRoot:dirname(file),
     passwordCorrect:password.exitCode===0&&password.stdout.toString()===token,
     usernameCorrect:username.exitCode===0&&username.stdout.toString()==='x-access-token\\n',
     command:args.includes('push')?'push':'ls-remote'
@@ -72,17 +73,11 @@ process.stdout.write(child.stdout);process.stderr.write(child.stderr);process.ex
         expect(rows).toHaveLength(fail?1:2);
         for(const row of rows){
           expect(row.envContainsCredential).toBe(false);expect(row.argvContainsCredential).toBe(false);
-          expect(row.privateFile).toBe(true);expect(row.passwordCorrect).toBe(true);expect(row.usernameCorrect).toBe(true);
+          expect(row.privateSocket).toBe(true);expect(row.passwordCorrect).toBe(true);expect(row.usernameCorrect).toBe(true);
         }
-        for(const dir of (await readdir(f.owner)).filter(name=>name.startsWith('push-'))){
-          const roots=(await readdir(join(f.owner,dir))).filter(name=>name.startsWith('auth-'));
-          if(cleanupFailure){
-            expect(roots).toHaveLength(1);
-            const authRoot=join(f.owner,dir,roots[0]);
-            expect(await readFile(join(authRoot,'credential'),'utf8')).toBe('');
-            await chmod(authRoot,0o700);
-          }else expect(roots).toHaveLength(0);
-        }
+        const socketRoot=rows[0].socketRoot;
+        if(cleanupFailure){await chmod(socketRoot,0o700);await rm(socketRoot,{recursive:true,force:true});}
+        else expect(await Bun.file(join(socketRoot,'broker.sock')).exists()).toBe(false);
         if(cleanupFailure){
           expect(warnings).toEqual(['stackot.owner_push.auth_cleanup_failed']);
           expect(transport.allows(f.target)).toBe(false);
@@ -94,6 +89,12 @@ process.stdout.write(child.stdout);process.stderr.write(child.stderr);process.ex
           for(const auth of (await readdir(join(f.owner,dir))).filter(name=>name.startsWith('auth-')))
             await chmod(join(f.owner,dir,auth),0o700);
         await transport.dispose();
+        if(await Bun.file(trace).exists()){
+          const rows=(await readFile(trace,'utf8')).trim().split('\n').map(line=>JSON.parse(line));
+          for(const root of new Set<string>(rows.map(row=>row.socketRoot))){
+            try{await chmod(root,0o700);await rm(root,{recursive:true,force:true});}catch{}
+          }
+        }
       }
     }finally{console.warn=originalWarn;await rm(f.root,{recursive:true,force:true});}
   }

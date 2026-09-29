@@ -1,0 +1,37 @@
+{
+  "artifacts": [
+    {
+      "reference": {
+        "bytes": 678,
+        "digest": "sha256:96661bb97f3ea3e0ad193d9c966af3af14560185d2267ce6cd8e35a0fffe16ab",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/96/661bb97f3ea3e0ad193d9c966af3af14560185d2267ce6cd8e35a0fffe16ab"
+      },
+      "text": "Pitfall: SIGKILL/power loss leaves a stale 0600 socket inside the 0700 dir; restart therefore needs unlink-before-bind, but unconditional unlink lets a second broker instance steal a still-live peer's path (split-brain auth brokers serving different state). Guard bind with an exclusive flock/pidfile in the same dir, not the socket file itself. Canary oracle (synthetic fixture only): tmpdir 0700 \u2192 start broker A on socket \u2192 canary curl returns sentinel OK \u2192 `kill -9` A \u2192 start broker B on same path \u2192 assert B binds and canary returns OK \u2192 while B alive, start B2 \u2192 assert B2 exits non-zero and B's socket still answers. No host scans, no real git/auth state.\n"
+    }
+  ],
+  "result": {
+    "artifacts": [
+      {
+        "bytes": 678,
+        "digest": "sha256:96661bb97f3ea3e0ad193d9c966af3af14560185d2267ce6cd8e35a0fffe16ab",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/96/661bb97f3ea3e0ad193d9c966af3af14560185d2267ce6cd8e35a0fffe16ab"
+      }
+    ],
+    "attempt_id": "cccf9b56-9901-48cc-ad95-2dc35db18d32",
+    "error": null,
+    "outcome": "candidate",
+    "result_id": "8e4a6de2-680e-4d74-b13c-9ffb05618024",
+    "revision": 2,
+    "schema": "brgr/v1",
+    "task_id": "47f2a479-68fe-4c18-9d7f-5d940785eebc",
+    "unresolved_effects": []
+  },
+  "route_observation": {
+    "effort": null,
+    "effort_source": "unavailable",
+    "model": null,
+    "model_source": "unavailable"
+  }
+}
