@@ -5,7 +5,7 @@ import type {StateStore} from "./state/flow-store.ts";
 /** Owner code creates this factory. Worker verdicts/config/RPC parameters never
  * choose broker, credentials, actor, operation or repository. No JSON functions. */
 export type NativePushOwnerFactory=(store:StateStore,binding:Readonly<CallbackBinding>)=>Promise<{
-  broker:OwnerPushBroker;operationId:string;
+  broker:OwnerPushBroker;operationId:string;dispose?:()=>Promise<void>;
 }|undefined>;
 
 export function attachNativePush(binding:CallbackBinding,store:StateStore,factory:NativePushOwnerFactory):void{
@@ -15,6 +15,10 @@ export function attachNativePush(binding:CallbackBinding,store:StateStore,factor
   binding.dispatchPush=async context=>{
     const prepared=await factory(store,binding);
     if(!prepared)throw new Error("OWNER_PUSH_NOT_PREPARED");
-    return new PushAuthority(store,prepared.broker).execute(context,prepared.operationId);
+    try{return await new PushAuthority(store,prepared.broker).execute(context,prepared.operationId);}
+    finally{
+      try{await prepared.dispose?.();}
+      catch{console.warn("stackot.owner_push.cleanup_failed");}
+    }
   };
 }

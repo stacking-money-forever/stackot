@@ -1,5 +1,5 @@
 /** Captured handler/context, fake broker: S, not native origin/auth proof. */
-import {test,expect} from "bun:test";
+import {test,expect,spyOn} from "bun:test";
 import {registerApprovalCallbacks,type CallbackBinding,type InteractiveApi} from "../src/callback.ts";
 import {attachNativePush} from "../src/native-push.ts";
 import {ApprovalRepository} from "../src/approval.ts";
@@ -20,7 +20,7 @@ async function fixture(){
   registerApprovalCallbacks({registerInteractiveHandler:value=>{registration=value;}},{resolve:async()=>binding},event=>{audits.push(event.outcome);});
   const context={channel:"discord",accountId:"default",guildId:"111",conversationId:"channel:222",parentConversationId:"333",senderId:request.requesterId,auth:{isAuthorizedSender:true},
     interaction:{kind:"button",messageId:"444",data:"stackot-approval:"+binding.token,payload:binding.token,namespace:"stackot-approval"},respond:{reply:async(value:{text:string})=>{replies.push(value.text);}}};
-  return {request,repo,store,binding,registration,context,replies,audits,counts:()=>({factories,credentials,pushes}),mutatePlan:()=>{(state.task as State).planVersion=2;revision++;}};
+  return {request,repo,store,broker,binding,registration,context,replies,audits,counts:()=>({factories,credentials,pushes}),mutatePlan:()=>{(state.task as State).planVersion=2;revision++;}};
 }
 test("native handler guards precede owner factory/credential/transport lookup",async()=>{
   for(const delta of [{auth:{isAuthorizedSender:false}},{senderId:"234567890123456789"},{guildId:"999"}]){
@@ -39,6 +39,28 @@ test("start/deny callbacks never gain the push dispatch closure",async()=>{
   const f=await fixture();f.binding.dispatchPush=undefined;f.binding.request={...f.request,action:"start"};
   attachNativePush(f.binding,f.store,async()=>{throw new Error("must not execute");});expect(f.binding.dispatchPush).toBeUndefined();
   f.binding.request=f.request;f.binding.decision="deny";attachNativePush(f.binding,f.store,async()=>{throw new Error("must not execute");});expect(f.binding.dispatchPush).toBeUndefined();
+});
+
+test("native owner resources are disposed on confirmed and rejected execution",async()=>{
+  for(const valid of [true,false]){
+    const f=await fixture();let disposed=0;
+    attachNativePush(f.binding,f.store,async()=>({broker:{...f.broker,verifyRevision:async()=>valid},operationId:"owned",dispose:async()=>{disposed++;}}));
+    await f.registration.handler(f.context);
+    expect(disposed).toBe(1);expect(f.counts().pushes).toBe(valid?1:0);
+    expect(f.replies[0]).toContain(valid?"원격 push를 확인했습니다":"push 완료를 확인하지 못했습니다");
+  }
+});
+
+test("cleanup failure preserves confirmed outcome and emits no private error",async()=>{
+  const f=await fixture(),warnings:string[]=[];
+  const warn=spyOn(console,"warn").mockImplementation((value)=>{warnings.push(String(value));});
+  try{
+    attachNativePush(f.binding,f.store,async()=>({broker:f.broker,operationId:"owned",dispose:async()=>{throw new Error("private-owner-path-secret");}}));
+    await f.registration.handler(f.context);
+    expect(f.replies[0]).toContain("원격 push를 확인했습니다");expect(f.audits[0]).toBe("push_sent");
+    expect(warnings).toEqual(["stackot.owner_push.cleanup_failed"]);
+    const snapshot=await f.store.read();expect((snapshot.state.pushIntents as State).push).toMatchObject({phase:"sent"});
+  }finally{warn.mockRestore();}
 });
 
 test("owner dispatch rejection reports committed approval without claiming remote completion",async()=>{

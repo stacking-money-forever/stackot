@@ -1,5 +1,15 @@
 # Wave 03 — resume real runtime verification (2026-09-28)
 
+## S33 owner catalog integration — preparation, NOT ACCEPT
+
+Source b4438273f79b3ffef7abf3c4d9e8b6828eb4cb6d: exact Linux CI36512006643
+all three checks green; independent cleanup review clean. Nine source files
+match integration byte-for-byte before receipt updates. Owner106 tests/675
+assertions, typecheck/build pass; cleanup regressions fail pre-fix d76e7ad and
+495b41f respectively. Detailed receipt: s33-owner-catalog.md. Native actor,
+real worker/task lineage and credential isolation are not synthesized by this
+catalog. No default/deployed factory is activated; total remains57/81.
+
 2026-09-28 permission continuation: user explicitly asked Aside to fix the exact
 claw-control ACL and completed their personal Discord login. Owner used serial
 Aside UI channel-settings permission selection to add 스태콧 role access. Live
