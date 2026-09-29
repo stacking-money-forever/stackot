@@ -16,6 +16,13 @@ Failure in a row means REJECT, retain candidate and evidence, do not integrate; 
 
 ## Atomic work DAG
 
+2026-09-29 explicit user exception: remaining S28 second-account/two-user runtime
+scenario is USER SKIPPED, not ACCEPT. Original row/oracle stay unchanged below.
+For execution only, this waiver permits S29 and descendants without repeating
+the unavailable account gate. All authorization guards and other prerequisites
+remain required. Accounting59accepted/1skipped/21required; exact scope and
+residual risk: `verification/s28-user-waiver.md`.
+
 The predecessors column is the canonical directed acyclic graph; all predecessors must be owner-accepted. Rows are topologically ordered except independent lanes that may run together. All status TODO initially. Existing HMAC/basic dedupe/21 tests are baseline, not new tasks.
 
 | ID | Priority | Predecessors | Exact scope | Single artifact / observable result | Single core oracle | Completion | Failure / rollback trigger | Evidence | Boundary |

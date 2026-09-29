@@ -1,5 +1,11 @@
 # Wave 03 — resume real runtime verification (2026-09-28)
 
+2026-09-29 S28 USER SKIPPED: user waived the remaining unavailable second-account
+runtime scenario. Partial real denial/approval evidence is preserved; no second
+principal or full pass is claimed. Explicit execution dependency exception permits
+S29 while all actual authorization guards/action approvals remain required.
+Receipt s28-user-waiver.md;59accepted/1skipped/21required. Reboot not waived.
+
 2026-09-29 B09 owner coverage revalidation: read-only analyzer and live PID/status
 confirm baseline-only collection, elapsed wall24h but roughly12.8h monotonic
 coverage with13 divergent intervals. Actual Gateway connection is healthy;

@@ -1,6 +1,6 @@
 # Stackot 완료 체크리스트
 
-**이 파일이 프로젝트의 완료 조건이다.** 아래 항목이 모두 체크되기 전에는 어떤 형태로도
+**이 파일이 프로젝트의 완료 조건이다.** 명시적인 사용자 생략 항목을 제외한 아래 항목이 모두 체크되기 전에는 어떤 형태로도
 "완성"이라고 말하지 않는다. 테스트가 green이라는 사실은 완료가 아니다 — 그것은 로컬/합성
 증거일 뿐이다.
 
@@ -8,9 +8,9 @@
 `docs/verification/wave-*.md`, 진행 상태 요약은 `docs/verification/owner-state.md`에 있다.
 이 파일은 **사람이 실제로 해야 할 일 순서**만 담는다.
 
-## 현재 상태 (2026-09-28 기준)
+## 현재 상태 (2026-09-29 기준)
 
-- 원장 81행 중 **59행 수용, 22행 미완**. 마일스톤: **M1 36/36**, M2 8/14, M3 8/12, M4 0/4, M5 7/11, C 0/4.
+- 원장 81행 중 **59행 검증 수용, 1행 사용자 생략(S28), 21행 필수 미완**. 검증 수용 마일스톤: **M1 36/36**, M2 8/14, M3 8/12, M4 0/4, M5 7/11, C 0/4. 생략은 검증 통과로 집계하지 않는다.
 - receiver 코드 기준선: `bun test` 351 pass / 0 fail, typecheck clean, `dist/server.js` 빌드, 수용 SHA의 Linux CI green.
 - 기존 47행은 L(로컬) 또는 S(합성 프로세스). **S23은 설치본 CLI·schema·소스 계약과 실제 로컬 Gateway 기동/인증 health로 수용**했다. 실제 worker·GitHub→Discord 연동은 아직 미검증이다. **Mac 배포의 D 증거는 확보**, 전체 배포 행 수용과 H(사람) 증거는 아직 없다. 공개 HTTPS/서명 거부·외부 내부포트 차단·4개 서비스 crash recovery 근거: `docs/verification/macos-deployment.md`, `macos-recovery.json`, `macos-edge-receipt/stackot-edge.json`. 기존 R 계약 근거: `wave-03.md`, `openclaw-contract.md`.
 
@@ -39,7 +39,7 @@
 - [ ] **S30** task당 worktree/branch 계보 하나(재시도 경로 동일, dirty 보존)
 - [ ] **S31** cancel/timeout 후 작업물 보존
 - [ ] **S29** 유효 승인 이후에만 ACP spawn (acpx 플러그인 + codex 로그인 선행)
-- [ ] **S28** 실제 auth=true 다른 요청자 거부와 pending 보존 확보(`s28-reverse-actor.md`). 두 번째 계정의 정상 승인 및 전체 two-user 검증은 미완.
+- [ ] **S28 — 사용자 생략**: 실제 auth=true 다른 요청자 거부와 pending 보존은 확보. 두 번째 계정의 정상 승인·전체 two-user 검증은 사용자 요청으로 생략하며, S29 진행 선행 조건에는 명시적 예외를 적용한다. 승인 권한 검사는 유지. 통과로 집계하지 않음: `docs/verification/s28-user-waiver.md`.
 - [ ] **S33/S34** push·PR 쓰기 어댑터 — 토큰 argv/env 노출 제거와 Docker 격리 실행기 구현 준비(고정 image·작업 디렉터리·실제 컨테이너 취소/timeout). 실제 Codex/승인 연결·GitHub push·PR receipt는 미완.
 - [x] **S36** 기존 thread 유지·역링크 실패만 재개 — 합성 회복/marker 신뢰/중복 거부 및 정확 SHA Linux CI, `wave-03.md`. 실제 GitHub 쓰기는 S49.
 - [x] **S35** thread intent/receipt 영속화·실패 후 재사용 — 합성 외부 생성자 + 실제 native 저장 재시작·정확 SHA Linux CI. 실제 Discord 어댑터는 S49.

@@ -1,0 +1,25 @@
+S29 bounded start-approval adapter preparation
+
+Base: current integration commit after explicit S28 user-waiver publication.
+Prerequisite: S28 remaining two-account scenario USER SKIPPED; guards unchanged.
+Primary artifact: <=2000-byte read-only brgr contract advice, then owner changeset
+for a server-owned start adapter and before/after-approval oracle.
+Harness: registered healthy local.devin, configured SWE-2 High; per-task selectors
+unsupported, actual model observation unavailable. Meter coverage: uncovered.
+Worker max2 flat Todos, no subagents, no writes/auth-store/config/external actions.
+One narrowed retry only; sealed result requires owner accept/reject.
+
+Supplied native contract: ACP sessions_spawn runtime=acp gates enabled/backend/
+allowedAgents; fields agentId/task/mode/thread/cwd/runTimeoutSeconds. ACP is not
+wrapped by OpenClaw sandbox, and sandboxed requesters cannot spawn ACP. cwd alone
+does not isolate owner credentials. Native invocation not assumed from these fields.
+Native managed flow storage/CAS and approval consumption are implemented. task/
+requester/plan hash/version/action=start/TTL/native actor must bind current task.
+
+Oracle: before valid approval no ACP spawn or task-file mutation; after authentic
+current approval exactly one durable bound start admission, including concurrent
+or replayed callbacks. Unknown spawn acknowledgement is uncertain, not a retry.
+QA synthetic/no-op plans can never create a real worker grant. Missing owner
+executor/auth returns a bounded failure; synthetic runner success is not R.
+Actual Codex/ACP login, isolation and live no-before/one-after execution remain
+mandatory for whole S29 ACCEPT. Push/PR and S30/S31 are separate rows.

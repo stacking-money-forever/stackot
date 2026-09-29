@@ -2,6 +2,13 @@
 
 ## Resumed checklist —59/81
 
+User instructed skipping the unavailable second-account scenario. S28 is USER
+SKIPPED, never ACCEPT/two-user pass. Execute S29 under the explicit dependency
+exception in atomic-completion.md; auth/actor/plan/TTL and actual action approvals
+remain unchanged. No-op QA grants stay no-op. Reboot remains prohibited. Current
+accounting59accepted/1skipped/21required; details s28-user-waiver.md. Full goal
+resumed through its verified owning pane; no objective replacement or fake actor.
+
 B09 current baseline audit confirms the same PID54300 live and receiverstatusok,
 Gateway reachable with queue0/3/1. Wall elapsed now exceeds24hours; monotonic
 coverage is only roughly12.8hours,13 divergent intervals and large wall gaps.
