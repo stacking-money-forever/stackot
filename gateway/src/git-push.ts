@@ -1,5 +1,5 @@
 import {spawn} from "node:child_process";
-import {mkdtemp,mkdir,writeFile,realpath,stat,rm} from "node:fs/promises";
+import {mkdtemp,mkdir,writeFile,realpath,stat,rm,open,type FileHandle} from "node:fs/promises";
 import {join,isAbsolute} from "node:path";
 import type {PushTarget} from "./push.ts";
 
@@ -18,10 +18,10 @@ async function command(executable:string,args:string[],cwd:string,env:Record<str
     child.stdin.end(input);
   });
 }
-function environment(home:string,credential?:string,askpass?:string):Record<string,string>{
+function environment(home:string,credentialFile?:string,askpass?:string):Record<string,string>{
   return {PATH:'/usr/bin:/bin',HOME:home,LANG:'C',LC_ALL:'C',GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_SYSTEM:'/dev/null',
     GIT_CONFIG_GLOBAL:'/dev/null',GIT_NO_REPLACE_OBJECTS:'1',GIT_TERMINAL_PROMPT:'0',
-    ...credential===undefined?{}:{GIT_ASKPASS:askpass!,STACKOT_OWNER_PUSH_TOKEN:credential}};
+    ...credentialFile===undefined?{}:{GIT_ASKPASS:askpass!,STACKOT_OWNER_PUSH_TOKEN_FILE:credentialFile}};
 }
 async function transferPack(git:string,proxy:string,destination:string,cwd:string,env:Record<string,string>,sha:string):Promise<void>{
   await new Promise<void>((resolve,reject)=>{
@@ -70,7 +70,7 @@ export class OwnerGitPush {
     const resolved=(await command(git,['--git-dir',repository,'rev-parse',options.target.commitSha+'^{commit}'],root,env)).toString().trim();
     if(resolved!==options.target.commitSha)throw new Error('OWNER_SEALED_REVISION_MISMATCH');
     const askpass=join(root,'askpass');
-    await writeFile(askpass,'#!/bin/sh\ncase "$1" in\n*Username*|*username*) printf "%s\\n" "x-access-token" ;;\n*) printf "%s\\n" "$STACKOT_OWNER_PUSH_TOKEN" ;;\nesac\n',{mode:0o700});
+    await writeFile(askpass,'#!/bin/sh\ncase "$1" in\n*Username*|*username*) printf "%s\\n" "x-access-token" ;;\n*) /bin/cat -- "$STACKOT_OWNER_PUSH_TOKEN_FILE" ;;\nesac\n',{mode:0o700});
     let endpoint='https://github.com/'+options.target.repo+'.git';
     if(options.fixtureRemote!==undefined){
       // Explicit local test fixture only; callers cannot use arbitrary HTTPS,
@@ -94,7 +94,16 @@ export class OwnerGitPush {
   }
   async push(value:PushTarget,credential:string):Promise<{remoteSha:string}>{
     if(!this.allows(value)||!credential.trim()||/^<[^<>]*>$/.test(credential))throw new Error('OWNER_GIT_AUTHORITY_DENIED');
-    const env=environment(this.home,credential,this.askpass);
+    // Same-UID processes can observe argv/env even under the tested Mac
+    // sandbox. Put only a path in env; actual isolation must deny this owner
+    // directory. Private mode alone is not same-UID isolation.
+    const authRoot=await mkdtemp(join(this.root,'auth-'));
+    let credentialHandle:FileHandle|undefined;
+    try{
+    const credentialFile=join(authRoot,'credential');
+    credentialHandle=await open(credentialFile,'wx',0o600);
+    await credentialHandle.writeFile(credential);
+    const env=environment(this.home,credentialFile,this.askpass);
     const config=['--git-dir',this.repository,'-c','core.hooksPath=/dev/null','-c','credential.helper=',
       '-c','http.followRedirects=false','-c','protocol.ext.allow=never','-c','protocol.ssh.allow=never'];
     await command(this.git,[...config,'push','--porcelain','--no-verify','--',this.endpoint,
@@ -103,5 +112,14 @@ export class OwnerGitPush {
     const lines=readback.toString().trim().split('\n');
     if(lines.length!==1||lines[0]!==value.commitSha+'\trefs/heads/'+value.branch)throw new Error('OWNER_REMOTE_RECEIPT_MISMATCH');
     return {remoteSha:value.commitSha};
+    }finally{
+      // Wipe through the original descriptor even if a path was renamed or
+      // directory cleanup fails. Cleanup must not erase a confirmed receipt.
+      let cleanupFailed=false;
+      try{await credentialHandle?.truncate(0);}catch{cleanupFailed=true;}
+      try{await credentialHandle?.close();}catch{cleanupFailed=true;}
+      try{await rm(authRoot,{recursive:true,force:true});}catch{cleanupFailed=true;}
+      if(cleanupFailed){this.disposed=true;console.warn('stackot.owner_push.auth_cleanup_failed');}
+    }
   }
 }

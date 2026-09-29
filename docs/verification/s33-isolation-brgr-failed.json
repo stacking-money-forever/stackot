@@ -1,0 +1,20 @@
+{
+  "artifacts": [],
+  "result": {
+    "artifacts": [],
+    "attempt_id": "2d34a375-6f24-43ed-b221-766e0fdd37d5",
+    "error": "attempt deadline elapsed",
+    "outcome": "failed",
+    "result_id": "fa1cd7b7-9018-4f9e-9dc2-e9c78b753028",
+    "revision": 1,
+    "schema": "brgr/v1",
+    "task_id": "d335768b-76d0-4ec0-aff6-80977c75e473",
+    "unresolved_effects": []
+  },
+  "route_observation": {
+    "effort": null,
+    "effort_source": "unavailable",
+    "model": null,
+    "model_source": "unavailable"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "control": {
+    "workspaceRead": true,
+    "workspaceWrite": true,
+    "ownerRead": true,
+    "symlinkOwnerRead": true,
+    "ownerWrite": true,
+    "networkConnect": true,
+    "inheritedOwnerFdRead": true,
+    "inheritedParentSecret": true,
+    "descendantOwnerRead": true
+  },
+  "confined": {
+    "workspaceRead": true,
+    "workspaceWrite": true,
+    "ownerRead": false,
+    "symlinkOwnerRead": false,
+    "ownerWrite": false,
+    "networkConnect": false,
+    "inheritedOwnerFdRead": false,
+    "inheritedParentSecret": false,
+    "descendantOwnerRead": false
+  },
+  "nativeSandboxTested": true,
+  "fixtureSecrets": true,
+  "fullS33Acceptance": false,
+  "actualCodexOrAcpWorkerTested": false,
+  "productionIntegration": false,
+  "platform": "Darwin"
+}
