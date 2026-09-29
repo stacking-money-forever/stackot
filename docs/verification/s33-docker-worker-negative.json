@@ -1,0 +1,16 @@
+[
+  {
+    "mutation": "reject writable inspected rootfs",
+    "oracle": "writable rootfs inspection",
+    "exitCode": 1,
+    "fixtureDockerCalls": true,
+    "actualWorker": false
+  },
+  {
+    "mutation": "bind start to created immutable ID",
+    "oracle": "fixed image, namespace",
+    "exitCode": 1,
+    "fixtureDockerCalls": true,
+    "actualWorker": false
+  }
+]

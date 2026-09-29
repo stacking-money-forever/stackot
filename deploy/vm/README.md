@@ -202,6 +202,11 @@ Prepared Git credentials use per-operation private0600 owner files and are
 removed after success/failure; token bytes do not enter child argv/environment.
 Actual Mac fixture process-env visibility is recorded separately from these
 Linux instructions. No VM/worker isolation or live push acceptance is inferred.
+The prepared owner-controlled Docker executor has fixed image/mount/privilege
+policy, actual-container timeout/cancel reconciliation and preserved task files;
+see [docker-worker.md](../../docs/contracts/docker-worker.md). Real model auth,
+approved native task/Git lineage and worker activation remain separate gates.
+The Linux CI shell fixture is not a VM deployment or an actual Codex run.
 
 The expired approval guidance is documented in
 [b06-expired-approval.md](../../docs/verification/b06-expired-approval.md).

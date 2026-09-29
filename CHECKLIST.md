@@ -40,7 +40,7 @@
 - [ ] **S31** cancel/timeout 후 작업물 보존
 - [ ] **S29** 유효 승인 이후에만 ACP spawn (acpx 플러그인 + codex 로그인 선행)
 - [ ] **S28** 실제 auth=true 다른 요청자 거부와 pending 보존 확보(`s28-reverse-actor.md`). 두 번째 계정의 정상 승인 및 전체 two-user 검증은 미완.
-- [ ] **S33/S34** push·PR 쓰기 어댑터 — push 토큰의 자식 argv/env 노출 제거·임시 파일 정리 검증 준비. 실제 worker 격리·승인된 GitHub push·PR receipt는 미완.
+- [ ] **S33/S34** push·PR 쓰기 어댑터 — 토큰 argv/env 노출 제거와 Docker 격리 실행기 구현 준비(고정 image·작업 디렉터리·실제 컨테이너 취소/timeout). 실제 Codex/승인 연결·GitHub push·PR receipt는 미완.
 - [x] **S36** 기존 thread 유지·역링크 실패만 재개 — 합성 회복/marker 신뢰/중복 거부 및 정확 SHA Linux CI, `wave-03.md`. 실제 GitHub 쓰기는 S49.
 - [x] **S35** thread intent/receipt 영속화·실패 후 재사용 — 합성 외부 생성자 + 실제 native 저장 재시작·정확 SHA Linux CI. 실제 Discord 어댑터는 S49.
 

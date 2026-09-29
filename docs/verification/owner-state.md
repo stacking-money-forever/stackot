@@ -2,6 +2,17 @@
 
 ## Resumed checklist —59/81
 
+User asked what can proceed now and said go. Owner corrected the prior blocked
+judgment: independent S33 execution transport can be implemented while its final
+R oracle remains blocked. DockerWorker now has owner-fixed image/mount/security
+policy, current authorization checks, immutable container-ID binding, actual
+container timeout/cancel reconciliation and task-file preservation. Local10tests/
+52assertions, source117/787, final review clean; real Linux Docker CI oracle added.
+It is not activated in the default plugin. Mac Docker daemon is unavailable;
+no reboot/desktop activation/auth-store copy or actual Codex run. No S28/S29
+acceptance bypass. Full row remains NOT ACCEPT/count59/81. Details:
+s33-docker-worker-owner.md and docs/contracts/docker-worker.md.
+
 User explicitly prohibited reboot and requested remaining work (2026-09-29).
 S44 reboot oracle is deferred; do not reboot or repeat a reboot approval request.
 Independent S33 hardening now removes Git credential bytes from child argv/env,
