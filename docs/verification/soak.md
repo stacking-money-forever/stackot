@@ -1,10 +1,11 @@
 # B09 24-hour beta observation — NOT ACCEPT
 
 Canonical predecessors B02/B03/B04 are accepted. The chosen host is the user's
-Mac at stackot.justn.me. Current receiver status is truthful degraded state:
-outboxReady true, pending0/deadLetter3/delivered0; Gateway hook forwarding was
-disabled intentionally pending controller verification. Existing retained
-dead-letter deliveries are evidence, not test data to delete or blindly replay.
+Mac at stackot.justn.me. The initial baseline had a degraded Gateway and queue
+pending0/deadLetter3/delivered0. Current2026-09-29 readback is statusok,
+Gateway reachable, pending0/deadLetter3/delivered1 after the reviewed approval
+ingress connection. Generic model hooks remain disabled. Retained dead-letter
+deliveries are evidence, not test data to delete or blindly replay.
 
 `deploy/observe-soak.py` performs bounded read-only GET /readyz and /status on
 loopback9377. It writes a new private mode0600 JSONL receipt, flushes/fsyncs each
@@ -42,7 +43,14 @@ The fixed24h baseline will use a new receipt, never append to the old run.
 
 ## Observed wall-clock gaps — 2026-09-29
 
-The fixed collector is still live. At77samples, recorded wall elapsed45665.23s
+Latest read-only audit is `b09-current-baseline-audit.json`: the same actual
+collector PID54300 is live, wall elapsed exceeds24hours, but monotonic coverage
+is roughly12.8hours and13 clock-divergence intervals remain. Recorded probe
+failures are0; this does not cover the missing wall intervals. There is no terminal
+receipt, representative beta workload or measured recovery. B09 NOT ACCEPT.
+The legacy JSONL is unchanged; no collector restart or replacement was performed.
+
+At the earlier77sample checkpoint, recorded wall elapsed45665.23s
 versus monotonic elapsed4568.48s; largest wall gap7116.76s while largest monotonic
 gap60.15s. Thirteen intervals show clock divergence. Successful probes alone
 do not prove availability during those missing intervals. These observations
