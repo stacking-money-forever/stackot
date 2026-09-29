@@ -2,6 +2,16 @@
 
 ## Resumed checklist —59/81
 
+Verified catalog composition is now packaged as verifiedPushOwner(policy) for
+the code-only native callback owner parameter. Trusted lease task/requester/plan,
+observed execution ID, exited0 and confirmed cleanup must match current task;
+target derives from durable owner intent/fixed repo and credentials remain lazy.
+Missing resolver data creates no candidate. Source126/880, integration133/913,
+typecheck/build and final preparation-scope review pass. Default activation is
+deferred until a real S30 lease provider is configured, not claimed as runtime
+wiring. S33 NOT ACCEPT/count59/81. Contract verified-push-catalog.md; receipts
+s33-verified-catalog-owner.md and accepted brgr advice0eb909ab.
+
 Independent S33 verification preparation now routes accepted S32 observations
 through credential-free/offline Docker, with owner-fixed tests and pinned target.
 Owner exports target/base objects into clean self-contained snapshots using

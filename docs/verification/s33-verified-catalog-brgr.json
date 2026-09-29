@@ -1,0 +1,37 @@
+{
+  "artifacts": [
+    {
+      "reference": {
+        "bytes": 647,
+        "digest": "sha256:9d6feb4ac4f5fe6cd3e8bcc73348ea25a12d39e7f18d175bd606f5bfc7bae2ca",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/9d/6feb4ac4f5fe6cd3e8bcc73348ea25a12d39e7f18d175bd606f5bfc7bae2ca"
+      },
+      "text": "**Pitfall:** Hydrating lease facts (task/workspace/git dir/base SHA/observed execution) from requester- or worker-supplied fields, or fabricating a \"default\" lease on resolver miss \u2014 a forged or stale claim then binds the durable push target and policy credentials to lineage the server never observed.\n\n**Negative oracle:** Invoke the factory with (a) no lease, (b) a lease whose requester/plan/task mismatches the binding, or (c) a worker record lacking exit-0 + confirmed cleanup + execution ID. Every case must return no factory and materialize no credentials; any produced factory, synthesized lineage, or default activation fails the row.\n"
+    }
+  ],
+  "result": {
+    "artifacts": [
+      {
+        "bytes": 647,
+        "digest": "sha256:9d6feb4ac4f5fe6cd3e8bcc73348ea25a12d39e7f18d175bd606f5bfc7bae2ca",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/9d/6feb4ac4f5fe6cd3e8bcc73348ea25a12d39e7f18d175bd606f5bfc7bae2ca"
+      }
+    ],
+    "attempt_id": "d948ba0b-78a1-4b85-bd0a-4328ce5be806",
+    "error": null,
+    "outcome": "candidate",
+    "result_id": "e89c1f6d-7547-4481-bd23-869efaea6ace",
+    "revision": 1,
+    "schema": "brgr/v1",
+    "task_id": "0eb909ab-de66-4722-8fa2-91c366b8aaec",
+    "unresolved_effects": []
+  },
+  "route_observation": {
+    "effort": null,
+    "effort_source": "unavailable",
+    "model": null,
+    "model_source": "unavailable"
+  }
+}

@@ -268,6 +268,10 @@ S33 독립 검증 연결 `docker-verifier.ts`는 Git 관측과 오너가 고정�
 테스트 전후에 branch·HEAD·clean 상태가 고정 대상과 같아야 push 검증을 통과한다.
 호스트 실행 fallback은 없으며 실제 task 계보·승인 연결은 여전히 미완이다.
 계약: `docs/contracts/isolated-verifier.md`.
+`verifiedPushOwner(policy)`는 실제 오너 lease를 읽는 resolver가 제공될 때만
+native push factory를 구성한다. task·요청자·계획·실행 ID와 종료/정리 상태가
+일치해야 하며 자격증명은 이 과정에서 조회하지 않는다. 기본 Gateway에는 실제
+lease 공급자가 없어 자동 활성화하지 않는다. `docs/contracts/verified-push-catalog.md`.
 
 버튼은 components v2로 구현. `allowedUsers`에 요청자 Discord ID. TTL 24h. 만료된 승인은
 재요청(재시도 버튼)으로 처리.

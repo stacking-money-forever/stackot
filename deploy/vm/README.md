@@ -211,6 +211,9 @@ The prepared isolated verifier runs Git/tests offline through that executor,
 requires unchanged clean revision/branch, and matches the owner push verify
 interface. See [isolated-verifier.md](../../docs/contracts/isolated-verifier.md).
 Actual VM/task/model/push wiring remains separate from this source preparation.
+Owner bootstrap may compose the packaged `verifiedPushOwner(policy)` only with
+its actual server-observed task lease provider. No default activation or fabricated
+lease is shipped; [catalog contract](../../docs/contracts/verified-push-catalog.md).
 
 The expired approval guidance is documented in
 [b06-expired-approval.md](../../docs/verification/b06-expired-approval.md).
