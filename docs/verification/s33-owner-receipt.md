@@ -56,3 +56,10 @@ No default factory/config/RPC injection or deployed push. Captured handler tests
 approve+push can dispatch, consumption prevents replay and reply distinguishes
 remote sent/uncertain. Fake contexts/broker remain S. Actual NativePushOwnerFactory
 production instance, sealed verifier/broker/worker and GitHub proof still open.
+
+Reviewe6edfa1 found factory/dispatch rejection could retain generic approval
+success copy after storing the decision. Reply/audit now begin push_uncertain,
+upgrade to push_sent only on confirmed transport result, hide provider exception
+and do not re-dispatch. New targeted rejection fixture fails againste6edfa1.
+Captured handler/broker tests4pass/22assertions; full102tests/643assertions,
+typecheck/build clean. These remain S, not native/GitHub/worker runtime proof.
