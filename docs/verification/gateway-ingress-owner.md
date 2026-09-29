@@ -40,5 +40,23 @@ observer API to async.runs.bindSession(...).list(), preserving failed receipts.
 
 Independent review found wrong approval URL, CI-event rejection and new-thread
 empty-target rejection; corrected with discriminating transport/input cases.
-Final review/Linux CI/live activation receipts are pending. Full product rows,
-S28 two-principal oracle, actual worker isolation and E2E remain open at57/81.
+Exact code7987f9483c2a54deb8c2c808ba8f77977bc711cd Linux CI36531396769
+receiver/runtime-config/ingress-contract succeeded; final basec13fcd8 review
+found no additional defect. Actual installed Gateway14 package files and the
+receiver bundle match the reviewed compiled artifacts. Prior package/config/
+release symlink are retained privately. No system-domain/reboot claim.
+
+Live Mac proof: gateway-ingress-live.json. Signed controlled input traversed
+public HTTPS→real receiver→real Gateway→actual Discord plan/card; it is not a
+GitHub-origin event. Actual flow5f5ff5b0-cac3-42aa-bba6-71b5db31f7b9 remains
+pending, revision11, same messages after owned Gateway restart and replay.
+Bound native model/worker run count0 before/after, no worker dispatch authority.
+Receiver statusok, Gateway reachable, delivered1; original dead-letter3 retained.
+First Python-default client was denied at Cloudflare with403/1010; an identified
+Stackot-controlled-ingress/1.0 client reached expected unsigned401 and signed200.
+No Cloudflare setting was changed. Cloudflare's browser-signature interpretation
+is documented at https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-1xxx-errors/error-1010/ .
+
+User-requested receiver-to-approval connection is verified at R/D for this
+controlled input. Full product rows, S28 two-principal oracle, actual worker
+isolation, real GitHub/forum/backlink E2E and H remain open at57/81.
