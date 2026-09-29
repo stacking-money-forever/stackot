@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-09-29T07:34:11.603162+00:00",
+  "repo": "stacking-money-forever/stackot",
+  "mainSha": "fd5ff804a26931adb338b11a9a2e96e451772cb9",
+  "protected": false,
+  "rulesets": [],
+  "security": {
+    "secret_scanning": "disabled",
+    "secret_scanning_push_protection": "disabled"
+  },
+  "successfulChecks": [
+    "ingress-contract",
+    "receiver",
+    "runtime-config"
+  ],
+  "checkAppId": 15368,
+  "checksSourceSha": "059b9bce52cfe5c636e33e722fef2d16e2d22d6d"
+}

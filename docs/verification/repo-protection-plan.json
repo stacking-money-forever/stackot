@@ -45,8 +45,7 @@
               "context": "ingress-contract",
               "app_id": 15368
             }
-          ],
-          "contexts": []
+          ]
         },
         "enforce_admins": true,
         "required_pull_request_reviews": null,

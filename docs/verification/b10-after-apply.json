@@ -1,0 +1,31 @@
+{
+  "observedAt": "2026-09-29T07:36:41.255178+00:00",
+  "repo": "stacking-money-forever/stackot",
+  "mainSha": "fd5ff804a26931adb338b11a9a2e96e451772cb9",
+  "protected": true,
+  "strictChecks": true,
+  "checks": [
+    {
+      "context": "receiver",
+      "app_id": 15368
+    },
+    {
+      "context": "runtime-config",
+      "app_id": 15368
+    },
+    {
+      "context": "ingress-contract",
+      "app_id": 15368
+    }
+  ],
+  "enforceAdmins": true,
+  "allowForcePushes": false,
+  "allowDeletions": false,
+  "security": {
+    "secret_scanning": "enabled",
+    "secret_scanning_push_protection": "enabled"
+  },
+  "mainHeadChanged": false,
+  "rulesets": [],
+  "evidence": "actual app-bound protection and security configuration readback; no merge/main-push/secret-injection attempt"
+}

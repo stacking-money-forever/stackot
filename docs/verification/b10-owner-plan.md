@@ -20,8 +20,10 @@ owner governance choice; concrete plan is ready for that decision.
 
 Classic protection supports `checks[{context,app_id}]`; rulesets are not required.
 The narrowed brgr advice follows rejection of that unsupported ruleset-only claim.
-Legacy contexts is empty alongside explicit checks; optional unspecified boolean
-fields are omitted, not sent as unsupported nulls. Four required nullable fields
+The2026-09-29 actual API rejected simultaneous empty legacy contexts and explicit
+checks with422 (overlapping schemas). The corrected body omits contexts entirely;
+all three app-bound checks remain. Optional unspecified boolean fields are
+omitted, not sent as unsupported nulls. Four required nullable fields
 remain explicit. Open PR list is currently empty, so no existing PR is affected.
 
 Readback plus a non-mutating evaluate/merge-state check must establish enforcement;

@@ -1,0 +1,8 @@
+{
+  "observedAt": "2026-09-29T07:36:37.942801+00:00",
+  "request": "require-status-check-main",
+  "httpStatus": 422,
+  "reason": "simultaneous contexts and checks matched overlapping required_status_checks schemas",
+  "mutationReadbackProtected": false,
+  "correction": "omit deprecated contexts, retain three app-bound checks"
+}
