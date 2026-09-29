@@ -1,0 +1,13 @@
+S33 — independent push authority adapter preparation.
+Predecessors S27/S32 accepted. Own gateway/src/push.ts, targeted push tests,
+docs/contracts/push-authority.md and row receipt. No production activation,
+remote push/PR/merge/release or credentials in worker/source/report.
+Owner gate binds request/action/plan/version + repo/branch/verified commit.
+Reject pending/expired/wrong-actor/stale-plan authority before credential lookup
+or transport. Consume separate push grant immediately before owner-only broker.
+Owner independently verifies revision; worker claim alone cannot grant push.
+Persist intent/receipt without secrets; consumed/uncertain outcomes never blindly
+re-dispatch. Minimized worker environment is not same-UID filesystem isolation.
+Unit dependencies are S; actual Git/SDK/worker boundary remains R oracle.
+brgr supplied-facts advice only <=700bytes, no tools/files/subagents. Identify one
+consequential gate/credential pitfall; one narrowed retry maximum. Owner implements.
