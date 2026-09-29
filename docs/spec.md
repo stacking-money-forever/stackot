@@ -248,6 +248,11 @@ Docker worker 실행기 준비는 `gateway/src/docker-worker.ts`에 있다. 오�
 취소/timeout은 컨테이너 종료를 확인하되 작업 파일을 보존한다. 코딩 계정 로그인과
 task/Git 계보·실제 승인 연결은 후속 런타임 검증이며 기본 배포에는 활성화하지 않는다.
 계약과 네트워크/인증 경계: `docs/contracts/docker-worker.md`.
+S33 독립 검증 연결 `docker-verifier.ts`는 Git 관측과 오너가 고정한 테스트를
+동일한 Docker 경계 안에서 실행한다. worker가 테스트 범위를 줄일 수 없고,
+테스트 전후에 branch·HEAD·clean 상태가 고정 대상과 같아야 push 검증을 통과한다.
+호스트 실행 fallback은 없으며 실제 task 계보·승인 연결은 여전히 미완이다.
+계약: `docs/contracts/isolated-verifier.md`.
 
 버튼은 components v2로 구현. `allowedUsers`에 요청자 Discord ID. TTL 24h. 만료된 승인은
 재요청(재시도 버튼)으로 처리.

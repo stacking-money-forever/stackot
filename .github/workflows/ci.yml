@@ -63,9 +63,9 @@ jobs:
         working-directory: gateway
       # Public fixture image only. Executor runs the inspected immutable ID;
       # no real Codex account, GitHub token or live worker is mounted.
-      - run: docker pull alpine:3.22
+      - run: docker build --file gateway/scripts/fixtures/Dockerfile.worker --tag stackot-worker-fixture gateway/scripts/fixtures
       - run: |
-          TASK_WORKER_IMAGE_ID="$(docker image inspect --format '{{.Id}}' alpine:3.22)"
+          TASK_WORKER_IMAGE_ID="$(docker image inspect --format '{{.Id}}' stackot-worker-fixture)"
           bun gateway/scripts/verify-docker-worker.ts "$TASK_WORKER_IMAGE_ID" > "$RUNNER_TEMP/stackot-worker-isolation.json"
       - uses: actions/upload-artifact@v4
         with:

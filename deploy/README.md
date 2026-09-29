@@ -192,6 +192,11 @@ separately configured coding home. The default network is offline; a vetted
 owner egress bridge is needed for model requests. No personal auth-store copy,
 host Docker socket or shared Git metadata mount is provided. This is not an
 active ACP worker factory, and real actor/task lineage verification is pending.
+Owner catalog verification can use
+[isolated-verifier.md](../docs/contracts/isolated-verifier.md): Git and the
+owner-fixed test command run offline without coding auth inside Docker. It
+requires a clean pinned revision before/after tests and confirmed cleanup;
+no direct host fallback or live catalog activation is added.
 
 Expired approval copy preparation and outstanding native/re-request/human QA
 are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).

@@ -1,0 +1,16 @@
+[
+  {
+    "mutation": "owner test command cannot be weakened",
+    "oracle": "worker cannot select a weaker",
+    "exitCode": 1,
+    "fakeExecutor": true,
+    "fullS33Acceptance": false
+  },
+  {
+    "mutation": "tested revision must remain unchanged",
+    "oracle": "failing owner tests",
+    "exitCode": 1,
+    "fakeExecutor": true,
+    "fullS33Acceptance": false
+  }
+]

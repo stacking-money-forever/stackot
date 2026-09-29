@@ -83,7 +83,7 @@ export class DockerWorker {
         '--network',this.owner.egressNetworkId??'none','--workdir=/work',
         '--env=HOME=/home/worker','--env=CODEX_HOME=/home/worker/.codex','--env=LANG=C',
         '--tmpfs',`/home/worker:rw,nosuid,nodev,mode=0700,uid=${this.uid},gid=${this.gid}`,
-        '--tmpfs','/tmp:rw,nosuid,nodev,size=64m',
+        '--tmpfs','/tmp:rw,nosuid,nodev,size=1g',
         '--mount',`type=bind,src=${workspace},dst=/work,bind-propagation=rprivate`];
       if(codingHome)args.push('--mount',`type=bind,src=${codingHome},dst=/home/worker/.codex,bind-propagation=rprivate`);
       args.push('--entrypoint',this.owner.program,this.owner.imageId,...request.arguments);
