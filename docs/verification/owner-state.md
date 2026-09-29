@@ -1,5 +1,27 @@
 # Owner continuation state
 
+B06 native retry R verified on sourceb9cc8d7 (code identical through5aa7d51
+except SDK oracle). Exact CI36501125563 all3green, review clean.10file hashes
+verified, QA fixture d9411d1a activated with actual10second TTL, alltoolsdeny*/
+hooksfalse. Actual requester111 clicked expiry/renewal through serial Aside:
+auth=true denied expired approve, private reply points to retry; retry requested
+current full plan + new card1554284192773447811. Originalcard1554283887801274379
+stays pending/expired, new renew-30250ba4... pending with normal24h TTL.
+Immediate and post-Gateway-restart real replays preserve1renewed request,
+same2bound cards, expiry and revision21. No worker/push/PR or fake actor/time.
+Safe b06-retry-live-* artifacts retained; operator clicks remain R, NOT H.
+Human comprehension question issued for actual expired original card; no reply
+yet. B06 NOT ACCEPT; total57/81. Owned b06 pane/worktree retained for H follow-on.
+Integrationc044000f582d20f54c62296c2605757ca0edc26f pushed,21changed files byte
+identical, gateway86tests/514assertions/typecheck/build passed; CI36502123206 live.
+
+External blockers revalidated: sudo-n still requires local administrator auth;
+GitHub mainfd5ff80 remains unprotected and secret scanning/push protection disabled.
+Existing B10 exact-plan approval still pending, no setting changes made. S28
+genuine second-principal pending-grant event still missing; no forged identity.
+Baseline collector stays live but timing gaps/workload absence prevent B09 beta
+acceptance. Finish remaining independent checks; no overall completion claim.
+
 B06 finalb9cc8d7 review clean, but exact CI36500727714 FAILED at installed-SDK
 oracle's obsolete rendered.entries.length==2 assertion. No retry package was
 activated. Fixed oracle5aa7d51b4936cb2882be51f8d09fdd48f0cf1174 checks3labels/
