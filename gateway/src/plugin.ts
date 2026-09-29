@@ -5,6 +5,7 @@ import {registerActorQa,QA_SCHEMA} from "./qa.ts";
 import {STACKOT_CONTROLLER_ID} from "./controller.ts";
 import {ApprovalRenewal} from "./renewal.ts";
 import {discordPromptTransport,type NativePromptApi} from "./discord-prompt.ts";
+import {attachNativePush,type NativePushOwnerFactory} from "./native-push.ts";
 export {STACKOT_CONTROLLER_ID} from "./controller.ts";
 export interface GatewayApi extends InteractiveApi {
   registerGatewayMethod(name:string,handler:(input:{params:Record<string,unknown>;
@@ -27,7 +28,7 @@ function roleRouteAmbiguous(config:Record<string,unknown>,context:CallbackRoute)
 }
 // Resolve from real native route + native flow list on every callback, not a
 // process-local map or caller-supplied session/flow ID. Survives Gateway restart.
-export function nativeCallbackRegistry(api:GatewayApi,agentId:string):CallbackRegistry {
+export function nativeCallbackRegistry(api:GatewayApi,agentId:string,pushOwner?:NativePushOwnerFactory):CallbackRegistry {
   return {async resolve(token,context){
     if(!context||roleRouteAmbiguous(api.config,context))return undefined;
     const route=api.runtime.channel.routing.resolveAgentRoute({cfg:api.config,channel:"discord",
@@ -61,6 +62,7 @@ export function nativeCallbackRegistry(api:GatewayApi,agentId:string):CallbackRe
       const renewal=new ApprovalRenewal(store,discordPromptTransport(api as unknown as NativePromptApi,context));
       binding.renew=actor=>renewal.reissue(binding.request,context,actor);
     }
+    if(binding&&pushOwner)attachNativePush(binding,store,pushOwner);
     return binding;
   }};
 }

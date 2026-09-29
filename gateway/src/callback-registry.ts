@@ -2,7 +2,7 @@ import {randomUUID} from "node:crypto";
 import {ApprovalRepository} from "./approval.ts";
 import type {CallbackBinding,CallbackRegistry} from "./callback.ts";
 import type {Json,State,StateStore} from "./state/flow-store.ts";
-type BindingData=Omit<CallbackBinding,"repository"|"renew"|"retryAvailable">;
+type BindingData=Omit<CallbackBinding,"repository"|"renew"|"retryAvailable"|"dispatchPush">;
 type BindingInput=Omit<BindingData,"token">;
 const snowflake=(v:unknown):v is string=>typeof v==="string"&&/^[1-9][0-9]{0,19}$/.test(v)&&
   BigInt(v)<=18_446_744_073_709_551_615n;
