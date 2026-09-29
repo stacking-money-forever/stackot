@@ -2,8 +2,8 @@
   "plan_id": "b10-repo-protection",
   "repo": "stacking-money-forever/stackot",
   "generated_at_utc": "2026-09-28T07:49:22.695349+00:00",
-  "applied": false,
-  "authorization_note": "Preparation only. Admin token access does not authorize these changes; apply only on an explicit owner order.",
+  "applied": true,
+  "authorization_note": "Applied after the owner's explicit ap-checklist goal and go order on2026-09-29. Actual before/after readback and the422 correction are recorded in b10-applied-owner.md. No merge/main push/release included.",
   "basis": {
     "default_branch": "main",
     "default_branch_sha": "fd5ff804a26931adb338b11a9a2e96e451772cb9",
