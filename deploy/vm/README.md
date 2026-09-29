@@ -183,6 +183,8 @@ forward only) and answers `/readyz` 200 — then stop it and record the result.
 S33 push-authority preparation is in
 [push-authority.md](../../docs/contracts/push-authority.md); no worker credential
 isolation or live push transport is implied.
+The separate owner transport prepares sealed Git objects/config; no VM or
+GitHub activation is implied by its actual local-Git fixture tests.
 
 The expired approval guidance is documented in
 [b06-expired-approval.md](../../docs/verification/b06-expired-approval.md).

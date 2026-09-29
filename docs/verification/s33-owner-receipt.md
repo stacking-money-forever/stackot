@@ -24,3 +24,18 @@ Independent review/exact Linux CI pending. No deployed plugin change, worker,
 real credential or GitHub write. Native controller wiring/real owner transport,
 sealed revision verification integration and actual worker credential isolation
 remain required for S33 R acceptance. Count remains57/81.
+
+Owner transport continuation: git-push.ts exports verified objects into a fresh
+owner bare repository before any auth exists, omits worker config/hooks/replace
+refs, pins destination/branch/commit and returns exact Git ref readback. Canonical
+production endpoint is GitHub HTTPS; explicit local fixtures stay inside owner
+test root. Owner askpass helper has no credential contents; token only in owner
+Git subprocess env, not argv/source/receipt/worker inputs. No same-UID isolation
+claim. Generic bounded command failures never return Git/provider output.
+
+Actual Git fixtures2tests/27assertions show source commit/config mutation and
+worker hooks/URL rewrites cannot alter sealed push destination/SHA. Mutation
+using worker Git config instead of sealed repository fails that oracle. Full
+96tests/597assertions/typecheck/build pass. Synthetic authority/credential and
+local remotes remain S only. New code/CI/review pending, no real GitHub push or
+native controller/worker connection enabled.

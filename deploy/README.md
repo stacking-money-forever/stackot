@@ -172,6 +172,8 @@ webhook을 붙인 저장소는 receiver `config.json`의 `repos`에도 등록돼
 S33 owner-only push gate preparation is in
 [push-authority.md](../docs/contracts/push-authority.md). It is not wired to the
 deployed callback/worker/GitHub transport; no live push authority is enabled.
+Prepared owner Git transport seals verified objects and ignores worker config;
+local-remote tests are S evidence, with real GitHub/worker boundary still pending.
 
 Expired approval copy preparation and outstanding native/re-request/human QA
 are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).
