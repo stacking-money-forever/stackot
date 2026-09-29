@@ -233,6 +233,9 @@ intent를 결합하고 오너 broker에만 자격증명을 전달한다. 미승�
 Native 연결 준비는 push approve callback의 실제 요청자 검사·승인 저장 뒤에만
 오너 코드 factory를 조회한다. 기본 bootstrap에는 factory가 없으며 JSON/RPC로
 주입할 수 없다. 작업 시작·거부·PR callback은 push를 실행하지 않는다.
+`owner-push.ts`의 코드 전용 catalog 연결은 저장된 push intent와 정확히 같은
+대상만 허용하고 검증 시 객체를 봉인한다. callback 종료 시 생성한 오너 저장소를
+정리한다. 실제 task/worktree 계보를 공급하는 catalog와 배포 활성화는 미완이다.
 
 버튼은 components v2로 구현. `allowedUsers`에 요청자 Discord ID. TTL 24h. 만료된 승인은
 재요청(재시도 버튼)으로 처리.

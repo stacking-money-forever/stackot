@@ -176,6 +176,9 @@ Prepared owner Git transport seals verified objects and ignores worker config;
 local-remote tests are S evidence, with real GitHub/worker boundary still pending.
 Optional native owner factory is code-only and absent from default bootstrap;
 the deployed plugin still cannot dispatch push through configuration alone.
+The code-only owner catalog composer validates the persisted push intent,
+seals objects lazily and disposes generated storage after callback execution.
+It still requires trusted real task/worktree lineage and is not activated here.
 
 Expired approval copy preparation and outstanding native/re-request/human QA
 are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).
