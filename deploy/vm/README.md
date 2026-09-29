@@ -212,6 +212,9 @@ The prepared [start authority](../../docs/contracts/start-authority.md) binds
 approved coding plans and atomically records consumption/admission. No default
 worker factory or coding login is installed by this source change; actual ACP,
 isolation and before/after approval evidence remains required for S29.
+Mac-only source-home/startup-probe protection is documented in the
+[client-boundary receipt](../../docs/verification/s29-acpx-client-owner.md).
+It is not a VM rollout or actual coding login.
 The selected Mac Docker fixture also passed isolation, cleanup and linked
 worktree verification; [receipt](../../docs/verification/s33-macos-docker-owner.md).
 This establishes neither VM deployment nor actual Codex/push acceptance.

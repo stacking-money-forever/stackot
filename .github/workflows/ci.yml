@@ -25,6 +25,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y caddy
       - run: python3 deploy/macos/verify-ingress.py
       - run: python3 deploy/macos/verify-migration.py
+      - run: python3 deploy/macos/verify-gateway-env.py
       # Linux validates fixture controls and fail-closed unsupported-platform
       # behavior. It does not certify the Mac sandbox or a real ACP worker.
       - run: python3 gateway/scripts/probe-worker-isolation.py --control-only
@@ -103,6 +104,13 @@ jobs:
       - run: npm install --global openclaw@2026.9.6 --allow-scripts=openclaw
       - run: openclaw --version
       - run: node deploy/verify-openclaw-template.mjs
+      # Real acpx library, synthetic ACP peer/canary. This does not run Codex.
+      - run: npm install --prefix "$RUNNER_TEMP/s29-acpx-client" --ignore-scripts --no-audit --no-fund acpx@0.19.0
+      - run: node gateway/scripts/verify-acpx-client.mjs "$RUNNER_TEMP/s29-acpx-client/node_modules/acpx" > "$RUNNER_TEMP/s29-acpx-client.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stackot-acpx-client-boundary
+          path: ${{ runner.temp }}/s29-acpx-client.json
       # S25: real local Gateway/native SDK restart; synthetic values only.
       - run: python3 docs/verification/s25-probe/run.py --output "$RUNNER_TEMP/s25-restart.json"
       # S26: product repository through actual native store in a new Gateway.

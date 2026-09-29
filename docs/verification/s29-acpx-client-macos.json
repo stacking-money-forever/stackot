@@ -1,0 +1,31 @@
+{
+  "nodeVersion": "24.21.0",
+  "acpxVersion": "0.19.0",
+  "realAcpx": true,
+  "syntheticPeer": true,
+  "results": [
+    {
+      "enabled": true,
+      "advertisedFs": true,
+      "advertisedTerminal": true,
+      "canaryRead": true,
+      "terminalAccepted": true,
+      "readError": null,
+      "terminalError": null,
+      "hostSentinelCreated": true
+    },
+    {
+      "enabled": false,
+      "advertisedFs": false,
+      "advertisedTerminal": false,
+      "canaryRead": false,
+      "terminalAccepted": false,
+      "readError": -32601,
+      "terminalError": -32601,
+      "hostSentinelCreated": false
+    }
+  ],
+  "actualCodexWorker": false,
+  "realCredentials": false,
+  "fullS29Acceptance": false
+}

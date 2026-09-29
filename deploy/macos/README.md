@@ -23,6 +23,10 @@ Caddy, tunnel ingress and plists before loading. `gateway-run.py` belongs in
 the runtime `bin` directory; compatible pinned Node and OpenClaw packages go
 in `runtime/node` and `runtime/packages`. Gateway's own state is isolated from
 the user's default OpenClaw state. Never copy personal authentication stores.
+The updated launcher uses private `state/acpx-source-home` as CODEX_HOME and
+forces `OPENCLAW_ACPX_RUNTIME_STARTUP_PROBE=0`. Unsafe permissions/symlinks fail
+closed. This prevents default ACP preparation reading the personal source home
+or launching a startup agent; it does not provision a real coding account.
 
 Put exact-SHA receiver build in `releases/<SHA>/receiver/server.js`; `current`
 points to that release. Configure real Discord forum/operations IDs and real

@@ -215,6 +215,9 @@ Prepared [start authority](../docs/contracts/start-authority.md) requires explic
 coding eligibility and atomically records grant consumption/start admission.
 Native factory remains absent by default; actual isolated login/ACP wiring must
 be verified before activation. No existing no-op card authorizes coding.
+The Mac launcher scopes Gateway CODEX_HOME to a private empty source home and
+disables unapproved ACP startup probes. Separate worker login is required;
+host ACP file/terminal callbacks must also be disabled or contained.
 The selected Mac's real Docker fixture passed isolation, cleanup and linked
 worktree verification; see [receipt](../docs/verification/s33-macos-docker-owner.md).
 Synthetic workers/secrets do not establish actual Codex or push acceptance.

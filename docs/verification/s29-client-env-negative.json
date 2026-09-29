@@ -1,0 +1,9 @@
+{
+  "evidenceClass": "S",
+  "cases": [
+    {"case": "pre-fix-gateway-env", "base": "a275a8d", "exitCode": 1, "specificAssertionFailed": true},
+    {"case": "missing-rejection-status", "exitCode": 1, "specificFailure": true}
+  ],
+  "realCredentials": false,
+  "actualCodexWorker": false
+}

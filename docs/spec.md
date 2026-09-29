@@ -276,6 +276,9 @@ S29 시작 어댑터 준비는 `start.ts`·`native-start.ts`에 있다. 명시�
 허용하고 승인 소비와 실행 대기 기록을 하나의 CAS로 저장한다. 응답 유실은
 재실행하지 않으며 QA/검증용 승인은 거부한다. 기본 배포의 시작 factory는 없고,
 실제 ACP·코딩 로그인 연결은 미검증이다: `docs/contracts/start-authority.md`.
+Mac Gateway 시작기는 빈 전용 `CODEX_HOME`과 비활성 ACP 시작 probe를 강제해
+개인 Codex 설정·인증의 자동 가져오기를 방지한다. 실제 코딩 로그인은 별도
+격리 worker에 준비한다. acpx 호스트 파일·터미널 callback도 차단이 필요하다.
 `verifiedPushOwner(policy)`는 실제 오너 lease를 읽는 resolver가 제공될 때만
 native push factory를 구성한다. task·요청자·계획·실행 ID와 종료/정리 상태가
 일치해야 하며 자격증명은 이 과정에서 조회하지 않는다. 기본 Gateway에는 실제

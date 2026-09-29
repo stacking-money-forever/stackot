@@ -2,6 +2,16 @@
 
 ## Resumed checklist —59/81
 
+S29 sourcea275a8d and exact-SHA integration CI36566027445/36566984576 all4green.
+Live Mac inventory shows ACP absent from deployment (S23 was isolated). Pinned
+@openclaw/acpx2026.9.6/acpx0.19.0 now installed privately with scripts disabled;
+production config/factories unchanged. Actual acpx synthetic-peer probe proves
+fs:false/terminal:false reject host callbacks (-32601), with no fake-canary read
+or terminal effect; default control allows both. Codex/auth/model not invoked.
+New Linux protocol oracle publication follows. s29-acpx-client-owner.md and
+s29-acpx-client-macos.json preserve scope;155unit tests remain previous source
+baseline. Actual contained ACP transport/login/live approved worker still required.
+
 S29 owner start authority is prepared in stackot-s29-20260929/w9C:p1:
 atomic grant+intent preparation and consumption+inflight admission, coding-only
 eligibility, no QA execution, one confirmed spawn, uncertain acknowledgement
