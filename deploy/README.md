@@ -185,6 +185,13 @@ askpass reads token bytes from a0600 per-operation owner file, removed after
 success/failure. The actual Mac fixture found same-UID process environment
 visibility despite the tested Seatbelt profile. This closes the token-in-env
 channel; actual Codex/ACP filesystem/Keychain isolation remains unverified.
+Prepared Docker execution transport is documented in
+[docker-worker.md](../docs/contracts/docker-worker.md). Supply a vetted installed
+immutable image, approved task workspace, authentic owner authority and a
+separately configured coding home. The default network is offline; a vetted
+owner egress bridge is needed for model requests. No personal auth-store copy,
+host Docker socket or shared Git metadata mount is provided. This is not an
+active ACP worker factory, and real actor/task lineage verification is pending.
 
 Expired approval copy preparation and outstanding native/re-request/human QA
 are recorded in [b06-expired-approval.md](../docs/verification/b06-expired-approval.md).

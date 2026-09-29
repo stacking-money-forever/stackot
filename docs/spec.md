@@ -242,6 +242,12 @@ Git 토큰 원문은 자식 프로세스 argv·환경변수에 넣지 않고, �
 fixture에서 같은 UID의 다른 프로세스 환경변수 읽기가 관측됐기 때문이다.
 파일·환경변수·자식 프로세스 검증은 실제 Codex/ACP 격리 수용과 별도이며,
 같은 UID의 파일·키체인 접근 차단을 완료했다고 주장하지 않는다.
+Docker worker 실행기 준비는 `gateway/src/docker-worker.ts`에 있다. 오너가 승인한
+단일 작업 디렉터리와 고정 image ID만 사용하며, 호스트 자격증명·Docker 소켓·
+공유 Git 상태는 mount하지 않는다. 생성된 실제 컨테이너 정책을 확인한 뒤 실행하고,
+취소/timeout은 컨테이너 종료를 확인하되 작업 파일을 보존한다. 코딩 계정 로그인과
+task/Git 계보·실제 승인 연결은 후속 런타임 검증이며 기본 배포에는 활성화하지 않는다.
+계약과 네트워크/인증 경계: `docs/contracts/docker-worker.md`.
 
 버튼은 components v2로 구현. `allowedUsers`에 요청자 Discord ID. TTL 24h. 만료된 승인은
 재요청(재시도 버튼)으로 처리.

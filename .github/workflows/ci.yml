@@ -52,6 +52,26 @@ jobs:
       - run: python3 docs/verification/s47-lifecycle-fixture.py
       - run: python3 -m py_compile deploy/macos/render.py deploy/macos/gateway-run.py deploy/macos/probe.py
 
+  worker-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+      - run: bun install --frozen-lockfile
+        working-directory: gateway
+      # Public fixture image only. Executor runs the inspected immutable ID;
+      # no real Codex account, GitHub token or live worker is mounted.
+      - run: docker pull alpine:3.22
+      - run: |
+          TASK_WORKER_IMAGE_ID="$(docker image inspect --format '{{.Id}}' alpine:3.22)"
+          bun gateway/scripts/verify-docker-worker.ts "$TASK_WORKER_IMAGE_ID" > "$RUNNER_TEMP/stackot-worker-isolation.json"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stackot-worker-isolation
+          path: ${{ runner.temp }}/stackot-worker-isolation.json
+
   receiver:
     runs-on: ubuntu-latest
     defaults:

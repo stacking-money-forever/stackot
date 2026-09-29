@@ -1,0 +1,22 @@
+{
+  "artifacts": [],
+  "result": {
+    "artifacts": [],
+    "attempt_id": "5f48e096-970f-4b33-9763-9026a3d37ceb",
+    "error": "Herdr worker pane launch could not be confirmed: Herdr worker pane could not open: {\"error\":{\"code\":\"pane_not_found\",\"message\":\"pane w1:p2Z not found\"},\"id\":\"cli:plugin\"}\n",
+    "outcome": "lost",
+    "result_id": "47fde967-1bd8-4a38-b846-8512c60da3dd",
+    "revision": 2,
+    "schema": "brgr/v1",
+    "task_id": "822c4cae-9dbb-49d4-b119-c32f5c6055f4",
+    "unresolved_effects": [
+      "execution identity was not established"
+    ]
+  },
+  "route_observation": {
+    "effort": null,
+    "effort_source": "unavailable",
+    "model": null,
+    "model_source": "unavailable"
+  }
+}
