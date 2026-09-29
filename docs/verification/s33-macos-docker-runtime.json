@@ -1,0 +1,43 @@
+{
+  "observedAt": "2026-09-29T10:55:33Z",
+  "platform": "darwin-arm64",
+  "sourceRevision": "23e6ffd7f29da7e1a286b3a661000f7f5a1da126",
+  "integrationRevision": "baba1c5393187f65f46829e38e58f5239ef45194",
+  "dockerServerVersion": "29.4.1",
+  "endpoint": "unix:///var/run/docker.sock",
+  "imageId": "sha256:076dd1a775ee8ada745c91b523d24a375eaa2bf6c54782a80e295da1dbd829b5",
+  "oracle": "bun gateway/scripts/verify-docker-worker.ts <inspected imageId>",
+  "exitCode": 0,
+  "realDockerEngine": true,
+  "fixtureSecrets": true,
+  "isolatedExitCode": 0,
+  "timeout": "timed-out",
+  "cancel": "cancelled",
+  "ownedContainersRemoved": true,
+  "workspacePreserved": true,
+  "codingSessionPreserved": true,
+  "isolatedOwnerVerification": "verified",
+  "linkedWorktreeVerified": true,
+  "failingOwnerTestsRejected": true,
+  "fullS33Acceptance": false,
+  "actualCodexWorker": false,
+  "realCredentialsUsed": false,
+  "rebootPerformed": false,
+  "linuxSourceCI": {
+    "runId": 36555661832,
+    "conclusion": "success"
+  },
+  "linuxIntegrationCI": {
+    "runId": 36555661638,
+    "conclusion": "success"
+  },
+  "initialRejectedAttempt": {
+    "imageId": "sha256:d4b501a157fcd94a1b0d34e13ab6a496a029580543722e9d55fcbcb8ebd3b269",
+    "reason": "Owner supplied build configuration digest instead of docker image inspect ID",
+    "exitCode": 1,
+    "kind": "failed",
+    "cleanupConfirmed": true
+  },
+  "containersRemainingAfterOracle": 0,
+  "evidenceBoundary": "Actual Docker engine with synthetic worker and secrets; no real Codex/ACP task, model login, GitHub push or PR."
+}

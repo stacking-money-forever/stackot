@@ -208,6 +208,9 @@ policy, actual-container timeout/cancel reconciliation and preserved task files;
 see [docker-worker.md](../../docs/contracts/docker-worker.md). Real model auth,
 approved native task/Git lineage and worker activation remain separate gates.
 The Linux CI shell fixture is not a VM deployment or an actual Codex run.
+The selected Mac Docker fixture also passed isolation, cleanup and linked
+worktree verification; [receipt](../../docs/verification/s33-macos-docker-owner.md).
+This establishes neither VM deployment nor actual Codex/push acceptance.
 The prepared isolated verifier runs Git/tests offline through that executor,
 requires unchanged clean revision/branch, and matches the owner push verify
 interface. See [isolated-verifier.md](../../docs/contracts/isolated-verifier.md).

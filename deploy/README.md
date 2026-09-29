@@ -211,6 +211,9 @@ separately configured coding home. The default network is offline; a vetted
 owner egress bridge is needed for model requests. No personal auth-store copy,
 host Docker socket or shared Git metadata mount is provided. This is not an
 active ACP worker factory, and real actor/task lineage verification is pending.
+The selected Mac's real Docker fixture passed isolation, cleanup and linked
+worktree verification; see [receipt](../docs/verification/s33-macos-docker-owner.md).
+Synthetic workers/secrets do not establish actual Codex or push acceptance.
 Owner catalog verification can use
 [isolated-verifier.md](../docs/contracts/isolated-verifier.md): Git and the
 owner-fixed test command run offline without coding auth inside Docker. It

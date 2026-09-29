@@ -264,6 +264,9 @@ Docker worker 실행기 준비는 `gateway/src/docker-worker.ts`에 있다. 오�
 취소/timeout은 컨테이너 종료를 확인하되 작업 파일을 보존한다. 코딩 계정 로그인과
 task/Git 계보·실제 승인 연결은 후속 런타임 검증이며 기본 배포에는 활성화하지 않는다.
 계약과 네트워크/인증 경계: `docs/contracts/docker-worker.md`.
+선택 Mac의 실제 Docker 격리·취소·linked-worktree 검증은 통과했다.
+합성 worker/비밀값 증거이며 실제 Codex 실행·push 수용은 아니다:
+`docs/verification/s33-macos-docker-owner.md`.
 S33 독립 검증 연결 `docker-verifier.ts`는 Git 관측과 오너가 고정한 테스트를
 동일한 Docker 경계 안에서 실행한다. worker가 테스트 범위를 줄일 수 없고,
 테스트 전후에 branch·HEAD·clean 상태가 고정 대상과 같아야 push 검증을 통과한다.

@@ -2,6 +2,16 @@
 
 ## Resumed checklist —59/81
 
+Selected-Mac Docker oracle now passes after user helper authentication:
+actual Docker29.4.1, exact inspected fixture image, isolation, timeout/cancel
+cleanup, retained task/session files, clean pinned verification, linked-worktree
+and failing-test rejection. Zero execution-labelled containers remain. Source
+23e6ffd and integrationbaba1c5 exact Linux CI36555661832/36555661638 all4green.
+Safe receipt s33-macos-docker-runtime.json / s33-macos-docker-owner.md. This
+supersedes earlier Mac-daemon-unavailable observations below. Synthetic worker/
+credentials only; actual Codex/lease/push/PR unproved. S33 NOT ACCEPT/count59/81.
+No reboot or default factory activation.
+
 S33 abrupt credential remnant risk now addressed in prepared transport: approved
 token lives only in memory, askpass receives private Unix socket path in env,
 config/proxy disabled and bounded curl. No plaintext credential file is created.
@@ -38,8 +48,9 @@ R oracle remains blocked. DockerWorker now has owner-fixed image/mount/security
 policy, current authorization checks, immutable container-ID binding, actual
 container timeout/cancel reconciliation and task-file preservation. Local10tests/
 52assertions, source117/787, final review clean; real Linux Docker CI oracle added.
-It is not activated in the default plugin. Mac Docker daemon is unavailable;
-no reboot/desktop activation/auth-store copy or actual Codex run. No S28/S29
+It is not activated in the default plugin. Mac Docker was unavailable at this
+earlier preparation checkpoint; the current Docker oracle is recorded above.
+No reboot/auth-store copy or actual Codex run. No S28/S29
 acceptance bypass. Full row remains NOT ACCEPT/count59/81. Details:
 s33-docker-worker-owner.md and docs/contracts/docker-worker.md.
 
