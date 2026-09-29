@@ -1,0 +1,51 @@
+{
+  "artifacts": [
+    {
+      "reference": {
+        "bytes": 1681,
+        "digest": "sha256:cd8f8be25ee93b5bc819a655a2ef0e888790fa9d193955f8fafc9b8c302822db",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/cd/8f8be25ee93b5bc819a655a2ef0e888790fa9d193955f8fafc9b8c302822db"
+      },
+      "text": "**Executor shape (S29 supplied-facts start-approval adapter):**\n\nSingle serialized `admit(grant, facts)` executed under a per-task lock (or DB txn with unique key on `grant_id`/`task_id`):\n\n1. **Validate grant**: well-formed signature/issuer, `grant.task_id == request.task_id`, `requester`, `plan_hash`, `action`, unexpired `ttl`, bound `native_actor` present. Any mismatch → deny, no side effects.\n2. **Validate facts**: login present + authenticated for the bound actor, isolation domain exists, backend registered/healthy. Any missing → deny, no side effects.\n3. **Plan gate**: reject synthetic/no-op/QA plans (empty step list, `dry_run`, `kind in {synthetic,qa,noop}`).\n4. **Consume atomically**: `INSERT admission(grant_id UNIQUE, task_id, actor, plan_hash, admitted_at)` — unique violation means already consumed/replayed → deny. `UPDATE grants SET consumed=1` in same txn.\n5. **Spawn** bound native actor (method name: *unproved — do not invent*; adapter takes an injected spawn callable, never a literal ACP method).\n6. **Acknowledge**: on spawn success record `spawned_at`; on failure mark admission `spawn_failed` — do **not** delete/consume-undo. Lost persistence or lost spawn ack → state `uncertain`, never auto-retry; retry requires a new grant.\n\n**Negative oracle:** in a disposable copy, issue the same valid grant twice concurrently (plus a replay after success): exactly one spawn must occur; the second call must deny on unique-constraint without spawning. An adapter that spawns twice, or spawns with any missing fact (login/isolation/backend), or silently retries after lost ack, fails. Passing on both old and new code = oracle proves nothing.\n"
+    }
+  ],
+  "result": {
+    "artifacts": [
+      {
+        "bytes": 1681,
+        "digest": "sha256:cd8f8be25ee93b5bc819a655a2ef0e888790fa9d193955f8fafc9b8c302822db",
+        "media_type": "text/plain",
+        "store_relative_path": "artifacts/sha256/cd/8f8be25ee93b5bc819a655a2ef0e888790fa9d193955f8fafc9b8c302822db"
+      }
+    ],
+    "attempt_id": "52999714-83be-4944-8dca-2bb677feea61",
+    "error": null,
+    "outcome": "candidate",
+    "result_id": "02e6fb20-fe6e-42e7-9d51-5680ac64f4b7",
+    "revision": 2,
+    "schema": "brgr/v1",
+    "task_id": "5ad8a2ab-205b-4ba0-9b70-70c3bf692128",
+    "unresolved_effects": []
+  },
+  "route_observation": {
+    "effort": null,
+    "effort_source": "unavailable",
+    "model": null,
+    "model_source": "unavailable"
+  },
+  "ownerDecision": {
+    "verdict": "rejected",
+    "decisionId": "e376763e-84fd-4d5a-85ea-b3267c2f3d65",
+    "reason": "1681 bytes exceeds 1200; uncertain admission needs reconciliation, not only a new grant",
+    "rowAccepted": false
+  },
+  "firstAttempt": {
+    "artifactBytes": 2199,
+    "criterionBytes": 2000,
+    "decisionId": "dc57402d-717f-4335-9c0c-1ba0c1a2c69e",
+    "verdict": "rejected",
+    "resultId": "399bc0d9-960a-4b74-a4b5-e9cb07964614"
+  },
+  "revisionAdmissionCorrection": "First revise omitted workspace and failed before admission with control-home overlap; explicit original integration workspace admitted the only revision."
+}

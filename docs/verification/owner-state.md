@@ -2,6 +2,18 @@
 
 ## Resumed checklist —59/81
 
+S29 owner start authority is prepared in stackot-s29-20260929/w9C:p1:
+atomic grant+intent preparation and consumption+inflight admission, coding-only
+eligibility, no QA execution, one confirmed spawn, uncertain acknowledgement
+no-retry, and genuine expired-renewal supersession without clearing admitted
+operations. Registered code-only builder passes private owner factory and renewal
+preparation hook before card publication. Plan text/hash match; known unadmitted
+outages can resume/renew without retrying uncertain operations. Default deployment
+factory remains absent. Local155tests/1108assertions/typecheck/build and seven
+negative oracles pass; final independent review clean. Linux publication pending; actual
+contained acpx login/binding/live worker R unproved. S29 NOT ACCEPT; full goal
+continues59accepted/1skipped/21required. s29-start-owner.md / start-authority.md.
+
 User instructed skipping the unavailable second-account scenario. S28 is USER
 SKIPPED, never ACCEPT/two-user pass. Execute S29 under the explicit dependency
 exception in atomic-completion.md; auth/actor/plan/TTL and actual action approvals

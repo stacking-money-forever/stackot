@@ -7,7 +7,7 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "build": "bun build src/plugin.ts src/approval.ts src/thread-receipt.ts src/backlink.ts src/callback.ts src/callback-registry.ts src/prompt.ts src/discord-prompt.ts src/push.ts src/git-push.ts src/native-push.ts src/owner-push.ts src/docker-worker.ts src/docker-verifier.ts src/verified-push-catalog.ts --root ./src --external 'openclaw/*' --target=node --outdir dist"
+    "build": "bun build src/plugin.ts src/approval.ts src/thread-receipt.ts src/backlink.ts src/callback.ts src/callback-registry.ts src/prompt.ts src/discord-prompt.ts src/push.ts src/git-push.ts src/native-push.ts src/owner-push.ts src/docker-worker.ts src/docker-verifier.ts src/verified-push-catalog.ts src/start.ts src/native-start.ts --root ./src --external 'openclaw/*' --target=node --outdir dist"
   },
   "devDependencies": {
     "@types/bun": "1.4.0",

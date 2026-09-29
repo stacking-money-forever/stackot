@@ -1,16 +1,18 @@
 import {test,expect} from "bun:test";
-import plugin,{nativeCallbackRegistry,type GatewayApi} from "../src/plugin.ts";
+import {createHash} from 'node:crypto';
+import plugin,{stackotGatewayPlugin,nativeCallbackRegistry,type GatewayApi} from "../src/plugin.ts";
+import {StartAuthority,type OwnerStartExecutor} from '../src/start.ts';
 import {FlowStateStore,type NativeFlow,type State} from "../src/state/flow-store.ts";
 import {FlowCallbackRegistry} from "../src/callback-registry.ts";
 import {ApprovalRepository,type ApprovalInput} from "../src/approval.ts";
 const token="6f028276-12ad-4d80-9418-614ecf8b9e50";
 const context={accountId:"default",guildId:"111",conversationId:"channel:345678901234567890",parentConversationId:"123456789012345678"};
 const request:ApprovalInput={requestId:"request-1",taskId:"owner/repo#7",requesterId:"123456789012345678",
-  planHash:"a".repeat(64),planVersion:1,action:"start",ttlMs:86400000};
+  planHash:createHash('sha256').update('Fixed owner plan').digest('hex'),planVersion:1,action:"start",ttlMs:86400000};
 async function fixture(){
   let flows:NativeFlow[]=[{flowId:"flow-1",ownerKey:"native-owner",controllerId:"stackot",syncMode:"managed",
     status:"waiting",revision:0,stateJson:{schemaVersion:1,task:{id:request.taskId,requesterId:request.requesterId,
-      planHash:request.planHash,planVersion:1,status:"planned"}}}];
+      planHash:request.planHash,planVersion:1,status:"planned",planText:'Fixed owner plan'}}}];
   let agentId="stackot",listCalls=0;const routes:unknown[]=[];
   const native={get:async(id:string)=>structuredClone(flows.find(f=>f.flowId===id)),
     list:async()=>{listCalls++;return structuredClone(flows);},
@@ -39,6 +41,26 @@ test("new bootstrap registry rediscovers callback from native route/list each ti
     parentPeer:{kind:"channel",id:context.parentConversationId}});
   expect((await next!.repository.decide({requestId:request.requestId,taskId:request.taskId,
     actorId:request.requesterId,planHash:request.planHash,planVersion:1,action:"start"},"approve")).status).toBe("approved");
+});
+
+test('registered owner bootstrap connects prepared coding approval to one start',async()=>{
+  const f=await fixture();(f.flows[0]!.stateJson as State).executionPolicy='coding';
+  const native=f.api.runtime.tasks.async.managedFlows.bindSession({sessionKey:'native-owner'});
+  const store=new FlowStateStore(native,'flow-1','native-owner','stackot');
+  let spawns=0,factories=0;
+  const destination={agentId:'codex' as const,task:'Fixed owner plan',cwd:'/owned/task',runTimeoutSeconds:60};
+  const executor:OwnerStartExecutor={allows:value=>JSON.stringify(value)===JSON.stringify(destination),ready:async()=>true,
+    spawn:async(_value,_operation,authorize)=>{expect(await authorize()).toBe(true);spawns++;return {runId:'observed-run',childSessionKey:'agent:codex:worker'};}};
+  await new StartAuthority(store,executor).prepare(request,destination);
+  stackotGatewayPlugin({startOwner:async()=>{factories++;return {executor,operationId:'registered-operation'};},
+    prepareStart:(bound,input)=>new StartAuthority(bound,executor).prepare(input,destination)}).register(f.api);
+  const cb={channel:'discord',...context,senderId:request.requesterId,auth:{isAuthorizedSender:true},
+    interaction:{kind:'button',messageId:'456789012345678901',data:'stackot-approval:'+token,namespace:'stackot-approval',payload:token},
+    respond:{reply:async()=>{}}};
+  expect(spawns).toBe(0);expect(factories).toBe(0);
+  await f.registration()!.handler(cb);expect(spawns).toBe(1);expect(factories).toBe(1);
+  await f.registration()!.handler(cb);expect(spawns).toBe(1);expect(factories).toBe(1);
+  expect((await new ApprovalRepository(store).get(request.requestId))?.status).toBe('consumed');
 });
 test("foreign agent/owner/controller and missing native route never find a grant",async()=>{
   const f=await fixture(),registry=nativeCallbackRegistry(f.api,"stackot");

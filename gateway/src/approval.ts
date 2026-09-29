@@ -4,6 +4,9 @@ import type { Json, State, StateStore } from "./state/flow-store.ts";
 export class ApprovalExpiredError extends Error {
   constructor(){super("APPROVAL_EXPIRED");this.name="ApprovalExpiredError";}
 }
+export class ApprovalAlreadyDecidedError extends Error {
+  constructor(){super('APPROVAL_ALREADY_DECIDED');this.name='ApprovalAlreadyDecidedError';}
+}
 
 export type Action = "start" | "push" | "pr";
 type ApprovalFields = {
@@ -152,7 +155,10 @@ export class ApprovalRepository {
       if(!Number.isSafeInteger(now)||now<entry.requestedAt||
           (entry.status!=="pending"&&now<entry.decidedAt))throw new Error("CLOCK_INVALID");
       if(now>=entry.expiresAt)throw new ApprovalExpiredError();
-      if(entry.status!==from)throw new Error(from==="pending"?"APPROVAL_ALREADY_DECIDED":"APPROVAL_NOT_APPROVED");
+      if(entry.status!==from){
+        if(from==='pending')throw new ApprovalAlreadyDecidedError();
+        throw new Error('APPROVAL_NOT_APPROVED');
+      }
       const updated=next(entry,now);
       if(await this.store.compareAndSwap(snapshot.revision,{...snapshot.state,
           approvals:{...entries,[context.requestId]:updated as unknown as Json}})) {

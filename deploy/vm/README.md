@@ -208,6 +208,10 @@ policy, actual-container timeout/cancel reconciliation and preserved task files;
 see [docker-worker.md](../../docs/contracts/docker-worker.md). Real model auth,
 approved native task/Git lineage and worker activation remain separate gates.
 The Linux CI shell fixture is not a VM deployment or an actual Codex run.
+The prepared [start authority](../../docs/contracts/start-authority.md) binds
+approved coding plans and atomically records consumption/admission. No default
+worker factory or coding login is installed by this source change; actual ACP,
+isolation and before/after approval evidence remains required for S29.
 The selected Mac Docker fixture also passed isolation, cleanup and linked
 worktree verification; [receipt](../../docs/verification/s33-macos-docker-owner.md).
 This establishes neither VM deployment nor actual Codex/push acceptance.

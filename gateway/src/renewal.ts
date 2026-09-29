@@ -12,7 +12,8 @@ type Renewal={schemaVersion:1;routeFingerprint:string;input:ApprovalInput};
 /** Server-only issuer. Caller identity comes from the private native callback. */
 export class ApprovalRenewal {
   constructor(private readonly store:StateStore,private readonly transport:PromptTransport,
-    private readonly now=Date.now,private readonly ttlMs=86_400_000){}
+    private readonly now=Date.now,private readonly ttlMs=86_400_000,
+    private readonly beforePublish?:(store:StateStore,input:ApprovalInput)=>Promise<void>){}
   async reissue(original:ApprovalInput,route:PromptRoute,actorId:string):Promise<PromptResult>{
     return this.issue(original,route,actorId,new Set());
   }
@@ -29,9 +30,36 @@ export class ApprovalRenewal {
       if(snapshot.state.schemaVersion!==1)throw new Error("STATE_VERSION_UNSUPPORTED");
       if(snapshot.cancelRequestedAt!==undefined)throw new Error("FLOW_CANCEL_REQUESTED");
       const old=object(object(snapshot.state.approvals)[original.requestId]),clock=this.now();
+      let approvedUnadmitted=false;
+      if(old.status==='approved'&&original.action==='start'&&snapshot.state.executionPolicy==='coding'&&this.beforePublish){
+        const intents=snapshot.state.startIntents;
+        const raw=intents&&typeof intents==='object'&&!Array.isArray(intents)?intents[original.requestId]:undefined;
+        if(raw&&typeof raw==='object'&&!Array.isArray(raw)){
+          const intent=object(raw),request=object(intent.request);
+          let unadmitted=intent.phase==='prepared';
+          if(intent.phase==='superseded'){
+            const key=createHash('sha256').update(original.requestId).digest('hex');
+            const renewals=snapshot.state.approvalRenewals;
+            const linked=renewals&&typeof renewals==='object'&&!Array.isArray(renewals)?renewals[key]:undefined;
+            if(linked&&typeof linked==='object'&&!Array.isArray(linked)){
+              const record=object(linked),next=object(record.input);
+              const nextRaw=typeof next.requestId==='string'&&intents&&typeof intents==='object'&&!Array.isArray(intents)?intents[next.requestId]:undefined;
+              unadmitted=record.schemaVersion===1&&!!nextRaw&&typeof nextRaw==='object'&&!Array.isArray(nextRaw)&&
+                JSON.stringify(object(nextRaw).request)===JSON.stringify(next);
+            }
+          }
+          approvedUnadmitted=intent.schemaVersion===1&&unadmitted&&intent.operationId===undefined&&
+            intent.receipt===undefined&&old.operationId===undefined&&old.consumedAt===undefined&&
+            old.decidedBy===actorId&&Number.isSafeInteger(old.decidedAt)&&
+            (old.decidedAt as number)>=(old.requestedAt as number)&&(old.decidedAt as number)<(old.expiresAt as number)&&
+            request.requestId===original.requestId&&request.taskId===original.taskId&&request.requesterId===actorId&&
+            request.planHash===original.planHash&&request.planVersion===original.planVersion&&
+            request.action==='start'&&request.ttlMs===original.ttlMs;
+        }
+      }
       if(old.schemaVersion!==1||old.requestId!==original.requestId||old.requesterId!==actorId||
         old.taskId!==original.taskId||old.action!==original.action||old.planHash!==original.planHash||
-        old.planVersion!==original.planVersion||old.status!=="pending"||
+        old.planVersion!==original.planVersion||(old.status!=="pending"&&!approvedUnadmitted)||
         typeof old.requestedAt!=="number"||typeof old.expiresAt!=="number"||
         !Number.isSafeInteger(old.requestedAt)||!Number.isSafeInteger(old.expiresAt)||old.requestedAt<0||
         old.expiresAt-old.requestedAt!==original.ttlMs)throw new Error("RENEWAL_ORIGINAL_DENIED");
@@ -79,6 +107,11 @@ export class ApprovalRenewal {
         // An old retry button must not report a stale bound card as usable.
         // Follow the durable lineage; each expired generation remains intact.
         return this.issue(record.input,route,actorId,ancestry);
+      }
+      const currentState=await store.read();
+      if(record.input.action==='start'&&currentState.state.executionPolicy==='coding'){
+        if(!this.beforePublish)throw new Error('START_PREPARATION_UNAVAILABLE');
+        await this.beforePublish(store,{...record.input});
       }
       const published=await new ApprovalPromptPublisher(store,this.transport,this.now).publish(route,record.input.requestId);
       if(published.kind==="published"){

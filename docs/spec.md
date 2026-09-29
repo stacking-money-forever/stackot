@@ -272,6 +272,10 @@ S33 독립 검증 연결 `docker-verifier.ts`는 Git 관측과 오너가 고정�
 테스트 전후에 branch·HEAD·clean 상태가 고정 대상과 같아야 push 검증을 통과한다.
 호스트 실행 fallback은 없으며 실제 task 계보·승인 연결은 여전히 미완이다.
 계약: `docs/contracts/isolated-verifier.md`.
+S29 시작 어댑터 준비는 `start.ts`·`native-start.ts`에 있다. 명시적 coding 작업만
+허용하고 승인 소비와 실행 대기 기록을 하나의 CAS로 저장한다. 응답 유실은
+재실행하지 않으며 QA/검증용 승인은 거부한다. 기본 배포의 시작 factory는 없고,
+실제 ACP·코딩 로그인 연결은 미검증이다: `docs/contracts/start-authority.md`.
 `verifiedPushOwner(policy)`는 실제 오너 lease를 읽는 resolver가 제공될 때만
 native push factory를 구성한다. task·요청자·계획·실행 ID와 종료/정리 상태가
 일치해야 하며 자격증명은 이 과정에서 조회하지 않는다. 기본 Gateway에는 실제

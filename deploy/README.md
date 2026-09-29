@@ -211,6 +211,10 @@ separately configured coding home. The default network is offline; a vetted
 owner egress bridge is needed for model requests. No personal auth-store copy,
 host Docker socket or shared Git metadata mount is provided. This is not an
 active ACP worker factory, and real actor/task lineage verification is pending.
+Prepared [start authority](../docs/contracts/start-authority.md) requires explicit
+coding eligibility and atomically records grant consumption/start admission.
+Native factory remains absent by default; actual isolated login/ACP wiring must
+be verified before activation. No existing no-op card authorizes coding.
 The selected Mac's real Docker fixture passed isolation, cleanup and linked
 worktree verification; see [receipt](../docs/verification/s33-macos-docker-owner.md).
 Synthetic workers/secrets do not establish actual Codex or push acceptance.

@@ -1,0 +1,49 @@
+{
+  "comparisonBase": "f81c409781717d13621a4e8f06a85dc7d8b36aa3",
+  "oracles": [
+    {
+      "case": "pre-fix-callback",
+      "exitCode": 1,
+      "targetedFailureVerified": true,
+      "evidenceClass": "S"
+    },
+    {
+      "case": "missing-atomic-admission",
+      "exitCode": 1,
+      "targetedFailureVerified": true,
+      "evidenceClass": "S"
+    },
+    {
+      "case": "late-preparation-validation",
+      "exitCode": 1,
+      "targetedFailureVerified": true,
+      "evidenceClass": "S"
+    },
+    {
+      "case": "blocked-expired-renewal",
+      "exitCode": 1,
+      "targetedFailureVerified": true,
+      "evidenceClass": "S"
+    },
+    {
+      "case": "missing-full-plan-binding",
+      "exitCode": 1,
+      "targetedFailureVerified": true,
+      "evidenceClass": "S"
+    },
+    {
+      "case": "blocked-known-pre-dispatch-recovery",
+      "exitCode": 1,
+      "targetedFailureVerified": true,
+      "evidenceClass": "S"
+    },
+    {
+      "case": "missing-renewal-prepublication",
+      "exitCode": 1,
+      "targetedFailureVerified": true,
+      "evidenceClass": "S"
+    }
+  ],
+  "realWorker": false,
+  "taskWorktreesDeleted": false
+}

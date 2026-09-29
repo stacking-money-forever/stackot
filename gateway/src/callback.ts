@@ -1,10 +1,12 @@
 import type {ApprovalInput,ApprovalRepository,ApprovalContext} from "./approval.ts";
-import {ApprovalExpiredError} from "./approval.ts";
+import {ApprovalExpiredError,ApprovalAlreadyDecidedError} from "./approval.ts";
+import {StartUnavailableError} from './start.ts';
 
 export type CallbackBinding={token:string;accountId:string;guildId:string;conversationId:string;
   parentConversationId:string;messageId:string;request:ApprovalInput;decision:"approve"|"deny"|"retry";
   repository:ApprovalRepository;retryAvailable?:boolean;
   renew?:(actorId:string)=>Promise<{kind:string}>;
+  dispatchStart?:(context:ApprovalContext)=>Promise<{kind:'started';receipt:{runId:string;childSessionKey:string}}|{kind:'uncertain'}>;
   dispatchPush?:(context:ApprovalContext)=>Promise<{kind:"sent"|"uncertain"}>};
 // Resolver is server-owned and must recover bindings/native ownership durably.
 // This interface alone is not production registry or actor-authentication proof.
@@ -25,7 +27,7 @@ const token=(v:unknown):v is string=>typeof v==="string"&&
 // Register a private handler only through the trusted native bootstrap API.
 // Never expose an HTTP/RPC endpoint accepting an alleged native context object.
 export type CallbackAudit={event:"stackot.approval";senderId?:string;authorized:boolean;
-  guildId?:string;conversationId?:string;messageId?:string;outcome:"denied"|"approved"|"rejected"|"requested"|"push_sent"|"push_uncertain"};
+  guildId?:string;conversationId?:string;messageId?:string;outcome:"denied"|"approved"|"rejected"|"requested"|"push_sent"|"push_uncertain"|"start_started"|"start_uncertain"|"start_waiting"};
 export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRegistry,observe?:(event:CallbackAudit)=>void):void {
   api.registerInteractiveHandler({channel:"discord",namespace,handler:async raw=>{
     const ctx=raw as Partial<Context>|null;
@@ -57,9 +59,20 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
         text="승인 요청의 발행 상태를 확인하고 있습니다. 기존 승인은 재사용되지 않습니다.";
         if(result.kind==="published"){text="새 승인 요청을 발행했습니다. 이 스레드의 새 계획과 승인 버튼을 확인해 주세요.";outcome="requested";}
       }else{
-      await binding.repository.decide({requestId:request.requestId,taskId:request.taskId,
-        planHash:request.planHash,planVersion:request.planVersion,action:request.action,
-        actorId:ctx.senderId},binding.decision);
+      try{
+        await binding.repository.decide({requestId:request.requestId,taskId:request.taskId,
+          planHash:request.planHash,planVersion:request.planVersion,action:request.action,
+          actorId:ctx.senderId},binding.decision);
+      }catch(error){
+        if(!(error instanceof ApprovalAlreadyDecidedError)||binding.decision!=='approve'||request.action!=='start'||
+          typeof binding.dispatchStart!=='function')throw error;
+        // Known pre-admission outages leave this exact grant approved. Native
+        // and S27 decide checks still apply; consumed/denied grants do not retry.
+        const current=await binding.repository.get(request.requestId);
+        if(!current||current.status!=='approved'||current.decidedBy!==ctx.senderId||
+          current.taskId!==request.taskId||current.planHash!==request.planHash||
+          current.planVersion!==request.planVersion||current.action!=='start')throw error;
+      }
       text=binding.decision==="approve"?"승인했습니다.":"거부했습니다.";
       outcome=binding.decision==="approve"?"approved":"rejected";
       if(binding.decision==="approve"&&request.action==="push"&&typeof binding.dispatchPush==="function"){
@@ -72,6 +85,20 @@ export function registerApprovalCallbacks(api:InteractiveApi,registry:CallbackRe
         }catch{
           // Approval storage succeeded; dispatch exceptions are never proof of
           // remote success/failure and their provider text stays private.
+        }
+      }
+      if(binding.decision==="approve"&&request.action==="start"&&typeof binding.dispatchStart==="function"){
+        text="승인은 저장됐지만 worker 시작을 확인하지 못했습니다. 상태 확인이 필요하며 같은 요청을 다시 실행하지 않습니다.";
+        outcome="start_uncertain";
+        try{
+          const result=await binding.dispatchStart({requestId:request.requestId,taskId:request.taskId,
+            planHash:request.planHash,planVersion:request.planVersion,action:"start",actorId:ctx.senderId});
+          if(result.kind==="started"){text="승인한 계획의 worker 시작을 확인했습니다.";outcome="start_started";}
+        }catch(error){
+          if(error instanceof StartUnavailableError){
+            text="승인은 저장됐지만 worker가 아직 준비되지 않았습니다. 준비 후 이 카드의 ‘승인’을 다시 누르면 같은 유효한 계획으로 재시도합니다.";
+            outcome='start_waiting';
+          }
         }
       }
       }
